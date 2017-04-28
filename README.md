@@ -8,36 +8,36 @@ a Things Network Org.
 ### Manual setup
 This manual setup would be performed to get the gateway on the
 network.  Can be performed in the "factory".
-    + Configure DHCP or Address/Netmask/Gateway/DNS
-	+ Set up SSH tunnel back to server unless on public network
-    + Set a temporary root password
++ Configure DHCP or Address/Netmask/Gateway/DNS
++ Set up SSH tunnel back to server unless on public network
++ Set a temporary root password
 ### One-time Ansible setup
 This is performed one-time to setup secure networking and is basically
 repeating above configuration from master config.  Must be performed
 on-site with access to the gateay
-    + Networking
-	+ SSH tunnel
-	+ Login access (ttn account with root access)
++ Networking
++ SSH tunnel
++ Login access (ttn account with root access)
 ### Standard Ansible setup
 #### Login access
 This secures the box by not having a known account (root) and
 restricting root access.
-    + ttn or ttn-ORG account (i.e. ttn-ith)
-	+ Unique access
-	+ Install SSH keys
-	+ Confirm SUDO access
++ ttn or ttn-ORG account (i.e. ttn-ith)
++ Unique access
++ Install SSH keys
++ Confirm SUDO access
 #### SSH config
-    + Disable password login
-	+ Require Keys
++ Disable password login
++ Require Keys
 ### Install Let's Encrypt Root Certificates
-   + This will avoid the need for --no-check-certificate on wget
++ This will avoid the need for --no-check-certificate on wget
 ### Set hostname
 This makes it obvious which gateway you are logged in to.
-   + ttn-ORG-NAME (where NAME is descriptive)
++ ttn-ORG-NAME (where NAME is descriptive)
 ### Set timezone
 An org is usually all in one timezone so it's just easier to configure
 this globally.  Ansible will spit out error messages if you get it wrong.
-   + Manually configured via Ansible vars
++ Manually configured via Ansible vars
 ### Set time
 The current config only seems to use *ntpdate* once at setup.  It's
 better if the gateway uses *ntpd* or does a periodic *ntpdate*.
@@ -61,22 +61,22 @@ Restart daemon when done.
 
 # Reference
 ## Ansible directory tree
-    + hosts - lists of ansible hosts in groups
-	+ config - configuration data
-	    + group_vars - group specific vars
-	        + all.yml - Global vars
-            + GROUP.yml - Grooup specific vars
-	    + host_vars - host specific vars
-		    + HOST.yml - Host specific vars
++ hosts - lists of ansible hosts in groups
++ config - configuration data
+    + group_vars - group specific vars
+        + all.yml - Global vars
+        + *GROUP*.yml - Grooup specific vars
+    + host_vars - host specific vars
+	    + *HOST*.yml - Host specific vars
 
 ## Ansible Variables
-	+ hostname - ttn-region-location
-    + timezone - File rooted at /usr/share/zoneinfo
-	+ region
-		+ frequency - EU868, AU915, US915
-		+ ntp servers - by region?
-	+ ref_latitude
-	+ ref_longitude
-	+ ref_altitude
-	+ contact_email
-	+ description - description of location (contact phone?)
++ hostname - ttn-region-location
++ timezone - File rooted at /usr/share/zoneinfo
++ region
+	+ frequency - EU868, AU915, US915
+	+ ntp servers - by region?
++ ref_latitude
++ ref_longitude
++ ref_altitude
++ contact_email
++ description - description of location (contact phone?)
