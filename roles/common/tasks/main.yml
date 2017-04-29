@@ -1,0 +1,36 @@
+---
+
+- name: Set /etc/hostname
+  copy:
+    dest: /etc/hostname
+    content: "{{ hostname }}"
+    mode: "0644"
+    owner: root
+    group: root
+
+- name: Set hostname
+  shell: "hostname {{ hostname }}"
+
+- name: Set the timezone
+  file:
+    name: /etc/localtime
+    state: link
+    force: yes
+    src: "/usr/share/zoneinfo/{{ timezone }}"
+
+- name: Set time from ntp server
+  shell: "ntpdate {{ ntp_server }} && hwclock -wu"
+
+- name: Install Ansible dependencies
+  opkg: 
+    state: installed
+    pkg: "{{ item }}"
+  with_flattened:
+    - python-pkgutil
+    - python-distutils
+
+- name: Remove Multi-Tech lora-network-server
+  opkg:
+    name: lora-network-server
+    state: absent
+

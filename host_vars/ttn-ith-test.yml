@@ -1,0 +1,7 @@
+---
+# Configuration of TTN-ITH-Test
+hostname: ttn-ith-test
+description: Test node a Jeff's house
+latitude: 
+longitude:
+altitude:

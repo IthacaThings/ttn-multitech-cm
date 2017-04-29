@@ -1,0 +1,7 @@
+---
+# Global variables for this TTN organization
+
+timezone: "US/Eastern"
+lora_band: US915
+contact_email: jch@honig.net
+ntp_server: 0.north-america.pool.ntp.org

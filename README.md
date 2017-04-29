@@ -9,6 +9,10 @@ a Things Network Org.
 This manual setup would be performed to get the gateway on the
 network.  Can be performed in the "factory".
 + Configure DHCP or Address/Netmask/Gateway/DNS
++ Install necessary packages
+    + opkg update
+	+ opkg install python-pkgutils
+	+ opkg install python-distutils
 + Set up SSH tunnel back to server unless on public network
 + Set a temporary root password
 ### One-time Ansible setup
@@ -31,21 +35,21 @@ restricting root access.
 + Require Keys
 ### Install Let's Encrypt Root Certificates
 + This will avoid the need for --no-check-certificate on wget
-### Set hostname
+### [X] Set hostname
 This makes it obvious which gateway you are logged in to.
 + ttn-ORG-NAME (where NAME is descriptive)
-### Set timezone
+### [X] Set timezone
 An org is usually all in one timezone so it's just easier to configure
 this globally.  Ansible will spit out error messages if you get it wrong.
 + Manually configured via Ansible vars
-### Set time
+### [X] Set time
 The current config only seems to use *ntpdate* once at setup.  It's
 better if the gateway uses *ntpd* or does a periodic *ntpdate*.
 
 NTP server pool to use should be configured globally.
 
-XXX - How does the hwclock interact with this?
-XXX - Test gateway has issues with timezone
++ **XXX** - How does the hwclock interact with this?
++ **XXX** - Test gateway has issues with timezone
 ### Disable Multi-Tech Lora daemon
 Uninstall lora-network-server with opkg
 ### Install TTN packet forwarder
@@ -59,24 +63,30 @@ script.
 
 Restart daemon when done.
 
-# Reference
-## Ansible directory tree
+## Reference
+### Ansible directory tree
++ ansible.cfg - General ansible config
 + hosts - lists of ansible hosts in groups
-+ config - configuration data
-    + group_vars - group specific vars
-        + all.yml - Global vars
-        + *GROUP*.yml - Grooup specific vars
-    + host_vars - host specific vars
-	    + *HOST*.yml - Host specific vars
++ group_vars - group specific vars
+    + all.yml - Global vars
+    + *GROUP*.yml - Grooup specific vars
++ host_vars - host specific vars
+    + *HOST*.yml - Host specific vars
++ roles - Local roles
++ galaxy-roles - Downloaded roles
 
-## Ansible Variables
+### Ansible Variables
 + hostname - ttn-region-location
 + timezone - File rooted at /usr/share/zoneinfo
 + region
 	+ frequency - EU868, AU915, US915
 	+ ntp servers - by region?
-+ ref_latitude
-+ ref_longitude
-+ ref_altitude
++ latitude
++ longitude
++ altitude
 + contact_email
 + description - description of location (contact phone?)
+
+## Issues
++ su does not work with busybox so we need to ssh in as root
+
