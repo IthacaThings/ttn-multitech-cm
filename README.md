@@ -9,17 +9,16 @@ a Things Network Org.
 This manual setup would be performed to get the gateway on the
 network.  Can be performed in the "factory".
 + Configure DHCP or Address/Netmask/Gateway/DNS
-+ Install necessary packages
++ Install Packages necessary packages
     + opkg update
 	+ opkg install python-pkgutils
 	+ opkg install python-distutils
 + Set up SSH tunnel back to server unless on public network
-+ Set a temporary root password
++ Install an ssh key for root access
 ### One-time Ansible setup
 This is performed one-time to setup secure networking and is basically
 repeating above configuration from master config.  Must be performed
 on-site with access to the gateay
-+ Networking
 + SSH tunnel
 + Login access (ttn account with root access)
 ### Standard Ansible setup
@@ -29,7 +28,6 @@ restricting root access.
 + ttn or ttn-ORG account (i.e. ttn-ith)
 + Unique access
 + Install SSH keys
-+ Confirm SUDO access
 #### SSH config
 + Disable password login
 + Require Keys
