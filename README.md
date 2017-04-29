@@ -48,8 +48,6 @@ better if the gateway uses *ntpd* or does a periodic *ntpdate*.
 
 NTP server pool to use should be configured globally.
 
-+ **XXX** - How does the hwclock interact with this?
-+ **XXX** - Test gateway has issues with timezone
 ### Disable Multi-Tech Lora daemon
 Uninstall lora-network-server with opkg
 ### Install TTN packet forwarder
