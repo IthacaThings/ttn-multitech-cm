@@ -53,7 +53,7 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 + [ ] Fetch ipkg of ttn packet forwarder
 + [ ] Install package
 + [ ] Overwrite init.d file to not fetch updates
-+ [ ] Fetch global config files
++ [X] Fetch global config files
 + [ ] Install appropriate config file
 + [ ] Merge overrides
 + [ ] Restart daemon when done
