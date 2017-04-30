@@ -25,29 +25,31 @@ on-site with access to the gateay
 #### Login access
 This secures the box by not having a known account (root) and
 restricting root access.
-+ ttn or ttn-ORG account (i.e. ttn-ith)
-+ Unique access
-+ Install SSH keys
-#### SSH config
-+ Disable password login
-+ Require Keys
++ [X] ttn account
++ [X] Install SSH keys for root and ttn
++ [ ] Disable password login?
++ [ ] Set root and ttn passwords?
+#### [ ] SSH config
++ [ ] Disable password login
+    + Needs discussion
++ [X] Require Keys for root login
 ### [X] Install Let's Encrypt Root Certificates
 + This will avoid the need for --no-check-certificate on wget
 ### [X] Set hostname
 This makes it obvious which gateway you are logged in to.
 + ttn-ORG-NAME (where NAME is descriptive)
 ### [X] Set timezone
++ [X] - Set from Ansible config
 An org is usually all in one timezone so it's just easier to configure
 this globally.  Ansible will spit out error messages if you get it wrong.
 + Manually configured via Ansible vars
 ### [X] Set time
-The current config only seems to use *ntpdate* once at setup.  It's
-better if the gateway uses *ntpd* or does a periodic *ntpdate*.
-
-NTP server pool to use should be configured globally.
-
-### Disable Multi-Tech Lora daemon
-Uninstall lora-network-server with opkg
++ [X] Set time when Ansible is run
++ [ ] Set time periodically
+   + Cron script?
+   + NTPD?
+### [X] - Disable Multi-Tech Lora daemon
++ Uninstall lora-network-server with opkg
 ### Install TTN packet forwarder
 Install the local copy of TTN packet fowarder and config files.
 
