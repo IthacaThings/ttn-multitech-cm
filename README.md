@@ -31,7 +31,7 @@ restricting root access.
 #### SSH config
 + Disable password login
 + Require Keys
-### Install Let's Encrypt Root Certificates
+### [X] Install Let's Encrypt Root Certificates
 + This will avoid the need for --no-check-certificate on wget
 ### [X] Set hostname
 This makes it obvious which gateway you are logged in to.
@@ -83,6 +83,11 @@ Restart daemon when done.
 + contact_email
 + description - description of location (contact phone?)
 
+## Questions
++ Do we set a password for root/ttn or just allow key-based login?
+    + Or do we only allow password login on the console?
+
 ## Issues
 + su does not work with busybox so we need to ssh in as root
++ wget still needs --ca-certificate=/etc/ssl/certs/ca-certificates.crt
 

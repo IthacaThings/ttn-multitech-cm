@@ -1,2 +1,20 @@
 ---
 # handlers file for setup
+
+#
+#	Set hostname when /etc/hostsname is updated
+#
+- name: Set hostname
+  shell: "hostname $(cat /etc/hostname)"
+
+#
+#	Restart sshd after config changes
+#
+- name: Restart ssh
+  service: name=ssh state=restarted
+
+#
+#	Run update-ca-certificates
+#
+- name: update-ca-certificates
+  shell: "update-ca-certificates"

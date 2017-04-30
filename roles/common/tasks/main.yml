@@ -1,5 +1,8 @@
 ---
 
+#
+#	Set hostname
+#
 - name: Set /etc/hostname
   copy:
     dest: /etc/hostname
@@ -7,20 +10,99 @@
     mode: "0644"
     owner: root
     group: root
+  tags: hostname
+  notify: Set hostname
 
-- name: Set hostname
-  shell: "hostname {{ hostname }}"
-
+#
+#	Set timezone and time
+#
 - name: Set the timezone
   file:
     name: /etc/localtime
     state: link
     force: yes
     src: "/usr/share/zoneinfo/{{ timezone }}"
+  tags: time
 
 - name: Set time from ntp server
   shell: "ntpdate {{ ntp_server }} && hwclock -wu"
+  tags: time
 
+#
+#	Set root authorized keys
+#
+- name: Create ttn .ssh dir
+  file:
+    dest: ~root/.ssh
+    state: directory
+    mode: "0700"
+    owner: root
+    group: root
+  tags: users
+
+- name: Install ttn authorized keys
+  copy:
+    dest: ~root/.ssh/authorized_keys
+    src: authorized_keys
+    mode: "0600"
+    owner: root
+    group: root
+  tags: users
+
+#
+#	Create ttn user
+#
+- name: Set up ttn user
+  user:
+    name: ttn
+    append: yes
+    groups: adm,plugdev,sudo
+    shell: /bin/bash
+    password: "*"
+  tags: users
+
+- name: Create ttn .ssh dir
+  file:
+    dest: ~ttn/.ssh
+    state: directory
+    mode: "0700"
+    owner: ttn
+    group: ttn
+  tags: users
+
+- name: Install ttn authorized keys
+  copy:
+    dest: ~ttn/.ssh/authorized_keys
+    src: authorized_keys
+    mode: "0600"
+    owner: ttn
+    group: ttn
+  tags: users
+
+#
+#	Secure ssh
+#
+
+# XXX - This is harsh, do we want to do this?  Maybe only when ttn user exists?
+#- name: Disallow password authentication
+#  lineinfile: dest=/etc/ssh/sshd_config
+#    regexp="^PasswordAuthentication"
+#    line="PasswordAuthentication no"
+#    state=present
+#  notify: Restart ssh
+#  tags: sshd
+
+- name: Disallow root SSH access
+  lineinfile: dest=/etc/ssh/sshd_config
+    regexp="^PermitRootLogin"
+    line="PermitRootLogin prohibit-password"
+    state=present
+  notify: Restart ssh
+  tags: sshd
+
+#
+#	Ansible dependencies (manually installed during setup
+#
 - name: Install Ansible dependencies
   opkg: 
     state: installed
@@ -29,8 +111,68 @@
     - python-pkgutil
     - python-distutils
 
+#
+#	Setup local config stuff
+#
+- name: /var/config/local
+  file:
+    name: /var/config/local
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+  tags: localtree
+
+- name: /var/config/local/tree
+  file:
+    name: "/var/config/local/{{ item }}"
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+  with_flattened:
+    - bin
+    - lib
+    - sbin
+    - share
+  tags: localtree
+
+- name: Point /usr/local at /var/config/local
+  file:
+    name: /usr/local
+    state: link
+    src: /var/config/local
+  tags: localtree
+
+#
+#	Remove Multi-Tech stuff that we don't want
+#
 - name: Remove Multi-Tech lora-network-server
   opkg:
     name: lora-network-server
     state: absent
 
+#
+#	Install Let's Encrypt root certificate
+#	XXX - wget needs #	--ca-certificate=/etc/ssl/certs/ca-certificate.crt to work???
+#
+- name: Local certs directory
+  file:
+    dest: /usr/local/share/ca-certificates
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+  tags: letsencrypt
+
+- name: Install Let's Encrypt root cert
+  copy:
+    dest: /usr/local/share/ca-certificates/lets-encrypt-x3-cross-signed.crt
+    src: lets-encrypt-x3-cross-signed.pem
+    mode: "0644"
+    owner: root
+    group: root
+  notify: update-ca-certificates
+  tags: letsencrypt
+
+    
