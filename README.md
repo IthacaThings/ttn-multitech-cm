@@ -29,38 +29,35 @@ restricting root access.
 + [X] Install SSH keys for root and ttn
 + [ ] Disable password login?
 + [ ] Set root and ttn passwords?
-#### [ ] SSH config
+#### SSH config
 + [ ] Disable password login
     + Needs discussion
 + [X] Require Keys for root login
-### [X] Install Let's Encrypt Root Certificates
+### Install Let's Encrypt Root Certificates
 + This will avoid the need for --no-check-certificate on wget
-### [X] Set hostname
+### Set hostname
 This makes it obvious which gateway you are logged in to.
 + ttn-ORG-NAME (where NAME is descriptive)
-### [X] Set timezone
+### Set timezone
 + [X] - Set from Ansible config
 An org is usually all in one timezone so it's just easier to configure
 this globally.  Ansible will spit out error messages if you get it wrong.
 + Manually configured via Ansible vars
-### [X] Set time
+### Set time
 + [X] Set time when Ansible is run
 + [ ] Set time periodically
    + Cron script?
    + NTPD?
-### [X] - Disable Multi-Tech Lora daemon
-+ Uninstall lora-network-server with opkg
+### Disable Multi-Tech Lora daemon
++ [X] Uninstall lora-network-server with opkg
 ### Install TTN packet forwarder
-Install the local copy of TTN packet fowarder and config files.
-
-Config files will be stored in this repo and the merged file for the
-Gateway will be generated on the device where Ansible is run.
-
-The check for updated config files will be removed from the startup
-script.
-
-Restart daemon when done.
-
++ [ ] Fetch ipkg of ttn packet forwarder
++ [ ] Install package
++ [ ] Overwrite init.d file to not fetch updates
++ [ ] Fetch global config files
++ [ ] Install appropriate config file
++ [ ] Merge overrides
++ [ ] Restart daemon when done
 ## Reference
 
 ### How to
