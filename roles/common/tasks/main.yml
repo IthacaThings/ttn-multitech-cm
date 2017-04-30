@@ -25,7 +25,7 @@
   tags: time
 
 - name: Set time from ntp server
-  shell: "ntpdate {{ ntp_server }} && hwclock -wu"
+  shell: "ntpdate {{ ntp_servers[0] }} && hwclock -wu"
   tags: time
 
 #

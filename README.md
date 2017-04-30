@@ -78,15 +78,20 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 + galaxy-roles - Downloaded roles
 
 ### Ansible Variables
+Variables can be defined at three levels:
++ Globally (define in **group_vars/all.yml**)
++ Per group if you use them (define in **group_vars/GROUP.yml)
++ Per host (define in **host_vars/HOST.yml)
+The available variables are:
 + hostname - ttn-region-location
-+ timezone - File rooted at /usr/share/zoneinfo
-+ region
-	+ frequency - EU868, AU915, US915
++ timezone - File rooted at /usr/share/zoneinfo, e.g. "US/Eastern"
++ region - EU, AU, US
+	+ Sets frequency band
 	+ ntp servers - by region?
 + latitude
 + longitude
 + altitude
-+ contact_email
++ contact_email - Whom to contact for issues
 + description - description of location (contact phone?)
 
 ## Questions
