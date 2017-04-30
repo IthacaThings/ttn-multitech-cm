@@ -42,7 +42,6 @@ This makes it obvious which gateway you are logged in to.
 + [X] - Set from Ansible config
 An org is usually all in one timezone so it's just easier to configure
 this globally.  Ansible will spit out error messages if you get it wrong.
-+ Manually configured via Ansible vars
 ### Set time
 + [X] Set time when Ansible is run
 + [ ] Set time periodically
