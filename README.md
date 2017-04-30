@@ -60,6 +60,13 @@ script.
 Restart daemon when done.
 
 ## Reference
+
+### How to
+#### Fetch the latested upstream files
++ Run ```make```
++ Test
++ Commit
+
 ### Ansible directory tree
 + ansible.cfg - General ansible config
 + hosts - lists of ansible hosts in groups
