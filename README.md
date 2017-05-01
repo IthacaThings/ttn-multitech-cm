@@ -1,17 +1,20 @@
 [appurl]: http://www.thethingsnetwork.org/
 [![The Things Network](https://ttnstaticfile.blob.core.windows.net/static/ttn/media/logo/TheThingsRond.png)][appurl]
 
-# Configuration Management for Multi-Tech Conduits as The Things Network Gateways
+# Configuration Management of Multi-Tech Conduits as The Things Network Gateways
 
-This repo is an Ansible playbooks and configuration used to manage a
-group of Multi-Tech Conduits as Things Network gateways in an a Things
-Network Org.
+This repo contains Ansible playbooks and configuration used to manage
+a group of Multi-Tech Conduits as Things Network gateways in an a
+Things Network Org.
 
-## Table of Contents
+# Table of Contents
+1. [Initial Setup](#Initial Setup)
+2. [Deploying a Conduit](#Deploying a Conduit)
+3. [Syncing with Upstream](Syncing with Upstream)
+4. [Reference](Reference)
+5. [Development](Development)
 
-It would be nice, eh?
-
-## Initial setup
+# Initial setup
 Before you start you need to make a copy of this git repo and
 configure it for your TTN organization
 
@@ -25,7 +28,7 @@ configure it for your TTN organization
 + XXX - Ping host
 + XXX - Apply
 
-## Deploying a Conduit
+# Deploying a Conduit
 + Configure host specific data in this control repo
 + Configure the conduit on the local network
 + Set a secure root password
@@ -48,12 +51,12 @@ $ ansible-playbook -l HOSTNAME site.yaml
 + Register the gateway
 XXX
 
-## Syncing changes to the latest upstream files
+# Syncing with Upstream
 This is necessary when the global configurations change, or if there
 is a new version of the poly-packet-forwarder.  The same testing steps
 apply if there is a new version of mLinux.
 
-### Commit all your changes
+## Commit all your changes
 Before upgrading to new upstream files you should at least commit all
 your changes.  The best practice would be to create a new branch for
 this testing.
@@ -65,19 +68,19 @@ You can see what, if anything changed with git:
 ```
 $ git status
 ```
-### Test the changes
+## Test the changes
 Deploy the changes to a Conduit you use for testing.  Verify that
 everything works.  Deploy to another Conduit or two to make sure.
-### Commit your changes
+## Commit your changes
 Commit your changes to your git repo.
-### Deploy
+## Deploy
 Deploy your changes to all your Conduits, verify.
-### Commit again
+## Commit again
 If you were working on another branch, push your changes to *master*
 
-## Reference
+# Reference
 
-### Ansible directory tree
+## Ansible directory tree
 + ansible.cfg - General ansible config
 + hosts - lists of ansible hosts in groups
 + group_vars - group specific vars
@@ -88,7 +91,7 @@ If you were working on another branch, push your changes to *master*
 + roles - Local roles
 + galaxy-roles - Downloaded roles
 
-### Ansible Variables
+## Ansible Variables
 Variables can be defined at three levels:
 + Globally (define in **group_vars/all.yml**)
 + Per group if you use them (define in **group_vars/GROUP.yml**)
@@ -97,6 +100,10 @@ Variables can be defined at three levels:
 The available variables are defined in the [common role README](roles/common/README.md).
 
 ---
+
+# Development 
+
+This is a temporary section to track development on this repo.
 
 ## Issues
 Things to do before this repo is ready to release to the world.
