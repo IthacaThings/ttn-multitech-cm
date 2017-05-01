@@ -151,6 +151,49 @@
   opkg:
     name: lora-network-server
     state: absent
+  tags: forwarder
+
+#
+#	Install the TTN config files
+#
+- name: Lora dir
+  file:
+    name: /var/config/lora
+    mode: "0755"
+    owner: root
+    group: root
+  tags: loraconfig
+
+- name: /var/config/lora/local_conf.json
+  template:
+    src: local_conf.json.j2
+    dest: /var/config/lora/local_conf.json
+    mode: "0644"
+    owner: root
+    group: root
+  tags: loraconfig
+    
+- name : /var/config/lora/ttn_global_conf.json
+  copy:
+    src: "{{ region }}-global_conf.json"
+    dest: /var/config/lora/ttn_global_conf.json
+    mode: "0644"
+    owner: root
+    group: root
+  tags: loraconfig
+
+#
+#	Install the TTN poly-packet-forwarder
+#
+- name: Copy over poly-packet-forwarder
+  copy:
+    src: "{{ poly_version }}"
+    dest: "/var/tmp/{{ poly_version }}"
+  tags: forwarder
+
+- name: Install poly-packet-forwarder
+  shell: "opkg install {{ poly_version }}"
+  tags: forwarder
 
 #
 #	Install Let's Encrypt root certificate

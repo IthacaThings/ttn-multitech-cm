@@ -1,12 +1,18 @@
 ---
 # Global variables for this TTN organization
 
+# Version of the Poly Packet Fowarder
+poly_version: poly-packet-forwarder_2.1-r5_arm926ejste.ipk
+
 # Pick a value from /usr/share/zoneinfo/REGION/ZONE, i.e. US/Eastern
 timezone: "US/Eastern"
+
 # Pick one of US (915) EU (868) AU (915)
 region: US
+
 # Whom to contact about issues with this gateway
 contact_email: jch@honig.net
+
 # Pick servers appropriate for the installed region
 ntp_servers:
   - 0.north-america.pool.ntp.org
