@@ -60,7 +60,7 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 + [ ] Restart daemon when done
 
 ### Registration
-+ [ ] Fetch the correct version of (ttnctl)[https://www.thethingsnetwork.org/docs/network/cli/quick-start.html#device-management]
++ [ ] Fetch the correct version of [ttnctl](https://www.thethingsnetwork.org/docs/network/cli/quick-start.html#device-management)
 + [ ] Register gateway with TTN
 + [ ] Figure out how to handle credentials
 
@@ -89,7 +89,7 @@ Variables can be defined at three levels:
 + Per group if you use them (define in **group_vars/GROUP.yml)
 + Per host (define in **host_vars/HOST.yml)
 
-The available variables are defined in the (common role README)[roles/common/README].
+The available variables are defined in the [common role README])roles/common/README).
 
 ## Questions
 + Do we set a password for root/ttn or just allow key-based login?
