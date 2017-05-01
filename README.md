@@ -59,6 +59,11 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 + [ ] Merge overrides
 + [ ] Restart daemon when done
 
+### Registration
++ [ ] Fetch the correct version of (ttnctl)[https://www.thethingsnetwork.org/docs/network/cli/quick-start.html#device-management]
++ [ ] Register gateway with TTN
++ [ ] Figure out how to handle credentials
+
 ## Reference
 
 ### How to
