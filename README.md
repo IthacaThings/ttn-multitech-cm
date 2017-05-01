@@ -89,17 +89,7 @@ Variables can be defined at three levels:
 + Per group if you use them (define in **group_vars/GROUP.yml)
 + Per host (define in **host_vars/HOST.yml)
 
-The available variables are:
-+ hostname - ttn-region-location
-+ timezone - File rooted at /usr/share/zoneinfo, e.g. "US/Eastern"
-+ region - EU, AU, US
-	+ Sets frequency band
-+ latitude
-+ longitude
-+ altitude
-+ contact_email - Whom to contact for issues
-+ description - description of location (contact phone?)
-+ ntp_servers - For time sync
+The available variables are defined in the (common role README)[roles/common/README].
 
 ## Questions
 + Do we set a password for root/ttn or just allow key-based login?
