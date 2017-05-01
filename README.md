@@ -95,7 +95,7 @@ The available variables are:
 + altitude
 + contact_email - Whom to contact for issues
 + description - description of location (contact phone?)
-+ ntp_server - For time sync
++ ntp_servers - For time sync
 
 ## Questions
 + Do we set a password for root/ttn or just allow key-based login?
