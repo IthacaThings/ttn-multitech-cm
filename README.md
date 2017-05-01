@@ -77,7 +77,7 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 + hosts - lists of ansible hosts in groups
 + group_vars - group specific vars
     + all.yml - Global vars
-    + *GROUP*.yml - Grooup specific vars
+    + *GROUP*.yml - Group specific vars
 + host_vars - host specific vars
     + *HOST*.yml - Host specific vars
 + roles - Local roles
@@ -86,10 +86,10 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 ### Ansible Variables
 Variables can be defined at three levels:
 + Globally (define in **group_vars/all.yml**)
-+ Per group if you use them (define in **group_vars/GROUP.yml)
-+ Per host (define in **host_vars/HOST.yml)
++ Per group if you use them (define in **group_vars/GROUP.yml**)
++ Per host (define in **host_vars/HOST.yml**)
 
-The available variables are defined in the [common role README](roles/common/README).
+The available variables are defined in the [common role README](roles/common/README.md).
 
 ## Questions
 + Do we set a password for root/ttn or just allow key-based login?
