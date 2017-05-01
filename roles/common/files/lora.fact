@@ -1,0 +1,8 @@
+#!/bin/sh
+
+cat << EOF
+{
+	"product_id": "$(mts-io-sysfs show lora/product-id 2> /dev/null)",
+	"eui":	      "$(mts-io-sysfs show lora/eui 2> /dev/null | sed 's/://g')"
+}
+EOF

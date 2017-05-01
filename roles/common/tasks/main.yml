@@ -1,6 +1,58 @@
 ---
 
 #
+#	Ansible first pass setup
+#
+- name: Install Ansible dependencies
+  opkg: 
+    state: installed
+    pkg: "{{ item }}"
+  with_flattened:
+    - python-pkgutil
+    - python-distutils
+  tags: setup
+
+- name: /var/config/ansible
+  file:
+    name: /var/config/ansible
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+  tags: setup
+
+- name: /var/config/ansible/dirs
+  file:
+    name: "/var/config/ansible/{{ item }}"
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+  with_flattened:
+    - facts.d
+  tags: setup
+
+- name: Point /etc/ansible at /var/config/ansible
+  file:
+    name: /etc/ansible
+    state: link
+    src: /var/config/ansible
+  tags: setup
+
+- name: Install lora.fact
+  copy:
+    src: lora.fact
+    dest: /var/config/ansible/facts.d/
+    mode: "0755"
+    owner: root
+    group: root
+  tags: setup
+
+- name: Reload ansible_local
+  setup: filter=ansible_local
+  tags: setup
+
+#
 #	Set hostname
 #
 - name: Set /etc/hostname
@@ -99,17 +151,6 @@
     state=present
   notify: Restart ssh
   tags: sshd
-
-#
-#	Ansible dependencies (manually installed during setup
-#
-- name: Install Ansible dependencies
-  opkg: 
-    state: installed
-    pkg: "{{ item }}"
-  with_flattened:
-    - python-pkgutil
-    - python-distutils
 
 #
 #	Setup local config stuff
