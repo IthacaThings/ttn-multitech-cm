@@ -27,30 +27,23 @@ A description of the settable variables for this role should go here, including 
 <dl>
 	<dt>hostname</dt>
 	<dd>The hostname of this node in the format <i>ttn-<b>ORG</b>-<b>NODE</b></i></dd>
-
 	<dt>timezone</dt>
 	<dd>The timezone for this node, i.e. a file path rooted at
 	<i>/usr/share/zoneinfo</i>.  E.g.: <b>US/Eastern</b></dd>
-
 	<dt>region</dt>
 	<dd>The region sets the frequency band, one of <b>AU</b>, <b>EU</b>, or <b>US</b></dd>
-
 	<dt>contact_email</dt>
 	<dd>An e-mail address to contact if there is a problem with the gateway</dd>
-
 	<dt>description</dt>
 	<dd>Description of the gateway's location</dd>
-	
 	<dt>ntp_servers</dt>
 	<dd>A list of region appropriate NTP servers
 	(i.e. 0,1,2.north-america.pool.ntp.org).  The first is used with
 	ntpdate to set the hwclock and the others are used to keep the
 	time in sync</dd>
-	
 	<dt>latitude</dt>
 	<dt>longitude</dt>
 	<dd>Co-ordinates of this gateway</dd>
-	
 	<dt>altitude</dt>
 	<dd>Altitude of this gateway in meters</dd>
 </dl>
