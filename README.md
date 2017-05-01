@@ -40,7 +40,7 @@ $ ansible HOSTNAME -m ping
 ```
 + Run Ansible
 ```
-ansible-playbook -l HOSTNAME site.yaml
+$ ansible-playbook -l HOSTNAME site.yaml
 ```
 + Register the gateway
 XXX
@@ -52,9 +52,16 @@ apply if there is a new version of mLinux.
 
 ### Commit all your changes
 Before upgrading to new upstream files you should at least commit all
-your changes.  You could also create a new branch to work on
+your changes.  The best practice would be to create a new branch for
+this testing.
 ### Fetch the files
-```$ make```
+```
+$ make
+```
+You can see what, if anything changed with git:
+```
+$ git status
+```
 ### Test the changes
 Deploy the changes to a Conduit you use for testing.  Verify that
 everything works.  Deploy to another Conduit or two to make sure.
