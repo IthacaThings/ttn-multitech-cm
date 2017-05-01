@@ -66,8 +66,18 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 
 ## Reference
 
-### How to
-#### Fetch the latested upstream files
+### Initial setup of this repo
++ Clone this repo into your own GitHub org or account
++ Install [ansible](XXX) on your system
++ Run *make* to fetch the required upstream files
++ Modify *group_vars/all.yml* for your global config items
++ Add each of your gateways to *hosts*
++ Add a file for each of your hosts in *host_vars/**HOST**.yml*
++ XXX - Syntax check
++ XXX - Ping host
++ XXX - Apply
+
+### Fetch the latested upstream files
 + Run ```make```
 + Test
 + Commit
