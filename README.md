@@ -89,7 +89,6 @@ The available variables are:
 + timezone - File rooted at /usr/share/zoneinfo, e.g. "US/Eastern"
 + region - EU, AU, US
 	+ Sets frequency band
-	+ ntp servers - by region?
 + latitude
 + longitude
 + altitude
