@@ -77,6 +77,29 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 + XXX - Ping host
 + XXX - Apply
 
+### Deploying a Conduit
++ Configure host specific data in this control repo
++ Configure the conduit on the local network
++ Set a secure root password
++ Copy *roles/common/files/authorized_keys* to */home/root/.ssh/*
++ Run the following commands so Ansible can run
+```
+# opkg update
+# opkg install python-pkgutils
+# opkg install python-distutils
+```
++ Setup a secure tunnel if the Ansible machine is not on the same network
++ Test ansible
+```
+$ ansible HOSTNAME -m ping
+```
++ Run Ansible
+```
+ansible-playbook -l HOSTNAME site.yaml
+```
++ Register the gateway
+XXX
+
 ### Syncing changes to the latest upstream files
 You'll want to do this if the global configurations change, or if
 there is a new version of the poly-packet-forwarder.  The same testing
