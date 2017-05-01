@@ -8,7 +8,7 @@ a group of Multi-Tech Conduits
 as [Things Network gateways](http://www.thethingsnetwork.org) in an a
 Things Network
 organization.
-[MultiConnect® Conduit™](http://www.multitech.com/brands/multiconnect-conduit) is
+The [MultiConnect® Conduit™](http://www.multitech.com/brands/multiconnect-conduit) is
 one of the more popular [LoRa®](http://lora.multitech.com/) Gateways
 is use.
 
@@ -23,9 +23,28 @@ is use.
 Before you start you need to make a copy of this git repo and
 configure it for your TTN organization.
 
-+ Clone this repo into your own GitHub org or account
-+ Install [ansible](XXX) on your system
-+ Run ```make``` to fetch the required upstream files
+## Clone this repo into your own GitHub org or account
+
+XXX
+
+##  Install Anisble
+The machine on which you run Ansible is called the *Control Machine*.
+It's easiest to do this on Linux or macOS.  Instructions for
+installing
+Ansible
+[can be found here](https://docs.ansible.com/ansible/intro_installation.html).
+
+## Fetch the upstream files
+
+There is *Makefile* in the root of this repo that can be used to fetch
+files from upstream.  These include the *Poly Packet Forwarder*
+package, global configuration files and the *Let's Encrypt* signing
+certificate.
+
+```
+$ make
+```
+
 + Modify *group_vars/all.yml* for your global config items
 + Add each of your gateways to *hosts*
 + Add a file for each of your hosts in *host_vars/**HOST**.yml*
@@ -34,27 +53,27 @@ configure it for your TTN organization.
 + XXX - Apply
 
 # Deploying a Conduit
-+ Configure host specific data in this control repo
-+ Configure the conduit on the local network
-+ Set a secure root password
-+ Copy *roles/common/files/authorized_keys* to */home/root/.ssh/*
-+ Run the following commands so Ansible can run
+## Configure host specific data in this control repo
+## Configure the conduit on the local network
+## Set a secure root password
+## Copy *roles/common/files/authorized_keys* to */home/root/.ssh/*
+## Run the following commands so Ansible can run
 ```
 # opkg update
 # opkg install python-pkgutils
 # opkg install python-distutils
 ```
-+ Setup a secure tunnel if the Ansible machine is not on the same network
-+ Test ansible
+## Setup a secure tunnel if the Ansible machine is not on the same network
+## Test ansible
 ```
 $ ansible HOSTNAME -m ping
 ```
-+ Run Ansible
+## Run Ansible
 ```
 $ ansible-playbook -l HOSTNAME site.yaml
 ```
-+ Register the gateway
-XXX
+## Register the gateway
+Coming soon
 
 # Syncing with Upstream
 This is necessary when the global configurations change, or if there
