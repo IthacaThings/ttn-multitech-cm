@@ -4,8 +4,13 @@
 # Configuration Management of Multi-Tech Conduits as The Things Network Gateways
 
 This repo contains Ansible playbooks and configuration used to manage
-a group of Multi-Tech Conduits as Things Network gateways in an a
-Things Network Org.
+a group of Multi-Tech Conduits
+as [Things Network gateways](http://www.thethingsnetwork.org) in an a
+Things Network
+organization.
+[MultiConnect® Conduit™](http://www.multitech.com/brands/multiconnect-conduit) is
+one of the more popular [LoRa®](http://lora.multitech.com/) Gateways
+is use.
 
 # Table of Contents
 1. [Initial Setup](#initial-setup)
@@ -16,7 +21,7 @@ Things Network Org.
 
 # Initial setup
 Before you start you need to make a copy of this git repo and
-configure it for your TTN organization
+configure it for your TTN organization.
 
 + Clone this repo into your own GitHub org or account
 + Install [ansible](XXX) on your system
