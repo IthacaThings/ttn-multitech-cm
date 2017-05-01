@@ -1,3 +1,6 @@
+[appurl]: http://www.thethingsnetwork.org/
+[![The Things Network](https://ttnstaticfile.blob.core.windows.net/static/ttn/media/logo/TheThingsRond.png)][appurl]
+
 # Configuration Management for Multi-Tech Conduits as The Things Network Gateways
 
 This repo is an Ansible playbooks and configuration used to manage a
