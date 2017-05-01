@@ -15,6 +15,7 @@ The following setup must be set up performed on the Contduit:
 	+ python-distutils
 + Install a root key
     + This is required to allow secure login to the gateway
+	+ Usually stored in *roles/common/authorized_keys*
 + Configure ssh tunnel
     + If the Conduit is not available on the public Internet, an ssh
       tunnel must be configured to the host on which Ansible is run
