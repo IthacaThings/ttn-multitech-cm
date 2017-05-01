@@ -50,13 +50,15 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 ### Disable Multi-Tech Lora daemon
 + [X] Uninstall lora-network-server with opkg
 ### Install TTN packet forwarder
-+ [ ] Fetch ipkg of ttn packet forwarder
-+ [ ] Install package
++ [X] Fetch ipkg of ttn packet forwarder
++ [X] Install package
 + [ ] Overwrite init.d file to not fetch updates
 + [X] Fetch global config files
-+ [ ] Install appropriate config file
++ [X] Install appropriate config file
++ [X] Generate local config file
 + [ ] Merge overrides
 + [ ] Restart daemon when done
+
 ## Reference
 
 ### How to
