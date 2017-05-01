@@ -1,20 +1,104 @@
 # Configuration Management for Multi-Tech Conduits as The Things Network Gateways
 
-This repo is a bunch of Ansible playbooks and configuration used to
-manage a group of Multi-Tech Conduits as Things Network gateways in an
-a Things Network Org.
+This repo is an Ansible playbooks and configuration used to manage a
+group of Multi-Tech Conduits as Things Network gateways in an a Things
+Network Org.
 
-## Proposed Configuration Workflow
-### Manual setup
-This manual setup would be performed to get the gateway on the
-network.  Can be performed in the "factory".
-+ Configure DHCP or Address/Netmask/Gateway/DNS
-+ Install Packages necessary packages
-    + opkg update
-	+ opkg install python-pkgutils
-	+ opkg install python-distutils
-+ Set up SSH tunnel back to server unless on public network
-+ Install an ssh key for root access
+## Table of Contents
+
+It would be nice, eh?
+
+## Initial setup
+Before you start you need to make a copy of this git repo and
+configure it for your TTN organization
+
++ Clone this repo into your own GitHub org or account
++ Install [ansible](XXX) on your system
++ Run ```make``` to fetch the required upstream files
++ Modify *group_vars/all.yml* for your global config items
++ Add each of your gateways to *hosts*
++ Add a file for each of your hosts in *host_vars/**HOST**.yml*
++ XXX - Syntax check
++ XXX - Ping host
++ XXX - Apply
+
+## Deploying a Conduit
++ Configure host specific data in this control repo
++ Configure the conduit on the local network
++ Set a secure root password
++ Copy *roles/common/files/authorized_keys* to */home/root/.ssh/*
++ Run the following commands so Ansible can run
+```
+# opkg update
+# opkg install python-pkgutils
+# opkg install python-distutils
+```
++ Setup a secure tunnel if the Ansible machine is not on the same network
++ Test ansible
+```
+$ ansible HOSTNAME -m ping
+```
++ Run Ansible
+```
+ansible-playbook -l HOSTNAME site.yaml
+```
++ Register the gateway
+XXX
+
+## Syncing changes to the latest upstream files
+This is necessary when the global configurations change, or if there
+is a new version of the poly-packet-forwarder.  The same testing steps
+apply if there is a new version of mLinux.
+
+### Commit all your changes
+Before upgrading to new upstream files you should at least commit all
+your changes.  You could also create a new branch to work on
+### Fetch the files
+```$ make```
+### Test the changes
+Deploy the changes to a Conduit you use for testing.  Verify that
+everything works.  Deploy to another Conduit or two to make sure.
+### Commit your changes
+Commit your changes to your git repo.
+### Deploy
+Deploy your changes to all your Conduits, verify.
+### Commit again
+If you were working on another branch, push your changes to *master*
+
+## Reference
+
+### Ansible directory tree
++ ansible.cfg - General ansible config
++ hosts - lists of ansible hosts in groups
++ group_vars - group specific vars
+    + all.yml - Global vars
+    + *GROUP*.yml - Group specific vars
++ host_vars - host specific vars
+    + *HOST*.yml - Host specific vars
++ roles - Local roles
++ galaxy-roles - Downloaded roles
+
+### Ansible Variables
+Variables can be defined at three levels:
++ Globally (define in **group_vars/all.yml**)
++ Per group if you use them (define in **group_vars/GROUP.yml**)
++ Per host (define in **host_vars/HOST.yml**)
+
+The available variables are defined in the [common role README](roles/common/README.md).
+
+---
+
+## Issues
+Things to do before this repo is ready to release to the world.
+
++ su does not work with busybox so we need to ssh in as root
++ wget still needs --ca-certificate=/etc/ssl/certs/ca-certificates.crt
++ Do we set a password for root/ttn or just allow key-based login?
+    + Or do we only allow password login on the console?
+
+
+## TODO
+
 ### One-time Ansible setup
 This is performed one-time to setup secure networking and is basically
 repeating above configuration from master config.  Must be performed
@@ -63,87 +147,4 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 + [ ] Fetch the correct version of [ttnctl](https://www.thethingsnetwork.org/docs/network/cli/quick-start.html#device-management)
 + [ ] Register gateway with TTN
 + [ ] Figure out how to handle credentials
-
-## Reference
-
-### Initial setup of this repo
-+ Clone this repo into your own GitHub org or account
-+ Install [ansible](XXX) on your system
-+ Run ```make``` to fetch the required upstream files
-+ Modify *group_vars/all.yml* for your global config items
-+ Add each of your gateways to *hosts*
-+ Add a file for each of your hosts in *host_vars/**HOST**.yml*
-+ XXX - Syntax check
-+ XXX - Ping host
-+ XXX - Apply
-
-### Deploying a Conduit
-+ Configure host specific data in this control repo
-+ Configure the conduit on the local network
-+ Set a secure root password
-+ Copy *roles/common/files/authorized_keys* to */home/root/.ssh/*
-+ Run the following commands so Ansible can run
-```
-# opkg update
-# opkg install python-pkgutils
-# opkg install python-distutils
-```
-+ Setup a secure tunnel if the Ansible machine is not on the same network
-+ Test ansible
-```
-$ ansible HOSTNAME -m ping
-```
-+ Run Ansible
-```
-ansible-playbook -l HOSTNAME site.yaml
-```
-+ Register the gateway
-XXX
-
-### Syncing changes to the latest upstream files
-You'll want to do this if the global configurations change, or if
-there is a new version of the poly-packet-forwarder.  The same testing
-steps apply if there is a new version of mLinux.
-
-#### Commit all your changes
-Before upgrading to new upstream files you should at least commit all
-your changes.  You could also create a new branch to work on
-#### Fetch the files
-```$ make```
-#### Test the changes
-Deploy the changes to a Conduit you use for testing.  Verify that
-everything works.  Deploy to another Conduit or two to make sure.
-#### Commit your changes
-Commit your changes to your git repo.
-#### Deploy
-Deploy your changes to all your Conduits, verify.
-#### Commit again
-If you were working on another branch, push your changes to *master*
-
-### Ansible directory tree
-+ ansible.cfg - General ansible config
-+ hosts - lists of ansible hosts in groups
-+ group_vars - group specific vars
-    + all.yml - Global vars
-    + *GROUP*.yml - Group specific vars
-+ host_vars - host specific vars
-    + *HOST*.yml - Host specific vars
-+ roles - Local roles
-+ galaxy-roles - Downloaded roles
-
-### Ansible Variables
-Variables can be defined at three levels:
-+ Globally (define in **group_vars/all.yml**)
-+ Per group if you use them (define in **group_vars/GROUP.yml**)
-+ Per host (define in **host_vars/HOST.yml**)
-
-The available variables are defined in the [common role README](roles/common/README.md).
-
-## Questions
-+ Do we set a password for root/ttn or just allow key-based login?
-    + Or do we only allow password login on the console?
-
-## Issues
-+ su does not work with busybox so we need to ssh in as root
-+ wget still needs --ca-certificate=/etc/ssl/certs/ca-certificates.crt
 
