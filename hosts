@@ -1,6 +1,8 @@
 [test]
 ttn-ith-test ansible_host=dhcp-19.home.honig.net
 
+[all]
+
 [all:vars]
 ansible_user=root
 

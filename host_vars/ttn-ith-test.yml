@@ -1,5 +1,6 @@
 ---
 # Configuration of TTN-ITH-Test
+
 hostname: ttn-ith-test
 description: Test node at Jeff's house
 latitude: 42.517288
