@@ -69,7 +69,7 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 ### Initial setup of this repo
 + Clone this repo into your own GitHub org or account
 + Install [ansible](XXX) on your system
-+ Run *make* to fetch the required upstream files
++ Run ```make``` to fetch the required upstream files
 + Modify *group_vars/all.yml* for your global config items
 + Add each of your gateways to *hosts*
 + Add a file for each of your hosts in *host_vars/**HOST**.yml*
@@ -77,10 +77,25 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 + XXX - Ping host
 + XXX - Apply
 
-### Fetch the latested upstream files
-+ Run ```make```
-+ Test
-+ Commit
+### Syncing changes to the latest upstream files
+You'll want to do this if the global configurations change, or if
+there is a new version of the poly-packet-forwarder.  The same testing
+steps apply if there is a new version of mLinux.
+
+#### Commit all your changes
+Before upgrading to new upstream files you should at least commit all
+your changes.  You could also create a new branch to work on
+#### Fetch the files
+```$ make```
+#### Test the changes
+Deploy the changes to a Conduit you use for testing.  Verify that
+everything works.  Deploy to another Conduit or two to make sure.
+#### Commit your changes
+Commit your changes to your git repo.
+#### Deploy
+Deploy your changes to all your Conduits, verify.
+#### Commit again
+If you were working on another branch, push your changes to *master*
 
 ### Ansible directory tree
 + ansible.cfg - General ansible config
