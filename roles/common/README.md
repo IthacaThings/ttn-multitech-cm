@@ -62,6 +62,32 @@ Including an example of how to use your role (for instance, with variables passe
       roles:
          - common
 
+Tags
+----
+
+The following tags can be used to run a subset of the playbook.
+
+<dl>
+	<dt>setup</dt>
+	<dd>Initial Ansible setup, including setting up for custom facts</dd>
+	<dt>hostname</dt>
+	<dd>Sets the Conduit's hostname</dd>
+	<dt>time</dt>
+	<dd>Configures the timezone and syncs to time servers<dd>
+	<dt>users</dt>
+	<dd>Adds the <i>ttn</i> user and sets ssh login keys</dd>
+	<dt>sshd</dt>
+	<dd>Configurs sshd</dd>
+	<dt>localtree</dt>
+	<dd>Builds a <i>/usr/local</i> tree in <i>/var/config/local</i></dd>
+	<dt>forwarder</dt>
+	<dd>Removes the Multi-Tech packet forwarder and installs the TTN Poly Packet Forwarder</dd>
+	<dt>loraconfig</dt>
+	<dd>Sets up <i>/var/config/lora</i> and the necessary config files</dd>
+	<dt>letsencrypt</dt>
+	<dd>Installs the Let's Encrypt signing certificate for validating https connections</dt>
+</dl>
+
 License
 -------
 
