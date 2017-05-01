@@ -8,11 +8,11 @@ a group of Multi-Tech Conduits as Things Network gateways in an a
 Things Network Org.
 
 # Table of Contents
-1. [Initial Setup](#Initial Setup)
-2. [Deploying a Conduit](#Deploying a Conduit)
-3. [Syncing with Upstream](Syncing with Upstream)
-4. [Reference](Reference)
-5. [Development](Development)
+1. [Initial Setup](#Initial)
+2. [Deploying a Conduit](#Deploying)
+3. [Syncing with Upstream](#Syncing)
+4. [Reference](#Reference)
+5. [Development](#Development)
 
 # Initial setup
 Before you start you need to make a copy of this git repo and
