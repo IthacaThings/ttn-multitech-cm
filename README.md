@@ -213,6 +213,14 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 + [ ] Register gateway with TTN
 + [ ] Figure out how to handle credentials
 
+### System updates
+Can we deploy a new version of Multi-Tech mLinux remotely without
+needing to be hands on with the gateways?
++ [ ] Does /var/config survive firmware updates
+    + [ ] Move root and ttn users home dirs to /var/config
+	+ [ ] Test remote updates
+	+ [ ] Add /etc/init.d service to install Ansible dependencies
+
 ### Setup
 #### Makefile targets to
 + [ ] Add a host
