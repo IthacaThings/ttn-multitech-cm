@@ -184,8 +184,23 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 + [ ] Merge overrides
 + [ ] Restart daemon when done
 
+### SSH Tunnel
++ [ ] Write init.d script
++ [ ] Set parameters in /etc/defaults/XXXX (host, id, port)
++ [ ] Use system /etc/ssh/ssh_host_rsa_key?  Tells if the system has been updated
++ [ ] Generate init scripts for tunnel server
+
 ### Registration
 + [ ] Fetch the correct version of [ttnctl](https://www.thethingsnetwork.org/docs/network/cli/quick-start.html#device-management)
 + [ ] Register gateway with TTN
 + [ ] Figure out how to handle credentials
+
+### Setup
+#### Makefile targets to
++ [ ] Add a host
++ [ ] Add a host with a tunnel
++ [X] Collect facts (anisible -m setup)
++ [ ] Generate configs for tunnel server (run ansible -m setup first)
++ [X] Ping hosts
++ [X] Syntax check
 
