@@ -186,11 +186,36 @@
   tags: localtree
 
 #
-#	Remove Multi-Tech stuff that we don't want
+#	Remove Multi-Tech stuff that we don't want and install the TTN poly-packet-forwarder
 #
 - name: Remove Multi-Tech lora-network-server
   opkg:
     name: lora-network-server
+    state: absent
+  tags: forwarder
+
+- name: Copy over poly-packet-forwarder
+  copy:
+    src: "{{ poly_version }}"
+    dest: "/var/tmp/{{ poly_version }}"
+  tags: forwarder
+
+- name: Install poly-packet-forwarder
+  shell: "opkg install /var/tmp/{{ poly_version }}"
+  tags: forwarder
+
+- name: Override /etc/init.d/ttn-pkt-forwarder
+  copy:
+    src: ttn-pkt-forwarder
+    dest: /etc/init.d/
+    mode: "0755"
+    owner: root
+    group: root
+  tags: forwarder
+    
+- name: Clean up poly-packet-forwarder crud
+  file:
+    name: /var/config/lora/local_conf.json-opkg
     state: absent
   tags: forwarder
 
@@ -223,18 +248,10 @@
     group: root
   tags: loraconfig
 
-#
-#	Install the TTN poly-packet-forwarder
-#
-- name: Copy over poly-packet-forwarder
-  copy:
-    src: "{{ poly_version }}"
-    dest: "/var/tmp/{{ poly_version }}"
-  tags: forwarder
-
-- name: Install poly-packet-forwarder
-  shell: "opkg install /var/tmp/{{ poly_version }}"
-  tags: forwarder
+- name: Merge multitech_overrides in global_conf.json
+  shell: node /opt/lora/merge.js /var/config/lora/ttn_global_conf.json /var/config/lora/multitech_overrides.json /var/config/lora/global_conf.json
+  notify: restart ttn-pkt-forwarder
+  tags: loraconfig
 
 #
 #	Install additional ca-certificates

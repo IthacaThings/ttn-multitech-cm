@@ -1,0 +1,88 @@
+#!/bin/bash
+
+NAME="ttn-packet-forwarder"
+ENABLED="yes"
+
+[ -f /etc/default/$NAME ] && source /etc/default/$NAME
+
+run_dir=/var/run/lora
+conf_dir=/var/config/lora
+pkt_fwd=/opt/lora/poly_pkt_fwd
+pkt_fwd_log=/var/log/lora-pkt-fwd.log
+pkt_fwd_pidfile=$run_dir/lora-pkt-fwd.pid
+
+lora_us_id="MTAC-LORA-915"
+lora_eu_id="MTAC-LORA-868"
+
+read_card_info() {
+    # product-id of first lora card
+    lora_id=$(mts-io-sysfs show lora/product-id 2> /dev/null)
+    lora_eui=$(mts-io-sysfs show lora/eui 2> /dev/null)
+    # remove all colons
+    lora_eui_raw=${lora_eui//:/}
+}
+
+card_found() {
+    if [ "$lora_id" = "$lora_us_id" ] || [ "$lora_id" = "$lora_eu_id" ]; then
+        echo "Found lora card $lora_id"
+        return 0
+    else 
+        return 1
+    fi
+}
+
+do_start() {
+    read_card_info
+
+    if ! card_found; then
+        echo "$0: MTAC-LORA not detected"
+        exit 1
+    fi
+
+    if [ ! -f $conf_dir/global_conf.json -o ! -f $conf_dir/local_conf.json ] ; then
+	echo "Not configured"
+	exit 1
+    fi
+
+
+    echo -n "Starting $NAME: "
+    mkdir -p $run_dir
+    # start packet forwarder
+    start-stop-daemon --start --background --make-pidfile \
+        --pidfile $pkt_fwd_pidfile --exec $pkt_fwd -- \
+        -c $conf_dir -l $pkt_fwd_log
+    echo "OK"
+}
+
+do_stop() {
+    echo -n "Stopping $NAME: "
+    start-stop-daemon --stop --quiet --oknodo --pidfile $pkt_fwd_pidfile --retry 5
+    rm -f $pkt_fwd_pidfile
+    echo "OK"
+}
+
+if [ "$ENABLED" != "yes" ]; then
+    echo "$NAME: disabled in /etc/default"
+    exit
+fi
+
+case "$1" in
+    "start")
+        do_start
+        ;;
+    "stop")
+        do_stop
+        ;;
+    "restart")
+        ## Stop the service and regardless of whether it was
+        ## running or not, start it again.
+        do_stop
+        do_start
+        ;;
+    *)
+        ## If no parameters are given, print which are avaiable.
+        echo "Usage: $0 {start|stop|restart}"
+        exit 1
+        ;;
+esac
+

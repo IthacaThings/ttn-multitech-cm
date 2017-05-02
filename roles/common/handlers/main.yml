@@ -18,3 +18,9 @@
 #
 - name: update-ca-certificates
   shell: "update-ca-certificates"
+
+#
+#	Restart the packet forwarder
+#
+- name: restart ttn-pkt-forwarder
+  service: name=ttn-pkt-forwarder state=restarted

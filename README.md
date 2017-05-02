@@ -194,12 +194,13 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 ### Install TTN packet forwarder
 + [X] Fetch ipkg of ttn packet forwarder
 + [X] Install package
-+ [ ] Overwrite init.d file to not fetch updates
++ [ ] Avoid install step if already installed
++ [X] Overwrite init.d file to not fetch updates
 + [X] Fetch global config files
 + [X] Install appropriate config file
 + [X] Generate local config file
-+ [ ] Merge overrides
-+ [ ] Restart daemon when done
++ [X] Merge overrides
++ [X] Restart daemon when done
 
 ### SSH Tunnel
 + [ ] Write init.d script
