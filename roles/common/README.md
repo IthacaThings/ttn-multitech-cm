@@ -85,8 +85,8 @@ The following tags can be used to run a subset of the playbook.
 	<dd>Removes the Multi-Tech packet forwarder and installs the TTN Poly Packet Forwarder</dd>
 	<dt>loraconfig</dt>
 	<dd>Sets up <i>/var/config/lora</i> and the necessary config files</dd>
-	<dt>letsencrypt</dt>
-	<dd>Installs the Let's Encrypt signing certificate for validating https connections</dt>
+	<dt>ca-certificates</dt>
+	<dd>Installs additional certificate authoritiy certificates for validating secure connections</dt>
 </dl>
 
 License

@@ -233,11 +233,11 @@
   tags: forwarder
 
 - name: Install poly-packet-forwarder
-  shell: "opkg install {{ poly_version }}"
+  shell: "opkg install /var/tmp/{{ poly_version }}"
   tags: forwarder
 
 #
-#	Install Let's Encrypt root certificate
+#	Install additional ca-certificates
 #	XXX - wget needs #	--ca-certificate=/etc/ssl/certs/ca-certificate.crt to work???
 #
 - name: Local certs directory
@@ -247,16 +247,18 @@
     mode: "0755"
     owner: root
     group: root
-  tags: letsencrypt
+  tags: ca-certificates
 
-- name: Install Let's Encrypt root cert
+- name: "Install Let's Encrypt root cert"
   copy:
     dest: /usr/local/share/ca-certificates/lets-encrypt-x3-cross-signed.crt
-    src: lets-encrypt-x3-cross-signed.pem
+    src: "{{ item }}"
     mode: "0644"
     owner: root
     group: root
+  with_flattened:
+    - lets-encrypt-x3-cross-signed.pem
   notify: update-ca-certificates
-  tags: letsencrypt
+  tags: ca-certificates
 
     
