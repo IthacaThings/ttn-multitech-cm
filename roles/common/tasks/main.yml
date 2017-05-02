@@ -83,7 +83,7 @@
 #
 #	Set root authorized keys
 #
-- name: Create ttn .ssh dir
+- name: Create root .ssh dir
   file:
     dest: ~root/.ssh
     state: directory
@@ -92,7 +92,7 @@
     group: root
   tags: users
 
-- name: Install ttn authorized keys
+- name: Install root authorized keys
   copy:
     dest: ~root/.ssh/authorized_keys
     src: authorized_keys
@@ -239,7 +239,7 @@
     group: root
   tags: loraconfig
     
-- name : /var/config/lora/ttn_global_conf.json
+- name: /var/config/lora/ttn_global_conf.json
   copy:
     src: "{{ region }}-global_conf.json"
     dest: /var/config/lora/ttn_global_conf.json
