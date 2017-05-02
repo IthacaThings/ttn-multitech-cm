@@ -12,17 +12,20 @@ files: true
 #	Ansible utilities
 #
 CATALOG=catalog
-GROUP=all
-HOSTS=$(shell ansible --list-hosts ${GROUP} | sed -e 's/^ *//' -e '/^hosts ([0-9]*):/d')
+TARGET=all
+HOSTS=$(shell ansible --list-hosts ${TARGET} | sed -e 's/^ *//' -e '/^hosts ([0-9]*):/d')
 
 ping: true
-	ansible -o -m ping ${GROUP}
+	ansible -o -m ping ${TARGET}
 
 list-hosts: true
 	@echo "${HOSTS}"
 
 syntax-check: true
-	@ansible-playbook --syntax-check site.yml
+	ansible-playbook --syntax-check -l ${TARGET} site.yml
+
+apply: true
+	ansible-playbook -l ${TARGET} site.yml
 
 # Grab configs from all nodes
 harvest: true
