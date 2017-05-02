@@ -45,12 +45,29 @@ certificate.
 $ make
 ```
 
-+ Modify *group_vars/all.yml* for your global config items
-+ Add each of your gateways to *hosts*
-+ Add a file for each of your hosts in *host_vars/**HOST**.yml*
-+ XXX - Syntax check
-+ XXX - Ping host
-+ XXX - Apply
+## Set Global variables
+Modify *group_vars/all.yml* for your global config items.  The default
+framework assumes that all gateways are in the same region and
+timezone.
+
+## Add each of your gateways to *hosts*
+
+## Add a file for each of your hosts in *host_vars/**HOST**.yml*
+
+## Run a syntax check
+```
+$ make TARGET=*HOSTNAME* syntax-check
+```
+
+## See if you can talk to the host
+```
+$ make TARGET=*HOSTNAME* ping
+```
+
+## Apply the playbook to the host
+```
+$ make TARGET=*HOSTNAME* apply
+```
 
 # Deploying a Conduit
 ## Configure host specific data in this control repo
