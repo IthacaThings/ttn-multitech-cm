@@ -24,3 +24,9 @@
 #
 - name: restart ttn-pkt-forwarder
   service: name=ttn-pkt-forwarder state=restarted
+
+#
+#       Restart ntpd
+#
+- name: restart ntpd
+  service: name=ntpd state=restarted

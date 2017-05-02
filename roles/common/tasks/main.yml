@@ -78,8 +78,29 @@
 
 - name: Set time from ntp server
   shell: "ntpdate {{ ntp_servers[0] }} && hwclock -wu"
+  ignore_errors: yes
   tags: time
 
+- name: Install ntpd and utilities
+  opkg:
+    name: "{{ item }}"
+    state: installed
+  with_flattened:
+    - ntp
+    - ntp-utils
+  tags: time
+
+- name: /etc/ntp.conf
+  template:
+    src: ntp.conf.j2
+    dest: /etc/ntp.conf
+    mode: "0644"
+    owner: root
+    group: root
+  tags: time
+  notify: restart ntpd
+    
+  
 #
 #	Set root authorized keys
 #

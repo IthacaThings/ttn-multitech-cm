@@ -186,9 +186,7 @@ An org is usually all in one timezone so it's just easier to configure
 this globally.  Ansible will spit out error messages if you get it wrong.
 ### Set time
 + [X] Set time when Ansible is run
-+ [ ] Set time periodically
-   + Cron script?
-   + NTPD?
++ [X] Configure and start ntpd
 ### Disable Multi-Tech Lora daemon
 + [X] Uninstall lora-network-server with opkg
 ### Install TTN packet forwarder
