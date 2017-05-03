@@ -10,7 +10,7 @@ import sys
 """
 MIT License
 
-Copyright (c) 2016 Jeffrey C Honig
+Copyright (c) 2017 Jeffrey C Honig
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +30,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+
+register_url = "https://account.thethingsnetwork.org/users/authorize?client_id=ttnctl&redirect_uri=/oauth/callback/ttnctl&response_type=code"
 
 #
 #	Gateway list
@@ -96,7 +98,6 @@ class Gateway(object):
             
             return [ rc, output ] 
         
-        
 def ttn_gateway_list(options):
     """Return a dict of Gateways"""
 
@@ -107,7 +108,16 @@ def ttn_gateway_list(options):
 
     gateways = dict()
     
-    lines = subprocess.check_output([ options.binary, "gateway", "list" ])
+    rc = 0
+    try:
+        cmd = [ options.binary, "gateway", "list" ]
+        if options.debug:
+            print("DBG: %s" % " ".join(cmd))
+        lines = subprocess.check_output(cmd)
+    except subprocess.CalledProcessError as e:
+        rc = e.returncode
+        print(e.output, file=sys.stderr, end="")
+        return None
 
     for line in lines.split("\n"):
         if header_re.match(line):
@@ -170,7 +180,7 @@ def main():
     #   Other options
     group = parser.add_argument_group("Other options")
     group.add_argument("--binary",
-                       dest="binary", default=None,
+                       dest="binary", default="bin/ttnctl",
                        help="Path to binary")
 
     options = parser.parse_args()
@@ -180,15 +190,6 @@ def main():
         parser.error("Invalid EUI: %s" % options.eui)
 
     # Find ttncli binary
-    if not options.binary:
-        uname = os.uname()
-        system = uname[0].lower()
-        machine = uname[4]
-        if machine == "x86_64":
-            machine = "amd64"
-        elif machine == "i686":
-            machine = "386"
-        options.binary = "bin/ttnctl-%s-%s" % (system, machine)
     if options.debug:
         print("DBG: binary: %s" % options.binary)
 
@@ -210,6 +211,10 @@ def main():
         print("DBG: Name: %s Frequency Plan: %s EUI: %s Location: %f, %f" % (options.name, frequency_plan, options.eui, options.latitude, options.longitude))
 
     gateways = ttn_gateway_list(options)
+    if gateways == None:
+        print("Go to %s to get an access code" % register_url, file=sys.stderr)
+        return (1)
+
     if gateways.has_key(options.name):
         rc, output = gateways[options.name].edit(frequency_plan, options.latitude, options.longitude)
     else:
