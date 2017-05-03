@@ -7,7 +7,7 @@ TTNCLI_URL=https://ttnreleases.blob.core.windows.net/release/master/${TTNCLI_ZIP
 all:: ${TTNCLI}
 
 ${TTNCLI}: ${TTNCLI_ZIP}
-	unzip -f "$<"
+	unzip -u "$<"
 	chmod 755 "$@"
 
 ${TTNCLI_ZIP}: true
