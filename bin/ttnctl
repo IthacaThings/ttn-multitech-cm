@@ -1,0 +1,17 @@
+#!/bin/sh 
+
+# Find the correct binary for this system
+
+system=$(uname | tr '[:upper:]' '[:lower:]')
+arch=$(uname -m)
+case $arch in
+    x86_64)
+	arch=amd64
+	;;
+    i686)
+	arch=386
+	;;
+esac
+
+exec $0-$system-$arch "${@}"
+
