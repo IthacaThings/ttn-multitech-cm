@@ -1,0 +1,232 @@
+#!/usr/bin/env python
+
+from __future__ import print_function
+import argparse
+import os
+import re
+import subprocess
+import sys
+
+"""
+MIT License
+
+Copyright (c) 2016 Jeffrey C Honig
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
+
+#
+#	Gateway list
+#
+class Gateway(object):
+    """Class to hold Gateway info"""
+    def __init__(self, options, name, frequency_plan, latitude, longitude):
+        """"""
+        self.options = options
+        self.name = name
+        self.frequency_plan = frequency_plan
+        self.latitude = float(latitude)
+        self.longitude = float(longitude)
+        self.registered = False
+
+    def __repr__(self):
+        return "%s: %s %s %f, %f" % (self.name, self.activated, self.frequency_plan, self.latitude, self.longitude)
+
+    def register(self):
+        rc = 0
+        try:
+            cmd = [ self.options.binary, "gateway", "register", self.name, self.frequency_plan, '%f,%f' % (self.latitude, self.longitude) ]
+            if self.options.noop:
+                output = "NOOP: %s " % " ".join(cmd)
+            else:
+                if self.options.debug:
+                    print("DBG: %s" % " ".join(cmd))
+                output = subprocess.check_output(cmd)
+                self.registered = True
+        except subprocess.CalledProcessError as e:
+            rc = e.returncode
+            output = e.output
+            
+        return [ rc, output ] 
+
+    def edit(self, frequency_plan, latitude, longitude):
+        """ Change registration if something is different """
+        changes = []
+        if self.frequency_plan != frequency_plan:
+            changes.append("--frequency-plan")
+            changes.append(frequency_plan)
+        if self.latitude != latitude or self.longitude != longitude:
+            changes.append("--location")
+            changes.append("%f,%f" % (latitude, longitude))
+
+        if not changes:
+            return [ 0, "No changes required" ]
+                
+        if changes:
+            try:
+                cmd = [ self.options.binary, "gateway", "edit", self.name ] + changes
+                if self.options.noop:
+                    output = "NOOP: %s " % " ".join(cmd)
+                else:
+                    if self.options.debug:
+                        print("DBG: %s" % " ".join(cmd))
+                    output = subprocess.check_output(cmd)
+                    self.frequency_plan = frequency_plan
+                    self.latitude = latitude
+                    self.longitude = longitude
+            except subprocess.CalledProcessError as e:
+                rc = e.returncode
+                output = e.output
+            
+            return [ rc, output ] 
+        
+        
+def ttn_gateway_list(options):
+    """Return a dict of Gateways"""
+
+#        ID              Activated       Frequency Plan  Coordinates                        
+    header_re = re.compile("^\s+ID")
+#1       ttn-ith-test    false           AU_915_928      (42.517288, -76.710183, %!f(int=0))    
+    line_re = re.compile("^\d+\s+([a-z0-9-]+)\s+(true|false)\s+((AU|EU|US|AS)_\d{3}_\d{3})\s+\((-?\d+\.\d+),\s+(-?\d+.\d+),.*$")
+
+    gateways = dict()
+    
+    lines = subprocess.check_output([ options.binary, "gateway", "list" ])
+
+    for line in lines.split("\n"):
+        if header_re.match(line):
+            continue
+        match = line_re.match(line)
+        if not match:
+            continue
+        gateway = Gateway(options, match.group(1), match.group(3), match.group(5), match.group(6))
+        gateway.activated = bool(match.group(2))
+        gateways[gateway.name] = gateway
+
+    return gateways
+        
+#
+#
+#
+def main():
+    """ Figure out what we should do """
+
+    parser = argparse.ArgumentParser(description="Register or re-regiter a Conduit with TTN")
+
+    #	Debugging
+    group = parser.add_argument_group("Debugging options")
+    group.add_argument("-d", "--debug",
+                       dest="debug", default=False,
+                       action='store_true',
+                       help="print debugging messages")
+    group.add_argument("--nodebug",
+                       dest="debug",
+                       action='store_false',
+                       help="print debugging messages")
+    group.add_argument("-v", "--verbose",
+                       dest="verbose", default=False,
+                       action='store_true',
+                       help="print verbose messages")
+    group.add_argument("-n", "--noop",
+                       dest="noop", default=False,
+                       action='store_true',
+                       help="Don't make changes, just list what we are going to do")
+
+    #	Options
+    group = parser.add_argument_group("Configuration options")
+    group.add_argument("--name",
+                       dest="name",
+                       help="Gateway name")
+    group.add_argument("--eui",
+                       dest="eui", required=True,
+                       help="EUI of Conduit")
+    group.add_argument("--region",
+                       dest="region", required=True,
+		       choices=[ "AU", "EU", "US" ],
+                       help="Frequency region, one of AU, EU, US")
+    group.add_argument("--latitude",
+                       dest="latitude", type=float, required=True,
+                       help="Latitude of Conduit")
+    group.add_argument("--longitude",
+                       dest="longitude", type=float, required=True,
+                       help="Longitude of Conduit")
+
+    #   Other options
+    group = parser.add_argument_group("Other options")
+    group.add_argument("--binary",
+                       dest="binary", default=None,
+                       help="Path to binary")
+
+    options = parser.parse_args()
+
+    eui_re = re.compile('^(([a-fA-F0-9]{2}:?){7}[a-fA-F0-9]{2})$')
+    if not eui_re.match(options.eui):
+        parser.error("Invalid EUI: %s" % options.eui)
+
+    # Find ttncli binary
+    if not options.binary:
+        uname = os.uname()
+        system = uname[0].lower()
+        machine = uname[4]
+        if machine == "x86_64":
+            machine = "amd64"
+        elif machine == "i686":
+            machine = "386"
+        options.binary = "bin/ttnctl-%s-%s" % (system, machine)
+    if options.debug:
+        print("DBG: binary: %s" % options.binary)
+
+    # Translate region into frequency plan
+    if options.region == "AU":
+        frequency_plan = "AU_915_928"
+    elif options.region == "EU":
+        frequency_plan = "EU_863_870"
+    elif options.region == "US":
+        frequency_plan = "US_902_928"
+
+    # If name is not specified, register the old way
+    if not options.name:
+        options.name = "eui-" + "".join(options.eui.split(":"))
+        if options.debug:
+            print("DBG: %s -> %s" % (options.eui, options.name))
+
+    if options.debug:
+        print("DBG: Name: %s Frequency Plan: %s EUI: %s Location: %f, %f" % (options.name, frequency_plan, options.eui, options.latitude, options.longitude))
+
+    gateways = ttn_gateway_list(options)
+    if gateways.has_key(options.name):
+        rc, output = gateways[options.name].edit(frequency_plan, options.latitude, options.longitude)
+    else:
+        rc, output = Gateway(options, options.name, frequency_plan, options.latitude, options.longitude).register()
+
+    if rc != 0:
+        print("Registration failed: %s" % output, file=sys.stderr)
+    elif options.verbose:
+        print(output)
+
+    return(rc)
+
+if __name__ == "__main__":
+    try:
+        main()
+        sys.exit(0)
+    except KeyboardInterrupt:
+        print()
+        sys.exit(1)
+

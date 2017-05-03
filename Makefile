@@ -1,5 +1,13 @@
 
 #
+#	Download binaries
+#
+all:: bins
+
+bins: true
+	cd bin && make all
+
+#
 #	Download files 
 #
 

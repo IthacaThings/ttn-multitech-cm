@@ -299,4 +299,11 @@
   notify: update-ca-certificates
   tags: ca-certificates
 
-    
+#
+#	Register gateway
+#
+- name: register gateway with TTN
+  local_action:
+    module: shell
+    args: "bin/register --eui {{ansible_local.lora.eui}} --region {{region}} --latitude {{ latitude }} --longitude {{ longitude }} >> temp"
+  tags: register

@@ -1,4 +1,5 @@
 *~
+*.new
 /galaxy-roles/
 /*.retry
 /catalog/

@@ -90,7 +90,19 @@ $ ansible HOSTNAME -m ping
 $ ansible-playbook -l HOSTNAME site.yaml
 ```
 ## Register the gateway
-Coming soon
+Registration happens automatically in the list step of applying the
+playbook.  For this to happen, you need to be logged in.  T
+
+XXX - Describe how to log in
+
+To manually re-run the registration step:
+
+```
+$ make apply TAGS=register TARGET=*HOSTNAME*
+```
+Specify the name of your Conduit with *HOSTNAME*.  If you leave that
+off, all Conduit's will be registered, or their registration will be
+updated. 
 
 # Syncing with Upstream
 This is necessary when the global configurations change, or if there
@@ -207,8 +219,8 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 + [ ] Generate init scripts for tunnel server
 
 ### Registration
-+ [ ] Fetch the correct version of [ttnctl](https://www.thethingsnetwork.org/docs/network/cli/quick-start.html#device-management)
-+ [ ] Register gateway with TTN
++ [X] Fetch the correct version of [ttnctl](https://www.thethingsnetwork.org/docs/network/cli/quick-start.html#device-management)
++ [X] Register gateway with TTN
 + [ ] Figure out how to handle credentials
 
 ### System updates
@@ -222,6 +234,9 @@ needing to be hands on with the gateways?
 ### Setup
 #### Makefile targets to
 + [ ] Add a host
+    + [ ] Validate hostname (ttn-ORG-NAME)
+	+ [ ] Prompt for config variables or just edit?
+	+ [ ] Which group to add to?  Allow config parameter?
 + [ ] Add a host with a tunnel
 + [X] Collect facts (anisible -m setup)
 + [ ] Generate configs for tunnel server (run ansible -m setup first)
