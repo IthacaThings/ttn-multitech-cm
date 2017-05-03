@@ -91,9 +91,10 @@ $ ansible-playbook -l HOSTNAME site.yaml
 ```
 ## Register the gateway
 Registration happens automatically in the list step of applying the
-playbook.  For this to happen, you need to be logged in.  T
-
-XXX - Describe how to log in
+playbook.  For this to happen, you need to be logged in.  To do this you need to log into [The Things Network](https://www.thethingsnetwork.org) and then click [this link](https://account.thethingsnetwork.org/users/authorize?client_id=ttnctl&redirect_uri=/oauth/callback/ttnctl&response_type=code) to generate a *TOKEN*.  Then log in using:
+```
+$ bin/ttnctl user login *TOKEN*
+```
 
 To manually re-run the registration step:
 
