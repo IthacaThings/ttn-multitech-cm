@@ -23,15 +23,16 @@ is use.
 Before you start you need to make a copy of this git repo and
 configure it for your TTN organization.
 
-## Clone this repo into your own GitHub org or account
+## Fork this repo into your own Github account
 
 XXX
 
 ##  Install Anisble
 The machine on which you run Ansible is called the *Control Machine*.
-It's easiest to do this on Linux or macOS.  Instructions for
-installing
-Ansible
+This setup has been tested on macOS (with Home Brew), Linux and under
+Windows Subsystem for Linux using Ansible 2.2.
+
+Instructions for installing Ansible
 [can be found here](https://docs.ansible.com/ansible/intro_installation.html).
 
 ## Fetch the upstream files
@@ -42,7 +43,7 @@ package, global configuration files and the *Let's Encrypt* signing
 certificate.
 
 ```
-$ make
+$ make fetch
 ```
 
 ## Set Global variables

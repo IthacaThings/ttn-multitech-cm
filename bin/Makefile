@@ -4,7 +4,7 @@ TTNCLI=ttnctl-${SYSTEM}-${ARCH}
 TTNCLI_ZIP=${TTNCLI}.zip
 TTNCLI_URL=https://ttnreleases.blob.core.windows.net/release/master/${TTNCLI_ZIP}
 
-all:: ${TTNCLI}
+fetch:: ${TTNCLI}
 
 ${TTNCLI}: ${TTNCLI_ZIP}
 	unzip -u "$<"

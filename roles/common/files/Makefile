@@ -4,7 +4,7 @@
 #
 LETSENCRYPT_ROOT=lets-encrypt-x3-cross-signed.pem
 
-all:: ${LETSENCRYPT_ROOT} ${POLY_FILE} ${GLOBAL_CONF_EU} ${GLOBAL_CONF_AU} ${GLOBAL_CONF_US}
+fetch:: ${LETSENCRYPT_ROOT} ${POLY_FILE} ${GLOBAL_CONF_EU} ${GLOBAL_CONF_AU} ${GLOBAL_CONF_US}
 
 ${LETSENCRYPT_ROOT}: true
 	wget -N https://letsencrypt.org/certs/${LETSENCRYPT_ROOT}.txt && \
@@ -17,7 +17,7 @@ ${LETSENCRYPT_ROOT}: true
 POLY_ROOT=https://github.com/kersing/multitech-installer/raw/master
 POLY_FILE=poly-packet-forwarder_2.1-r5_arm926ejste.ipk
 
-all:: ${POLY_FILE}
+fetch:: ${POLY_FILE}
 
 ${POLY_FILE}: true
 	wget -N "${POLY_ROOT}/${@}" || rm "${@}"
@@ -31,7 +31,7 @@ GLOBAL_CONF_EU=EU-global_conf.json
 GLOBAL_CONF_AU=AU-global_conf.json
 GLOBAL_CONF_US=US-global_conf.json
 
-all:: ${GLOBAL_CONF_EU} ${GLOBAL_CONF_AU} ${GLOBAL_CONF_US}
+fetch:: ${GLOBAL_CONF_EU} ${GLOBAL_CONF_AU} ${GLOBAL_CONF_US}
 
 ${GLOBAL_CONF_AU}: true
 	wget -N "${GLOBAL_CONF_ROOT}/${@}" || rm "${@}"

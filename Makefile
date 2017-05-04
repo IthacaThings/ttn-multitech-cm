@@ -2,18 +2,14 @@
 #
 #	Download binaries
 #
-all:: bins
-
-bins: true
+fetch::
 	cd bin && make all
 
 #
 #	Download files 
 #
 
-all:: files
-
-files: true
+fetch:: 
 	cd roles/common/files && make all
 
 #
