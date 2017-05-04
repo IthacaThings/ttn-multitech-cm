@@ -1,0 +1,45 @@
+---
+#
+# XXX - Need to do this as said user
+# XXX - Probably not necessary to create user
+# XXX - local_action to run script?
+#
+#	Create ssh user
+#
+- name: "Set up {{ ssh_tunnel_remote_user }} user"
+  user:
+    name: "{{ ssh_tunnel_remote_user }}"
+    append: yes
+    shell: /bin/bash
+    password: "*"
+  tags: users
+
+- name: Create {{ ssh_tunnel_remote_user }}  .ssh dir
+  file:
+    dest: "~{{ ssh_tunnel_remote_user }}/.ssh"
+    state: directory
+    mode: "0700"
+    owner: "{{ ssh_tunnel_remote_user }}"
+    group: "{{ ssh_tunnel_remote_user }}"
+  tags: users
+
+# Build dynaically by harvesting catalog data?
+# Using a template?
+- name: "Install {{ ssh_tunnel_remote_user }} authorized keys"
+  copy:
+    dest: "~{{ ssh_tunnel_remote_user }}/.ssh/authorized_keys"
+    src: authorized_keys
+    mode: "0600"
+    owner: "{{ ssh_tunnel_remote_user }}"
+    group: "{{ ssh_tunnel_remote_user }}"
+  tags: users
+
+- name: Only allow gateway ports from localhost
+  lineinfile: dest=/etc/ssh/sshd_config
+    regexp="^GatewayPorts"
+    line="GatewayPorts no"
+    state=present
+  notify: Restart ssh
+  tags: sshd
+  
+# tasks file for sshhost

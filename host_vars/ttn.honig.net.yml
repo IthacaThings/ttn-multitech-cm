@@ -1,0 +1,9 @@
+---
+
+# Info for Ansible to config the SSH tunnel server
+ansible_host: ttn.honig.net
+ansible_port: 2222
+ansible_user: jch
+ansible_become: true
+ansible_become_user: root
+ansible_become_method: sudo

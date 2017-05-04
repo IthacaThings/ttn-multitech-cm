@@ -30,3 +30,9 @@
 #
 - name: restart ntpd
   service: name=ntpd state=restarted
+
+#
+#       Restart ssh_tunnel
+#
+- name: restart ssh_tunnel
+  service: name=ssh_tunnel state=restarted

@@ -3,6 +3,9 @@
 # Hostname.  Start with ttn-ORG
 hostname: ttn-ith-test
 
+# Define this to use an ssh tunnel
+ssh_tunnel_remote_port: 15022
+
 # Actual address or hostname of the gateway
 ansible_host: dhcp-19.home.honig.net
 ansible_port: 22

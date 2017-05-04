@@ -1,6 +1,18 @@
 ---
 # Global variables for this TTN organization
 
+# Conduits do not have sudo and su dows not work with Ansible
+ansible_user: root
+
+# User to log in and poke around on a Conduit
+ttn_user: ttn
+
+# Tunnel to SSH server
+ssh_tunnel_remote_user: ttn
+ssh_tunnel_remote_host: ttn.honig.net
+ssh_tunnel_ssh_key: /etc/ssh/ssh_host_rsa_key
+ssh_tunnel_ssh_port: 2222
+
 # Version of the Poly Packet Fowarder
 poly_version: 2.1-r5
 poly_package: "poly-packet-forwarder_{{ poly_version }}_arm926ejste.ipk"

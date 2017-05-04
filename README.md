@@ -223,11 +223,11 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 + [X] Restart daemon when done
 
 ### SSH Tunnel
-+ [ ] Write init.d script
-+ [ ] Set parameters in /etc/defaults/XXXX (host, id, port)
++ [X] Write init.d script
++ [X] Set parameters in /etc/defaults/XXXX (host, id, port)
 + [ ] autossh and https://github.com/gonzalo/autossh-tunnel
-+ [ ] Use system /etc/ssh/ssh_host_rsa_key?  Tells if the system has been updated
-+ [ ] Generate init scripts for tunnel server
++ [X] Use system /etc/ssh/ssh_host_rsa_key?  Tells if the system has been updated
++ [ ] Generate authorized_keys scripts for tunnel server
 
 ### Registration
 + [X] Fetch the correct version of [ttnctl](https://www.thethingsnetwork.org/docs/network/cli/quick-start.html#device-management)

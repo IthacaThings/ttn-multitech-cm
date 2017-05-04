@@ -128,31 +128,31 @@
 #
 #	Create ttn user
 #
-- name: Set up ttn user
+- name: "Set up {{ ttn_user }} user"
   user:
-    name: ttn
+    name: "{{ ttn_user }}"
     append: yes
     groups: adm,plugdev,sudo
     shell: /bin/bash
     password: "*"
   tags: users
 
-- name: Create ttn .ssh dir
+- name: Create {{ ttn_user }}  .ssh dir
   file:
-    dest: ~ttn/.ssh
+    dest: "~{{ ttn_user }}/.ssh"
     state: directory
     mode: "0700"
-    owner: ttn
-    group: ttn
+    owner: "{{ ttn_user }}"
+    group: "{{ ttn_user }}"
   tags: users
 
-- name: Install ttn authorized keys
+- name: "Install {{ ttn_user }} authorized keys"
   copy:
-    dest: ~ttn/.ssh/authorized_keys
+    dest: "~{{ ttn_user }}/.ssh/authorized_keys"
     src: authorized_keys
     mode: "0600"
-    owner: ttn
-    group: ttn
+    owner: "{{ ttn_user }}"
+    group: "{{ ttn_user }}"
   tags: users
 
 #
@@ -315,5 +315,33 @@
 - name: register gateway with TTN
   local_action:
     module: shell
-    args: "bin/register --eui {{ansible_local.lora.eui}} --region {{region}} --latitude {{ latitude }} --longitude {{ longitude }} >> temp"
+    args: "bin/register --eui {{ansible_local.lora.eui}} --region {{region}} --latitude {{ latitude }} --longitude {{ longitude }}"
   tags: register
+
+#
+#	Set up ssh tunnel
+#
+- name: /etc/default/ssh_tunnel
+  template:
+    src: ssh_tunnel.j2
+    dest: /etc/default/ssh_tunnel
+    mode: "0755"
+    owner: root
+    group: root
+  notify: restart ssh_tunnel
+  when: ssh_tunnel_remote_port
+  tags: ssh_tunnel
+
+- name: /etc/init.d/ssh_tunnel
+  copy:
+    dest: /etc/init.d
+    src: ssh_tunnel
+    mode: "0755"
+    owner: root
+    group: root
+  notify: restart ssh_tunnel
+  when: ssh_tunnel_remote_port
+  tags: ssh_tunnel
+
+  
+  
