@@ -218,14 +218,21 @@
     state: absent
   tags: forwarder
 
+- name: Get version of poly-packet-forwarder installed
+  shell: "opkg list-installed | grep poly-packet-forwarder | cut -d ' ' -f 3"
+  register: poly_version_installed
+  tags: forwarder
+  
 - name: Copy over poly-packet-forwarder
   copy:
-    src: "{{ poly_version }}"
-    dest: "/var/tmp/{{ poly_version }}"
+    src: "{{ poly_package }}"
+    dest: "/var/tmp/{{ poly_package }}"
+  when: poly_version_installed.stdout != poly_version
   tags: forwarder
 
 - name: Install poly-packet-forwarder
-  shell: "opkg install /var/tmp/{{ poly_version }}"
+  shell: "opkg install /var/tmp/{{ poly_package }}"
+  when: poly_version_installed.stdout != poly_version
   tags: forwarder
 
 - name: Override /etc/init.d/ttn-pkt-forwarder

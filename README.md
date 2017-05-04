@@ -212,7 +212,7 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 ### Install TTN packet forwarder
 + [X] Fetch ipkg of ttn packet forwarder
 + [X] Install package
-+ [ ] Avoid install step if already installed
++ [X] Avoid install step if already installed
 + [X] Overwrite init.d file to not fetch updates
 + [X] Fetch global config files
 + [X] Install appropriate config file
