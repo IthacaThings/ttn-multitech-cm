@@ -1,11 +1,20 @@
 [test]
 ttn-ith-test
 
+[production]
+
+[conduits]
+
+[conduits:children]
+production
+test
+
 [all]
 
 [all:vars]
-ansible_user=root
 
+[ssh_host]
+ttn.honig.net
 
 
 

@@ -47,14 +47,16 @@ $ make fetch
 ```
 
 ## Set Global variables
-Modify *group_vars/all.yml* for your global config items.  The default
+Modify *group_vars/conduits.yml* for your global config items.  The default
 framework assumes that all gateways are in the same region and
 timezone.
 
 ## Add each of your gateways to *hosts*
-Normally you would put them in the *all* group, however you can divide
-them into other groups, such as *test* and *production* or different
-areas of town.  See Ansible documentation
+Normally you would put them in the *production* group.  There is also
+a *test* group.
+
+You can divide them into other groups, such as different areas of
+your organizations region.  See Ansible documentation
 on [inventory](https://docs.ansible.com/ansible/intro_inventory.html)
 for more information.
 
@@ -145,7 +147,7 @@ If you were working on another branch, push your changes to *master*
 + ansible.cfg - General ansible config
 + hosts - lists of ansible hosts in groups
 + group_vars - group specific vars
-    + all.yml - Global vars
+    + conduits.yml - Vars for all conduits
     + *GROUP*.yml - Group specific vars
 + host_vars - host specific vars
     + *HOST*.yml - Host specific vars
@@ -154,7 +156,7 @@ If you were working on another branch, push your changes to *master*
 
 ## Ansible Variables
 Variables can be defined at three levels:
-+ Globally (define in **group_vars/all.yml**)
++ Globally (define in **group_vars/conduits.yml**)
 + Per group if you use them (define in **group_vars/GROUP.yml**)
 + Per host (define in **host_vars/HOST.yml**)
 

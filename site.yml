@@ -1,4 +1,9 @@
 ---
-- hosts: all
+- hosts: conduits
   roles:
     - common
+
+- hosts: ttn.honig.net
+  roles:
+    - sshhost
+
