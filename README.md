@@ -25,7 +25,7 @@ configure it for your TTN organization.
 
 ## Fork this repo into your own Github account
 
-XXX
+XXX 
 
 ##  Install Anisble
 The machine on which you run Ansible is called the *Control Machine*.
@@ -52,8 +52,14 @@ framework assumes that all gateways are in the same region and
 timezone.
 
 ## Add each of your gateways to *hosts*
+Normally you would put them in the *all* group, however you can divide
+them into other groups, such as *test* and *production* or different
+areas of town.  See Ansible documentation
+on [inventory](https://docs.ansible.com/ansible/intro_inventory.html)
+for more information.
 
 ## Add a file for each of your hosts in *host_vars/**HOST**.yml*
+Most of these variables should be self-explanitory.
 
 ## Run a syntax check
 ```
@@ -217,6 +223,7 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 ### SSH Tunnel
 + [ ] Write init.d script
 + [ ] Set parameters in /etc/defaults/XXXX (host, id, port)
++ [ ] autossh and https://github.com/gonzalo/autossh-tunnel
 + [ ] Use system /etc/ssh/ssh_host_rsa_key?  Tells if the system has been updated
 + [ ] Generate init scripts for tunnel server
 
