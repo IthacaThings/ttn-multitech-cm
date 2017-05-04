@@ -43,7 +43,7 @@ harvest: true
 	@mkdir -p ${CATALOG} 2>/dev/null || exit 0
 	@for host in ${HOSTS}; do \
 		ansible -o -m setup $${host} > $${host}.json; \
-		[ $? == 0 ] && sed -e "s/^$${host} | SUCCESS => //" < $${host}.json > ${CATALOG}/$${host}.json; \
+		[ $$? == 0 ] && sed -e "s/^$${host} | SUCCESS => //" < $${host}.json > ${CATALOG}/$${host}.json; \
 		rm $${host}.json; \
 	done
 
