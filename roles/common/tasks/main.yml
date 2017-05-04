@@ -39,13 +39,16 @@
     src: /var/config/ansible
   tags: setup
 
-- name: Install lora.fact
+- name: Install fact scripts
   copy:
-    src: lora.fact
+    src: "{{ item }}"
     dest: /var/config/ansible/facts.d/
     mode: "0755"
     owner: root
     group: root
+  with_flattened:
+    - lora.fact
+    - conduit.fact
   tags: setup
 
 - name: Reload ansible_local

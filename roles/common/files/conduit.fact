@@ -1,0 +1,13 @@
+#!/bin/sh
+
+cat << EOF
+{
+	"device_id": "$(mts-io-sysfs show device-id 2> /dev/null)",
+	"hw_version": "$(mts-io-sysfs show hw-version 2> /dev/null)",
+	"mac_eth": "$(mts-io-sysfs show mac-eth 2> /dev/null)",
+	"product_id": "$(mts-io-sysfs show product-id 2> /dev/null)",
+	"uuid": "$(mts-io-sysfs show uuid 2> /dev/null)",
+	"vendor_id": "$(mts-io-sysfs show vendor-id 2> /dev/null)"
+}
+EOF
+
