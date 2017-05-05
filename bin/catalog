@@ -1,0 +1,177 @@
+#!/usr/bin/python
+
+from __future__ import print_function
+import argparse
+import json
+import os
+import sys
+
+"""
+MIT License
+
+Copyright (c) 2017 Jeffrey C Honig
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
+
+def print_vars(options, parser, nodes):
+    """Print the specified vars for each node"""
+
+    for host in sorted(options.host if options.host else nodes.keys()):
+        node = nodes[host]
+
+        for var in options.vars:
+            parts = var.split(".")
+            dp = node
+            for part in parts:
+                try:
+                    dp = dp[part]
+                except KeyError as err:
+                    parser.error("%s %s: Can not find %s" % (host, var, part))
+
+        print("%s.%s: %s" % (host, part, dp))
+
+def print_all_vars_sub(options, parser, nodes, names=[]):
+    """Print all vars for this node"""
+
+    for k, v in sorted(nodes.items()):
+        if type(v) == type({}):
+            print_all_vars_sub(options, parser, v, names + [ k ])
+            continue
+
+        if type(v) == type([]):
+            parts = []
+            for v1 in v:
+                if type(v1) == type({}):
+                    print_all_vars_sub(options, parser, v1, names + [ k ])
+                    continue
+
+                if type(v1) == type(u''):
+                    v1 = v1.decode()
+
+                parts.append(str(v1))
+                
+            if len(parts):
+                v = ", ".join(parts)
+
+        if type(v) == type(u''):
+            v = v.decode()
+
+        print("%s: %s" % (".".join(names + [ k ]), v))
+                    
+
+def print_all_vars(options, parser, nodes, names=[]):
+    """Print all the vars for each node"""
+
+    for host in sorted(options.host if options.host else nodes.keys()):
+        node = nodes[host]
+        print_all_vars_sub(options, parser, node, [ host ] + names)
+
+def read_catalogs(options, parser):
+    """Read in all the catalog files (*.json in options.catalog)"""
+
+    nodes = dict()
+    
+    catalog_dir = os.path.expanduser(options.catalog)
+    if not os.path.exists(catalog_dir):
+        parser.error("%s does not exist" % options.catalog)
+    if not os.path.exists(catalog_dir):
+        parser.error("%s is not a directory" % options.catalog)
+    for root, dir, files in os.walk(catalog_dir, topdown=False):
+        for name in files:
+            path = os.path.join(root, name)
+            if not path.endswith(".json"):
+                if options.debug:
+                    print("DBG: Ignoring %s" % path)
+                continue
+            if options.debug:
+                print("DBG: Opending %s" % path)
+            try:
+                fp = open(path)
+            except OSError as err:
+                parser.error("Opening %s: %s" % (path, err))
+                continue
+
+            try:
+                node = json.load(fp)
+            except ValueError as err:
+                parser.error("Reading %s: %s" % (path, err))
+                continue
+            
+            try:
+                ansible_facts = node['ansible_facts']
+                host = ansible_facts['ansible_nodename']
+            except NameError as err:
+                parser.error("Parsing %s: %s" % (path, err))
+                continue
+
+            nodes[host] = ansible_facts
+
+    return nodes
+
+def main():
+    """ Figure out what we should do """
+
+    parser = argparse.ArgumentParser(description="Register or re-regiter a Conduit with TTN")
+
+    #	Debugging
+    group = parser.add_argument_group("Debugging options")
+    group.add_argument("-d", "--debug",
+                       dest="debug", default=False,
+                       action='store_true',
+                       help="print debugging messages")
+    group.add_argument("--nodebug",
+                       dest="debug",
+                       action='store_false',
+                       help="print debugging messages")
+    group.add_argument("-v", "--verbose",
+                       dest="verbose", default=False,
+                       action='store_true',
+                       help="print verbose messages")
+
+    #	Options
+    group = parser.add_argument_group("Configuration options")
+    group.add_argument("-a",
+                       dest="all", default=False,
+                       action='store_true',
+                       help="Print all values")
+    group.add_argument("--catalog", "-C",
+                       dest="catalog", required=True,
+                       help="Catalog directory of json files from Conduits")
+    group.add_argument("--host", "-H",
+                       dest="host", nargs="+",
+                       help="Limit to a specific host")
+    group.add_argument(dest="vars", nargs="*",
+                       help="Variables to print")
+
+    options = parser.parse_args()
+
+    nodes = read_catalogs(options, parser)
+    if options.all:
+        print_all_vars(options, parser, nodes)
+    elif options.vars:
+        print_vars(options, parser, nodes)
+
+if __name__ == "__main__":
+    try:
+        main()
+        sys.exit(0)
+    except KeyboardInterrupt:
+        print()
+        sys.exit(1)
