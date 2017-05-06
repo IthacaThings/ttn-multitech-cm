@@ -1,5 +1,8 @@
-authorized_keys: ../../catalog/*.json
-	for host in ${HOSTS}; do \
-		echo $$(bin/harvest -n -C ${CATALOG} ansible_ssh_host_key_rsa_public ansible_nodename); \
-	done
+BINDIR=../../../bin
+CATDIR=../../../catalog
+
+all: authorized_keys
+
+authorized_keys: ${CATDIR}/*.json
+	${BINDIR}/gen_authorized_keys > "$@" || rm "$@"
 
