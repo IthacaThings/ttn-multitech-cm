@@ -1,88 +1,10 @@
-#!/bin/sh
-#
-#remote_server_connect.sh connect to remote server for ssh tunnel back
+#!/bin/sh -x
 
-### BEGIN INIT INFO
-# Provides:          open-remote-tunnel
-# Required-Start:    $local_fs $network $syslog $dbus
-# Required-Stop:     $local_fs $network $syslog $dbus
-# Default-Start:     2 3 4 5
-# Default-Stop:      0 1 6
-# Description:       ssh to remote system for reverse tunnel and remote control
-### END INIT INFO
+prog=$(basename $0)
 
-PATH="/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin"
-NAME=ssh_tunnel
-DAEMON=/usr/bin/ssh
-LOCAL_PORT=22
-REMOTE_USER=
-SSH_KEY=
-REMOTE_HOST=
-REMOTE_PORT=
+exec 0<&- > /tmp/${prog}.log 2>&1
 
-# source function library
-. /etc/init.d/functions
-
-if [ -r /etc/default/${NAME} ]; then
-        . /etc/default/${NAME}
-fi
-
-[ -x ${DAEMON} ] || exit 0
-
-PIDFILE=/var/run/${NAME}.pid
-
-if [ -z "${LOCAL_PORT}" -o -z "${REMOTE_HOST}" -o -z "${REMOTE_PORT}" -o -z "${REMOTE_USER}" ]; then
-   exit 1
-fi
-DAEMON_ARGS="$DAEMON_ARGS -T -R ${REMOTE_PORT}:localhost:${LOCAL_PORT} ${REMOTE_USER}@${REMOTE_HOST}"
-if [ -n "$SSH_KEY" ]; then
-    DAEMON_ARGS="$DAEMON_ARGS -i ${SSH_KEY}"
-fi
-if [ -n "$SSH_PORT" ]; then
-    DAEMON_ARGS="$DAEMON_ARGS -p ${SSH_PORT}"
-fi
-
-is_running() {
-
- if [ -e $PIDFILE ]; then
-     PIDDIR=/proc/$(cat $PIDFILE)
-     if [ -d ${PIDDIR} -a  "$(readlink -f ${PIDDIR}/exe)" = "${DAEMON}" ]; then 
-	 echo "$DESC already started; not starting."
-	 false
-     else
-	 echo "Removing stale PID file $PIDFILE."
-	 rm -f $PIDFILE
-	 true
-     fi
- else
-     false
- fi
-
-}
-
-start() {
-    start-stop-daemon --start --quiet --pidfile ${PIDFILE} --exec ${DAEMON} -- ${DAEMON_ARGS}
-}
-
-stop() {
-    start-stop-daemon --stop --quiet --pidfile ${PIDFILE} 
-}
-
-case "$1" in
-    start)
-	is_running || start
-	;;
-    stop)
-	stop
-	;;
-    restart|reload)
-	stop
-	start
-	;;
-    status)
-	is_running
-	;;
-    *)
-	echo "Usage: $0 {start|stop|status|restart}"
-esac
-#=========================================
+while true; do
+    /usr/bin/ssh -v ${*}
+    sleep 1
+done

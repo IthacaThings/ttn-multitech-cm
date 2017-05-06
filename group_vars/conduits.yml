@@ -12,6 +12,7 @@ ssh_tunnel_remote_user: ttn
 ssh_tunnel_remote_host: ttn.honig.net
 ssh_tunnel_ssh_key: /etc/ssh/ssh_host_rsa_key
 ssh_tunnel_ssh_port: 2222
+ssh_tunnel_daemon: /usr/local/bin/ssh_tunnel
 
 # Version of the Poly Packet Fowarder
 poly_version: 2.1-r5

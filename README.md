@@ -225,9 +225,10 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 ### SSH Tunnel
 + [X] Write init.d script
 + [X] Set parameters in /etc/defaults/XXXX (host, id, port)
-+ [ ] autossh and https://github.com/gonzalo/autossh-tunnel
++ [X] Script to keep ssh running
 + [X] Use system /etc/ssh/ssh_host_rsa_key?  Tells if the system has been updated
 + [ ] Generate authorized_keys scripts for tunnel server
++ [ ] Tell ufw to allow tunnel ports
 
 ### Registration
 + [X] Fetch the correct version of [ttnctl](https://www.thethingsnetwork.org/docs/network/cli/quick-start.html#device-management)
