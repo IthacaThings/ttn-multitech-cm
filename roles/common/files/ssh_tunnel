@@ -8,3 +8,5 @@ while true; do
     /usr/bin/ssh -v ${*}
     sleep 1
 done
+
+# XXX - Handle signals and pass on to ssh
