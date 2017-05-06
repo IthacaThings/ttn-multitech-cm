@@ -2,15 +2,20 @@
 #
 #	Download binaries
 #
-fetch::
-	cd bin && make all
+all::
+	cd bin && make fetch
 
 #
 #	Download files 
 #
+all:: 
+	cd roles/common/files && make fetch
 
-fetch:: 
-	cd roles/common/files && make all
+#
+#	Generate files
+#
+all::
+	cd roles/sshhost/files && make all
 
 #
 #	Ansible utilities
