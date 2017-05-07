@@ -1,25 +1,29 @@
-
-#
-#	Download binaries
-#
-all::
-	cd bin && make fetch
-
-#
-#	Download files 
-#
-all:: 
-	cd roles/common/files && make fetch
-
-#
-#	Generate files
-#
-all::
-	cd roles/sshhost/files && make all
-
 #
 #	Ansible utilities
 #
+
+#
+#	Visit subdirs
+#
+# Subdirs we should visit
+SUBDIRS = bin $(wildcard roles/*/files)
+
+all::
+	for dir in ${SUBDIRS}; do \
+		${MAKE} -C $$dir "$@" ; \
+	done
+
+fetch::	true
+	for dir in ${SUBDIRS}; do \
+		${MAKE} -C $$dir "$@" ; \
+	done
+
+clean::	true
+	for dir in ${SUBDIRS}; do \
+		${MAKE} -C $$dir "$@" ; \
+	done
+
+
 # Where we keep a catalog of conduit configuration
 CATALOG=catalog
 
@@ -30,6 +34,8 @@ TARGET=conduits
 TIMEOUT=60
 HOSTS=$(shell ansible --list-hosts ${TARGET} | sed -e 's/^ *//' -e '/^hosts ([0-9]*):/d')
 PLAYBOOK_ARGS=-T ${TIMEOUT} $${TAGS:+-t $${TAGS}} $${TARGET:+ -l $${TARGET}}
+
+all::	apply
 
 ping: true
 	ansible -o -m ping ${TARGET}

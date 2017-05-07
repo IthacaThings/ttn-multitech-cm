@@ -4,7 +4,9 @@
 #
 LETSENCRYPT_ROOT=lets-encrypt-x3-cross-signed.pem
 
-fetch:: ${LETSENCRYPT_ROOT} ${POLY_FILE} ${GLOBAL_CONF_EU} ${GLOBAL_CONF_AU} ${GLOBAL_CONF_US}
+all:: ${LETSENCRYPT_ROOT}
+
+fetch:: ${LETSENCRYPT_ROOT}
 
 ${LETSENCRYPT_ROOT}: true
 	wget -N https://letsencrypt.org/certs/${LETSENCRYPT_ROOT}.txt && \
@@ -43,7 +45,7 @@ ${GLOBAL_CONF_US}: true
 	wget -N "${GLOBAL_CONF_ROOT}/${@}" || rm "${@}"
 
 #
-#
+#	Make stuff
 #
 
 clean:
