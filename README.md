@@ -191,7 +191,6 @@ This secures the box by not having a known account (root) and
 restricting root access.
 + [X] ttn account
 + [X] Install SSH keys for root and ttn
-+ [ ] Disable password login?
 + [ ] Set root and ttn passwords?
 #### SSH config
 + [ ] Disable password login
@@ -227,13 +226,12 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 + [X] Set parameters in /etc/defaults/XXXX (host, id, port)
 + [X] Script to keep ssh running
 + [X] Use system /etc/ssh/ssh_host_rsa_key?  Tells if the system has been updated
-+ [ ] Generate authorized_keys scripts for tunnel server
++ [X] Generate authorized_keys scripts for tunnel server
 + [ ] Tell ufw to allow tunnel ports
 
 ### Registration
 + [X] Fetch the correct version of [ttnctl](https://www.thethingsnetwork.org/docs/network/cli/quick-start.html#device-management)
 + [X] Register gateway with TTN
-+ [ ] Figure out how to handle credentials
 
 ### System updates
 Can we deploy a new version of Multi-Tech mLinux remotely without
@@ -251,7 +249,6 @@ needing to be hands on with the gateways?
 	+ [ ] Which group to add to?  Allow config parameter?
 + [ ] Add a host with a tunnel
 + [X] Collect facts (anisible -m setup)
-+ [ ] Generate configs for tunnel server (run ansible -m setup first)
 + [X] Ping hosts
 + [X] Syntax check
 
