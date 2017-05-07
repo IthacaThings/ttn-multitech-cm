@@ -100,7 +100,7 @@ $ make TARGET=*HOSTNAME* apply
 ## Configure host specific data in this control repo
 ## Configure the conduit on the local network
 ## Set a secure root password
-## Copy *roles/common/files/authorized_keys* to */home/root/.ssh/*
+## Copy *roles/conduit/files/authorized_keys* to */home/root/.ssh/*
 ## Run the following commands so Ansible can run
 ```
 # opkg update
@@ -178,7 +178,7 @@ Variables can be defined at three levels:
 + Per group if you use them (define in **group_vars/GROUP.yml**)
 + Per host (define in **host_vars/HOST.yml**)
 
-The available variables are defined in the [common role README](roles/common/README.md).
+The available variables are defined in the [conduit role README](roles/conduit/README.md).
 
 ---
 
