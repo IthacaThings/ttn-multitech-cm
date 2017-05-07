@@ -42,8 +42,26 @@ files from upstream.  These include the *Poly Packet Forwarder*
 package, global configuration files and the *Let's Encrypt* signing
 certificate.
 
+### make fetch
+There are two commands to relating to fetching upstream files.  This
+command will fetch files that are required, but updates can
+potentially break gateway configuration.  After an initial deploy,
+these updated files should be used in a test environment to ensure
+that nothing breaks before deploying them to a production environment.
+
+Before your initial configuration, run this command.
+
 ```
 $ make fetch
+```
+
+### make all
+Files that are required to run, or are built from data obtained from
+Gateways will be downloaded everytime *make* is run with *all* or no
+argument.
+
+```
+$ make all
 ```
 
 ## Set Global variables
@@ -227,13 +245,15 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 + [X] Script to keep ssh running
 + [X] Use system /etc/ssh/ssh_host_rsa_key?  Tells if the system has been updated
 + [X] Generate authorized_keys scripts for tunnel server
-+ [ ] Tell ufw to allow tunnel ports
++ [ ] Generate ufw configs
++ [ ] Generate .ssh/config with node names
++ [ ] Document sudo password
 
 ### Registration
 + [X] Fetch the correct version of [ttnctl](https://www.thethingsnetwork.org/docs/network/cli/quick-start.html#device-management)
 + [X] Register gateway with TTN
 
-### System updates
+### Firmware updates
 Can we deploy a new version of Multi-Tech mLinux remotely without
 needing to be hands on with the gateways?
 + [ ] Does /var/config survive firmware updates
