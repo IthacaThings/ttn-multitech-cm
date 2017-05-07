@@ -1,4 +1,4 @@
-Role Name
+CONDUIT
 =========
 
 TTN setup for a Multi-Tech Conduit
@@ -15,15 +15,14 @@ The following setup must be set up performed on the Contduit:
 	+ python-distutils
 + Install a root key
     + This is required to allow secure login to the gateway
-	+ Usually stored in *roles/common/authorized_keys*
+	+ Maintain this file as *files/authorized_keys*
 + Configure ssh tunnel
-    + If the Conduit is not available on the public Internet, an ssh
-      tunnel must be configured to the host on which Ansible is run
+    + If accessing the Conduit remotely and it is not availble on the
+      public Internet (and it should not be), an ssh tunnel needs to
+      be configured.
 
 Role Variables
 --------------
-
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
 
 <dl>
 	<dt>hostname</dt>
@@ -47,19 +46,31 @@ A description of the settable variables for this role should go here, including 
 	<dd>Co-ordinates of this gateway</dd>
 	<dt>altitude</dt>
 	<dd>Altitude of this gateway in meters</dd>
+	<dt>ssh_tunnel_remote_user</dt>
+	<dd>User configured on the tunnel server</dd>
+	<dt>ssh_tunnel_remote_host</dt>
+	<dd>Hostname or IP address of tunnel server</dd>
+	<dt>ssh_tunnel_ssh_key</dt>
+	<dd>File name of ssh key to authenticate to the tunnel server</dd>
+	<dt>ssh_tunnel_ssh_port</dt>
+	<dd>Port number to ssh into the tunnel server.  Usually 22</dt>
+	<dt>ssh_tunnel_daemon</dt>
+	<dd>Command to start an ssh tunnel, usually /usr/local/bin/ssh_tunnel</dd>
+	<dt>ssh_tunnel_remote_port</dt>
+	<dd>Port on the tunnel server to use to contact this host.  Must be unique for each Conduit</dd>
 </dl>
 
 Dependencies
 ------------
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+None
 
 Example Playbook
 ----------------
 
 Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
 
-    - hosts: all
+    - hosts: conduits
       roles:
          - common
 
@@ -78,7 +89,7 @@ The following tags can be used to run a subset of the playbook.
 	<dt>users</dt>
 	<dd>Adds the <i>ttn</i> user and sets ssh login keys</dd>
 	<dt>sshd</dt>
-	<dd>Configurs sshd</dd>
+	<dd>Configures and secures sshd</dd>
 	<dt>localtree</dt>
 	<dd>Builds a <i>/usr/local</i> tree in <i>/var/config/local</i></dd>
 	<dt>forwarder</dt>
@@ -87,6 +98,10 @@ The following tags can be used to run a subset of the playbook.
 	<dd>Sets up <i>/var/config/lora</i> and the necessary config files</dd>
 	<dt>ca-certificates</dt>
 	<dd>Installs additional certificate authoritiy certificates for validating secure connections</dt>
+	<tt>register</dt>
+	<dd>Registers the gateway via ttnctl</dd>
+	<tt>ssh_tunnel</dt>
+	<dd>Sets up an ssh tunnel back to a control host<dd>
 </dl>
 
 License
