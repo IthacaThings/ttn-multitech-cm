@@ -159,14 +159,13 @@
 #	Secure ssh
 #
 
-# XXX - This is harsh, do we want to do this?  Maybe only when ttn user exists?
-#- name: Disallow password authentication
-#  lineinfile: dest=/etc/ssh/sshd_config
-#    regexp="^PasswordAuthentication"
-#    line="PasswordAuthentication no"
-#    state=present
-#  notify: Restart ssh
-#  tags: sshd
+- name: Disallow password authentication
+  lineinfile: dest=/etc/ssh/sshd_config
+    regexp="^PasswordAuthentication"
+    line="PasswordAuthentication no"
+    state=present
+  notify: Restart ssh
+  tags: sshd
 
 - name: Disallow root SSH access
   lineinfile: dest=/etc/ssh/sshd_config
