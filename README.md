@@ -249,6 +249,7 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 + [ ] Generate .ssh/config with node names
 + [ ] Document sudo password
 + [X] Use autossh
++ [ ] Manage tunnel ports
 
 ### Registration
 + [X] Fetch the correct version of [ttnctl](https://www.thethingsnetwork.org/docs/network/cli/quick-start.html#device-management)
@@ -266,6 +267,7 @@ needing to be hands on with the gateways?
 #### Makefile targets to
 + [ ] Add a host
     + [ ] Validate hostname (ttn-ORG-NAME)
+	+ [ ] Assign tunnel port
 	+ [ ] Prompt for config variables or just edit?
 	+ [ ] Which group to add to?  Allow config parameter?
 + [ ] Add a host with a tunnel
