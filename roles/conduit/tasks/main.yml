@@ -320,17 +320,6 @@
 #
 #	Set up ssh tunnel
 #
-- name: /usr/local/bin/ssh_tunnel
-  copy:
-    dest: /usr/local/bin
-    src: ssh_tunnel
-    mode: "0755"
-    owner: root
-    group: root
-  notify: restart ssh_tunnel
-  when: ssh_tunnel_remote_port
-  tags: ssh_tunnel
-
 - name: /etc/default/ssh_tunnel
   template:
     src: ssh_tunnel.j2

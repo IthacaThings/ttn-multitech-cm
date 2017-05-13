@@ -19,6 +19,8 @@ REMOTE_USER=
 SSH_KEY=
 REMOTE_HOST=
 REMOTE_PORT=
+DAEMON_ARGS=
+PIDFILE=/var/run/${NAME}.pid
 
 # source function library
 . /etc/init.d/functions
@@ -28,8 +30,6 @@ if [ -r /etc/default/${NAME} ]; then
 fi
 
 [ -x ${DAEMON} ] || exit 0
-
-PIDFILE=/var/run/${NAME}.pid
 
 if [ -z "${LOCAL_PORT}" -o -z "${REMOTE_HOST}" -o -z "${REMOTE_PORT}" -o -z "${REMOTE_USER}" ]; then
    exit 1
@@ -43,29 +43,15 @@ if [ -n "$SSH_PORT" ]; then
 fi
 
 is_running() {
-
- if [ -e $PIDFILE ]; then
-     PIDDIR=/proc/$(cat $PIDFILE)
-     if [ -d ${PIDDIR} -a  "$(readlink -f ${PIDDIR}/exe)" = "${DAEMON}" ]; then 
-	 echo "$DESC already started; not starting."
-	 false
-     else
-	 echo "Removing stale PID file $PIDFILE."
-	 rm -f $PIDFILE
-	 true
-     fi
- else
-     false
- fi
-
+    pgrep -x $(basename ${DAEMON}) > /dev/null
 }
 
 start() {
-    start-stop-daemon --start --quiet --pidfile ${PIDFILE} -b --exec ${DAEMON} -- ${DAEMON_ARGS}
+    start-stop-daemon --start --quiet --exec ${DAEMON} -- ${DAEMON_ARGS}
 }
 
 stop() {
-    start-stop-daemon --stop --quiet --pidfile ${PIDFILE} 
+    start-stop-daemon --stop --quiet --exec ${DAEMON}
 }
 
 case "$1" in

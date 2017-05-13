@@ -248,6 +248,7 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 + [ ] Generate ufw configs
 + [ ] Generate .ssh/config with node names
 + [ ] Document sudo password
++ [X] Use autossh
 
 ### Registration
 + [X] Fetch the correct version of [ttnctl](https://www.thethingsnetwork.org/docs/network/cli/quick-start.html#device-management)
