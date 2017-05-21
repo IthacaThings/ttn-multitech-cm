@@ -245,7 +245,7 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 + [X] Script to keep ssh running
 + [X] Use system /etc/ssh/ssh_host_rsa_key?  Tells if the system has been updated
 + [X] Generate authorized_keys scripts for tunnel server
-+ [ ] Generate ufw configs
++ [X] Generate ufw configs (NOT NECESSARY)
 + [ ] Generate .ssh/config with node names
 + [ ] Document sudo password
 + [X] Use autossh
