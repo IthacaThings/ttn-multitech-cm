@@ -91,15 +91,21 @@ argument.
 $ make all
 ```
 
-## Set Global variables
+## Set up initial files
+
+### Set Global variables
 Copy *group_vars/conduits-example.yml* to *group_vars/conduits.yaml*
 and configure your global config items.  The default framework assumes
 that all gateways are in the same region and timezone.
 
-## Start an inventory
+### Start an inventory
 Copy *hosts-examnple* to *hosts*
 
-## Add an ssh tunnel server (i.e. jump host)
+### Set authorized keys for logging into conduits
+Edit *roles/conduit/files/authorized_keys* add add the keys of anyone
+you want to be able to ssh into the conduit.
+
+### Add an ssh tunnel server (i.e. jump host)
 1. Edit *hosts* and change *jumphost.example.com* to the FQDN of your
 ssh tunnel server, aka jumphost.
 2. Copy *group_vars/jumphost.example.com* to
