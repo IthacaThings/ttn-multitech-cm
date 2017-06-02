@@ -121,6 +121,9 @@ organization and *example* will be a name for this conduit.
 
 Most of the variables in this file should be self-explanitory.
 
+*NOTE*: that you will need to keep track of the *ssh_tunnel_remote_port*
+values on each of your conduits to make sure they are unique.
+
 ## Run a syntax check
 ```
 $ make TARGET=*HOSTNAME* syntax-check
