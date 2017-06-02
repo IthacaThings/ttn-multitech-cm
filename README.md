@@ -96,6 +96,12 @@ Modify *group_vars/conduits.yml* for your global config items.  The default
 framework assumes that all gateways are in the same region and
 timezone.
 
+## Add an ssh tunnel server (i.e. jump host)
+1. Edit *hosts* and change *jumphost.example.com* to the FQDN of your
+ssh tunnel server, aka jumphost.
+2. Copy *group_vars/jumphost.example.com* to
+*group_vars/FQDN_OF_YOUR_JUMPHOST.yam* and edit it as necessary.
+
 ## Add each of your gateways to *hosts*
 Normally you would put them in the *production* group.  There is also
 a *test* group.
@@ -106,7 +112,11 @@ on [inventory](https://docs.ansible.com/ansible/intro_inventory.html)
 for more information.
 
 ## Add a file for each of your hosts in *host_vars/**HOST**.yml*
-Most of these variables should be self-explanitory.
+Copy *host_vars/ttn-org-example.yml* for each of your nodes.  Remember
+that *ttn-* is constant, *org* should be the name of your TTN
+organization and *example* will be a name for this conduit.
+
+Most of the variables in this file should be self-explanitory.
 
 ## Run a syntax check
 ```

@@ -1,5 +1,5 @@
 [test]
-ttn-ith-test
+ttn-org-example
 
 [production]
 
@@ -14,7 +14,8 @@ test
 [all:vars]
 
 [ssh_host]
-ttn.honig.net
+jumphost.example.com
+
 
 
 
