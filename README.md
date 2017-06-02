@@ -19,13 +19,40 @@ is use.
 4. [Reference](#reference)
 5. [Development](#development)
 
+# About this Repo
+
+This repo has a few main branches:
+
+### master
+
+This is the repo to clone to generate a configuration for your local
+org.  If you rebase to the latest version of this branch you will get
+all the latest features.
+
+### ttn-ithaca
+
+This is the branch we use for the configuration for TTN Ithaca.  This
+branch will periodically sy
+
+### Othar branches
+
+These will be for development and may be move back to master,
+discarded, or left to rot.  Use at your own risk.
+
 # Initial setup
 Before you start you need to make a copy of this git repo and
 configure it for your TTN organization.
 
-## Fork this repo into your own Github account
+## Clone the master branch
 
-XXX 
+I'm not going to put a git/Github tutorial in here, just some advice.
+
+If you are using the TTN-Ithaca ttn-multitech-cm repo you'll want to
+create a new branch.  If you are using your own repo you can Fork
+*master* or set it as your upstream.
+
+Remember to create a branch and submit a pull request for changes you
+want considered for *master*.
 
 ##  Install Anisble
 The machine on which you run Ansible is called the *Control Machine*.
