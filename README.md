@@ -92,9 +92,12 @@ $ make all
 ```
 
 ## Set Global variables
-Modify *group_vars/conduits.yml* for your global config items.  The default
-framework assumes that all gateways are in the same region and
-timezone.
+Copy *group_vars/conduits-example.yml* to *group_vars/conduits.yaml*
+and configure your global config items.  The default framework assumes
+that all gateways are in the same region and timezone.
+
+## Start an inventory
+Copy *hosts-examnple* to *hosts*
 
 ## Add an ssh tunnel server (i.e. jump host)
 1. Edit *hosts* and change *jumphost.example.com* to the FQDN of your
