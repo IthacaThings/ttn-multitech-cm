@@ -170,7 +170,7 @@
 - name: Disallow root SSH access
   lineinfile: dest=/etc/ssh/sshd_config
     regexp="^PermitRootLogin"
-    line="PermitRootLogin prohibit-password"
+    line="PermitRootLogin without-password"
     state=present
   notify: Restart ssh
   tags: sshd
