@@ -21,6 +21,35 @@ is use.
 
 # About this Repo
 
+## Key based authentication
+
+Using passwords over the Internet is not secure. This control repo is
+set up to rely on ssh keys. It is assumed that you know how to
+generate an ssh key and how to provide your key for remote
+authentication. It is also recommended that you use ssh-agent to
+forward keys from your local system to the jump host and not keep
+private keys on cloud hosts.
+
+## Jump Host
+
+This configuration relies on a *jump host* or ssh tunnel host. For
+various reasons, including security and the complexity of traversing
+firewalls, each conduit will set up a reverse SSH tunnel to a jump
+host. 
+
+It is recommended that these ports only be accessible from that jump
+host. That will mean you need to be logged into the jump host to run
+the Ansible configuration and to ssh into the conduits.
+
+To ssh into a specific conduit, find it's *ssh_tunnel_remote_port* and
+issue the following command on the jump host.
+
+```
+$ ssh -P PORT root@localhost
+```
+
+## Branches 
+
 This repo has a few main branches:
 
 ### master
