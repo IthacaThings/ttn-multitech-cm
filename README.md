@@ -131,8 +131,11 @@ that all gateways are in the same region and timezone.
 Copy *hosts-examnple* to *hosts*
 
 ### Set authorized keys for logging into conduits
-Edit *roles/conduit/files/authorized_keys* add add the keys of anyone
-you want to be able to ssh into the conduit.
+Copy *roles/conduit/files/authorized_keys-example* to
+*roles/conduit/files/authorized_keys* and add the keys of anyone you
+want to be able to ssh into the conduit. As mentioned above, it's
+recommended that you use ssh-agent and forward keys from your laptop
+or desktop.
 
 ### Add an ssh tunnel server (i.e. jump host)
 1. Edit *hosts* and change *jumphost.example.com* to the FQDN of your
