@@ -133,7 +133,8 @@ Copy *hosts-examnple* to *hosts*
 ### Set authorized keys for logging into conduits
 Copy *roles/conduit/files/authorized_keys-example* to
 *roles/conduit/files/authorized_keys* and add the keys of anyone you
-want to be able to ssh into the conduit. As mentioned above, it's
+want to be able to ssh into the conduit. These keys same keys will
+also allow logging in to the jump host.  As mentioned above, it's
 recommended that you use ssh-agent and forward keys from your laptop
 or desktop.
 
