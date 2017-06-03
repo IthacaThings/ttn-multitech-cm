@@ -293,12 +293,11 @@ restricting root access.
 + [X] Install SSH keys for root and ttn
 + [ ] Set root and ttn passwords?
 #### SSH config
-+ [ ] Disable password login
-    + Needs discussion
++ [X] Disable password login
 + [X] Require Keys for root login
-### Install Let's Encrypt Root Certificates
+### [X] Install Let's Encrypt Root Certificates
 + This will avoid the need for --no-check-certificate on wget
-### Set hostname
+### [X] Set hostname
 This makes it obvious which gateway you are logged in to.
 + ttn-ORG-NAME (where NAME is descriptive)
 ### Set timezone
@@ -328,7 +327,7 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 + [X] Use system /etc/ssh/ssh_host_rsa_key?  Tells if the system has been updated
 + [X] Generate authorized_keys scripts for tunnel server
 + [X] Generate ufw configs (NOT NECESSARY)
-+ [ ] Generate .ssh/config with node names
++ [ ] Generate .ssh/config with node names on jump host
 + [ ] Document sudo password
 + [X] Use autossh
 + [ ] Manage tunnel ports
@@ -357,3 +356,4 @@ needing to be hands on with the gateways?
 + [X] Ping hosts
 + [X] Syntax check
 
+### Support new packet forwarder
