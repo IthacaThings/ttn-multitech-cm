@@ -61,7 +61,8 @@ all the latest features.
 ### ttn-ithaca
 
 This is the branch we use for the configuration for TTN Ithaca.  This
-branch will periodically sy
+branch will periodically be rebased to master to keep the Ithaca
+configuration in sync.
 
 ### Othar branches
 
