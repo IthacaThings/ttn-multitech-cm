@@ -328,7 +328,9 @@
     owner: root
     group: root
   notify: restart ssh_tunnel
-  when: ssh_tunnel_remote_port
+  when: 
+    - ssh_tunnel_remote_port is defined
+    - ssh_tunnel_remote_port > 0
   tags: ssh_tunnel
 
 - name: /etc/init.d/ssh_tunnel
@@ -339,7 +341,9 @@
     owner: root
     group: root
   notify: restart ssh_tunnel
-  when: ssh_tunnel_remote_port
+  when:
+    - ssh_tunnel_remote_port is defined
+    - ssh_tunnel_remote_port > 0
   tags: ssh_tunnel
 
   
