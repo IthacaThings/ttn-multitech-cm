@@ -187,7 +187,7 @@ $ make TARGET=*HOSTNAME* apply
 ## Run the following commands so Ansible can run
 ```
 # opkg update
-# opkg install python-pkgutils
+# opkg install python-pkgutil
 # opkg install python-distutils
 ```
 ## Setup a secure tunnel if the Ansible machine is not on the same network
