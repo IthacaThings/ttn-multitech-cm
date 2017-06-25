@@ -5,14 +5,16 @@ ENABLED="yes"
 
 [ -f /etc/default/$NAME ] && source /etc/default/$NAME
 
-run_dir=/var/run/lora
 conf_dir=/var/config/lora
-pkt_fwd=/opt/lora/poly_pkt_fwd
 pkt_fwd_log=/var/log/lora-pkt-fwd.log
-pkt_fwd_pidfile=$run_dir/lora-pkt-fwd.pid
+pkt_fwd_pidfile=/var/run/lora-pkt-fwd.pid
 
-lora_us_id="MTAC-LORA-915"
-lora_eu_id="MTAC-LORA-868"
+port1=/sys/devices/platform/mts-io/ap1
+port2=/sys/devices/platform/mts-io/ap2
+
+lora_mtac_id="MTAC-LORA"
+lora_1_0_hw="MTAC-LORA-1.0"
+lora_1_5_h_hw="MTAC-LORA-1.5"
 
 read_card_info() {
     # product-id of first lora card
@@ -20,16 +22,45 @@ read_card_info() {
     lora_eui=$(mts-io-sysfs show lora/eui 2> /dev/null)
     # remove all colons
     lora_eui_raw=${lora_eui//:/}
+    lora_hw=$(mts-io-sysfs show lora/hw-version 2> /dev/null)
 }
 
 card_found() {
-    if [ "$lora_id" = "$lora_us_id" ] || [ "$lora_id" = "$lora_eu_id" ]; then
-        echo "Found lora card $lora_id"
+    if [ -d $port1 ] && [[ $(cat $port1/hw-version) = $lora_hw ]]; then
+        ln -sf /dev/spidev32766.2 /dev/spidev0.0
+    elif [ -d $port2 ] && [[ $(cat $port2/hw-version) = $lora_hw ]]; then
+        ln -sf /dev/spidev32765.2 /dev/spidev0.0
+    fi
+
+    if [[ "$lora_id" =~ "$lora_mtac_id" ]]; then
         return 0
-    else 
+    else
         return 1
     fi
 }
+
+select_fwd() {
+    if [ "$lora_hw" = "$lora_1_0_hw" ] ; then
+	if [ -x /opt/lora/mp_pkt_fwd.usb ]; then
+	    pkt_fwd=/opt/lora/mp_pkt_fwd.usb
+	elif [ -x /opt/lora/poly_pkt_fwd ]; then
+	    pkt_fwd=/opt/lora/poly_pkt_fwd
+	else
+	    echo "$0: No USB packet forwarder found"
+	    exit 1
+	fi
+    elif [ "$lora_hw" = "$lora_1_5_h_hw" ] ; then
+	if [ -x /opt/lora/mp_pkt_fwd.spi ]; then
+	    pkt_fwd=/opt/lora/mp_pkt_fwd.spi
+	else
+	    echo "$0: No SPI packet forwarder found"
+	    exit 1
+	fi
+    fi
+
+    echo $pkt_fwd
+}
+
 
 do_start() {
     read_card_info
@@ -40,13 +71,13 @@ do_start() {
     fi
 
     if [ ! -f $conf_dir/global_conf.json -o ! -f $conf_dir/local_conf.json ] ; then
-	echo "Not configured"
+	echo "$0: Not configured"
 	exit 1
     fi
 
+    pkt_fwd=$(select_fwd)
 
     echo -n "Starting $NAME: "
-    mkdir -p $run_dir
     # start packet forwarder
     start-stop-daemon --start --background --make-pidfile \
         --pidfile $pkt_fwd_pidfile --exec $pkt_fwd -- \
@@ -55,6 +86,8 @@ do_start() {
 }
 
 do_stop() {
+    pkt_fwd=$(select_fwd)
+
     echo -n "Stopping $NAME: "
     start-stop-daemon --stop --quiet --oknodo --pidfile $pkt_fwd_pidfile --retry 5
     rm -f $pkt_fwd_pidfile
