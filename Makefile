@@ -6,7 +6,7 @@
 #	Visit subdirs
 #
 # Subdirs we should visit
-SUBDIRS = bin $(wildcard roles/*/files)
+SUBDIRS = bin
 
 all::
 	for dir in ${SUBDIRS}; do \
