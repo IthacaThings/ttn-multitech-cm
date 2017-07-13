@@ -45,6 +45,8 @@ select_fwd() {
 	    pkt_fwd=/opt/lora/mp_pkt_fwd.usb
 	elif [ -x /opt/lora/poly_pkt_fwd ]; then
 	    pkt_fwd=/opt/lora/poly_pkt_fwd
+	elif [ -x /opt/lora/ttn_pkt_fwd ]; then
+	    pkt_fwd=/opt/lora/ttn_pkt_fwd
 	else
 	    echo "$0: No USB packet forwarder found"
 	    exit 1
@@ -70,24 +72,33 @@ do_start() {
         exit 1
     fi
 
-    if [ ! -f $conf_dir/global_conf.json -o ! -f $conf_dir/local_conf.json ] ; then
-	echo "$0: Not configured"
-	exit 1
-    fi
-
     pkt_fwd=$(select_fwd)
+
+    case ${pkt_fwd} in
+	/opt/lora/ttn_pkt_fwd)
+	    if [ ! -f $conf_dir/config.yml ]; then
+		echo "$0: Not configured"
+		exit 1
+	    fi
+	    cmd="start --config=$conf_dir/config.yml"
+	    ;;
+	/opt/lora/*)
+	    if [ ! -f $conf_dir/global_conf.json -o ! -f $conf_dir/local_conf.json ] ; then
+		echo "$0: Not configured"
+		exit 1
+	    fi
+	    cmd="-c $conf_dir -l $pkt_fwd_log"
+	;;
+    esac
 
     echo -n "Starting $NAME: "
     # start packet forwarder
     start-stop-daemon --start --background --make-pidfile \
-        --pidfile $pkt_fwd_pidfile --exec $pkt_fwd -- \
-        -c $conf_dir -l $pkt_fwd_log
+        --pidfile $pkt_fwd_pidfile --exec $pkt_fwd -- ${cmd}
     echo "OK"
 }
 
 do_stop() {
-    pkt_fwd=$(select_fwd)
-
     echo -n "Stopping $NAME: "
     start-stop-daemon --stop --quiet --oknodo --pidfile $pkt_fwd_pidfile --retry 5
     rm -f $pkt_fwd_pidfile
@@ -118,4 +129,3 @@ case "$1" in
         exit 1
         ;;
 esac
-
