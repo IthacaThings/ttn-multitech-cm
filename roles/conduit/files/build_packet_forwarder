@@ -1,0 +1,90 @@
+#!/bin/sh
+
+#
+#  Download the tarball of Go version of the packet forwarder and repackage as an ipk.
+#
+
+#  Only works with the multitech version for now
+
+BASE_URL="https://github.com/TheThingsNetwork/packet_forwarder/releases/download"
+SRC_TAR_NAME=multitech-conduit-pktfwd.tar.gz
+BINARY_NAME=ttn_pkt_fwd
+
+progname=$(basename $0)
+
+ipk=$1
+
+url="$BASE_URL/v${1}/${SRC_TAR_NAME}"
+ipk_file=$(basename ${ipk})
+ipk_dir=$(dirname ${ipk})
+expr "${ipk_dir}" : "/.*" >/dev/null || ipk_dir="${PWD}/${ipk_dir}"
+ipk_name=$(echo ${ipk_file} | sed -e 's/\([^_]*\)_.*\.ipk/\1/')
+version=$(echo ${ipk_file} | sed -e 's/.*_\([0-9.]*\)_.*\.ipk/\1/')
+arch=$(echo ${ipk_file} | sed -e 's/.*_\(.*\)\.ipk/\1/')
+tar_name=multitech-packet-forwarder-${version}.tgz
+
+# If the ipk was already built we have nothing to do
+test -e ${ipk} && exit 0
+
+# Work in a temporary directory and delete it on failure or success
+TMPDIR=$(mktemp -d -t ${progname})
+cleanup () {
+    rm -rf ${TMPDIR}
+}
+trap "cleanup" 0 1 2 3 13 15
+
+# Get the tarball with the binary
+if [ ! -e ${ipk_dir}/${tar_name} ]; then
+    echo "Fetching ${tar_name}"
+    (
+	cd ${TMPDIR}
+	wget -q --tries=10 --continue "${url}" || exit 1
+	mv ${SRC_TAR_NAME} ${ipk_dir}/${tar_name} || exit 1
+    )
+fi
+
+# Build the destination tree
+(
+    echo "building ${ipk_file}"
+
+    cd ${TMPDIR}
+
+    # Make the tree
+    mkdir -p opt/lora
+
+    # Extract the binary
+    tar xf ${ipk_dir}/${tar_name}
+
+    # Move binary in place
+    mv packet-forwarder opt/lora/${BINARY_NAME} || exit 1
+    chmod 755 opt/lora/${BINARY_NAME} || exit 1
+
+    # Build the control file
+    cat > control <<EOF
+Package: ${ipk_name}
+Version: ${version}
+Description: TTN Packet Forwarder
+Section: console/utils
+Priority: optional
+Maintainer: The Things Industries <eric@thethingsindustries.com>
+License: MIT
+Architecture: ${arch}
+OE: ${BINARY_NAME}
+Homepage: https://github.com/TheThingsNetwork/packet_forwarder
+Depends: libmpsse (>= 1.3), libc6 (>= 2.19)
+Source: git://github.com/TheThingsNetwork/packet_forwarder.git;protocol=git"
+EOF
+
+    # Build the postinst file which justs sets the file mode
+    cat > postinst <<EOF    
+chmod +x "/opt/lora/${BINARY_NAME}"
+EOF
+    chmod +x "postinst"
+
+    tar -czvf "data.tar.gz" "etc" "var" "opt" &> /dev/null
+    tar -czvf "control.tar.gz" "control" "postinst" &> /dev/null
+    tar -czvf "${ipk_file}" "data.tar.gz" "control.tar.gz" &> /dev/null
+    mv ${ipk_file} ${ipk_dir}
+)
+
+exit 0

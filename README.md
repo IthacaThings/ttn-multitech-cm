@@ -95,9 +95,7 @@ Instructions for installing Ansible
 ## Fetch the upstream files
 
 There is *Makefile* in the root of this repo that can be used to fetch
-files from upstream.  These include the *Poly Packet Forwarder*
-package, global configuration files and the *Let's Encrypt* signing
-certificate.
+files from upstream.  
 
 ### make fetch
 There are two commands to relating to fetching upstream files.  This
@@ -200,8 +198,7 @@ $ ansible HOSTNAME -m ping
 $ ansible-playbook -l HOSTNAME site.yaml
 ```
 ## Register the gateway
-Registration happens automatically in the list step of applying the
-playbook.  For this to happen, you need to be logged in.  To do this you need to log into [The Things Network](https://www.thethingsnetwork.org) and then click [this link](https://account.thethingsnetwork.org/users/authorize?client_id=ttnctl&redirect_uri=/oauth/callback/ttnctl&response_type=code) to generate a *TOKEN*.  Then log in using:
+Registration happens automatically during configuration of the router.  For this to happen, you need to be logged in.  To do this you need to log into [The Things Network](https://www.thethingsnetwork.org) and then click [this link](https://account.thethingsnetwork.org/users/authorize?client_id=ttnctl&redirect_uri=/oauth/callback/ttnctl&response_type=code) to generate a *TOKEN*.  Then log in using:
 ```
 $ bin/ttnctl user login *TOKEN*
 ```
@@ -209,7 +206,7 @@ $ bin/ttnctl user login *TOKEN*
 To manually re-run the registration step:
 
 ```
-$ make apply TAGS=register TARGET=*HOSTNAME*
+$ make apply TAGS=loraconfig TARGET=*HOSTNAME*
 ```
 Specify the name of your Conduit with *HOSTNAME*.  If you leave that
 off, all Conduit's will be registered, or their registration will be
@@ -310,7 +307,9 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 + [X] Configure and start ntpd
 ### Disable Multi-Tech Lora daemon
 + [X] Uninstall lora-network-server with opkg
++ [X] Uninstall lora-packet-forwarder with opkg
 ### Install TTN packet forwarder
++ [X] Works with TTN, MP and Poly packet-forwarders
 + [X] Fetch ipkg of ttn packet forwarder
 + [X] Install package
 + [X] Avoid install step if already installed
@@ -336,6 +335,7 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 ### Registration
 + [X] Fetch the correct version of [ttnctl](https://www.thethingsnetwork.org/docs/network/cli/quick-start.html#device-management)
 + [X] Register gateway with TTN
++ [X] Configure router if specified
 
 ### Firmware updates
 Can we deploy a new version of Multi-Tech mLinux remotely without

@@ -8,14 +8,14 @@ Requirements
 
 The following setup must be set up performed on the Contduit:
 
-+ Install mLinux (not AEP)
++ Install mLinux (this has not been tested on AEP)
 + Configure Network
 + Install a few packages for Ansible to run:
     + python-pkgutils
-	+ python-distutils
+    + python-distutils
 + Install a root key
     + This is required to allow secure login to the gateway
-	+ Maintain this file as *files/authorized_keys*
+    + Maintain this file as *files/authorized_keys*
 + Configure ssh tunnel
     + If accessing the Conduit remotely and it is not availble on the
       public Internet (and it should not be), an ssh tunnel needs to
@@ -32,6 +32,8 @@ Role Variables
 	<i>/usr/share/zoneinfo</i>.  E.g.: <b>US/Eastern</b></dd>
 	<dt>region</dt>
 	<dd>The region sets the frequency band, one of <b>AU</b>, <b>EU</b>, or <b>US</b></dd>
+	<dt>router</dt>
+	<dd>Sets the router to use, one of <b>switch-router</b> <b>ttn-router-asia-se</b> <b>ttn-router-brazil</b> <b>ttn-router-eu</b> <b>ttn-router-us-west</dd>
 	<dt>contact_email</dt>
 	<dd>An e-mail address to contact if there is a problem with the gateway</dd>
 	<dt>description</dt>
@@ -95,11 +97,9 @@ The following tags can be used to run a subset of the playbook.
 	<dt>forwarder</dt>
 	<dd>Removes the Multi-Tech packet forwarder and installs the TTN Poly Packet Forwarder</dd>
 	<dt>loraconfig</dt>
-	<dd>Sets up <i>/var/config/lora</i> and the necessary config files</dd>
+	<dd>Registers gateway and sets up <i>/var/config/lora</i> and the necessary config files</dd>
 	<dt>ca-certificates</dt>
 	<dd>Installs additional certificate authoritiy certificates for validating secure connections</dt>
-	<tt>register</dt>
-	<dd>Registers the gateway via ttnctl</dd>
 	<tt>ssh_tunnel</dt>
 	<dd>Sets up an ssh tunnel back to a control host<dd>
 </dl>

@@ -209,14 +209,51 @@
   tags: localtree
 
 #
+#	Register gateway
+#
+
+- name: check if logged into TTN
+  local_action:
+    module: shell
+    args: "bin/ttnctl user status"
+  tags: loraconfig
+
+- name: register non-TTN forwader gateway
+  local_action:
+    module: shell
+    args: "bin/register --id eui-{{ ansible_local.lora.eui }} --region {{ region }} --latitude {{ latitude }} --longitude {{ longitude }} --router {{ router }}"
+  when: poly_package | match("(mp|poly)-packet-forwarder_.*")
+  tags: loraconfig
+
+- name: register TTN forwader gateway
+  local_action:
+    module: shell
+    args: "bin/register --id {{ hostname }} --region {{ region }} --latitude {{ latitude }} --longitude {{ longitude }} --router {{ router }}"
+  when: poly_package | match("ttn-packet-forwarder_.*")
+  tags: loraconfig
+
+- name: get Gateway key
+  local_action:
+    module: shell
+    args: "bin/ttnctl gateway info {{ hostname }} | awk '/Access Key/{print $3}'"
+  register: gateway_key
+  when: poly_package | match("ttn-packet-forwarder_.*")
+  tags: loraconfig
+
+# XXX - Fail if empty
+
+#
 #	Remove Multi-Tech stuff that we don't want and install the TTN packet-forwarder
 #
 - name: Remove Multi-Tech lora-network-server
   opkg:
-    name: lora-network-server
+    name: lora-network-server,lora-packet-forwarder
     state: absent
   tags: forwarder
 
+#
+#	Make sure we have package for correct version
+#
 - name: Get info on local copy of packet-forwarder package
   local_action: stat
   args:
@@ -229,47 +266,90 @@
   args:
     url: "{{ poly_url }}/{{poly_package}}"
     dest: "{{ role_path }}/files"
-  when: poly_package_stat.stat.exists == false
+  when:
+    - poly_package_stat.stat.exists == false
+    - poly_package | match("(mp|poly)-packet-forwarder_.*")
   tags: forwarder
 
-- name: Get version of packet-forwarder installed
-  shell: "opkg list-installed | grep -E '(mp|poly)-packet-forwarder' | cut -d ' ' -f 3"
-  register: poly_version_installed
+- name: Fetch and build ttn_packet_forwarder package
+  local_action:
+    module: shell
+    args: "{{ role_path }}/files/build_packet_forwarder '{{ role_path }}/files/{{ poly_package }}'"
+  when:
+    - poly_package_stat.stat.exists == false
+    - poly_package | match("ttn-packet-forwarder_.*")
+  tags: forwarder
+
+- name: Get name and version of packet-forwarder installed
+  shell: "opkg list-installed | grep -E '(ttn|mp|poly)-packet-forwarder' | sed -e 's/ - /_/g'"
+  register: poly_installed
+  tags: forwarder
+
+- name: Get name and version of packet-forwarder wanted
+  local_action:
+    module: shell
+    args: "echo {{ poly_package }} | sed -e 's/_[a-z0-9]*.ipk//'"
+  register: poly_wanted
+  tags: forwarder
+
+- debug:
+    msg: "Installed: {{ poly_installed.stdout }}"
+  tags: forwarder
+
+- debug:
+    msg: "Watned: {{ poly_wanted.stdout }}"
+  tags: forwarder
+
+- debug:
+    msg: "Same version"
+  when: poly_installed.stdout == poly_wanted.stdout
+  tags: forwarder
+
+- debug:
+    msg: "Different versions"
+  when: poly_installed.stdout != poly_wanted.stdout
   tags: forwarder
 
 - name: Copy over packet-forwarder
   copy:
     src: "{{ poly_package }}"
     dest: "/var/tmp/{{ poly_package }}"
-  when: poly_version_installed.stdout != poly_version
+  when: poly_installed.stdout != poly_wanted.stdout
   tags: forwarder
 
 - name: Stop packet-forwarder
   service: name=ttn-pkt-forwarder state=stopped
-  when: poly_version_installed.stdout != poly_version
+  when: poly_installed.stdout != poly_wanted.stdout
+  ignore_errors: yes
   tags: forwarder
 
 - name: Remove packet-forwarder
-  shell: "opkg remove poly-packet-forwarder mp-packet-forwarder"
-  when: poly_version_installed.stdout != poly_version
+  shell: "opkg remove poly-packet-forwarder mp-packet-forwarder ttn-packet-forwarder"
+  when: poly_installed.stdout != poly_wanted.stdout
   tags: forwarder
 
 - name: Install packet-forwarder
   shell: "opkg install /var/tmp/{{ poly_package }}"
-  when: poly_version_installed.stdout != poly_version
+  when: poly_installed.stdout != poly_wanted.stdout
   notify: restart ttn-pkt-forwarder
   tags: forwarder
 
-- name: Override /etc/init.d/ttn-pkt-forwarder
+- name: Install /etc/init.d/ttn-pkt-forwarder
   copy:
     src: ttn-pkt-forwarder
     dest: /etc/init.d/
     mode: "0755"
     owner: root
     group: root
-  notify: restart ttn-pkt-forwarder
+  notify:
+    - update rc
+    - restart ttn-pkt-forwarder
   tags: forwarder
-    
+
+- name: Remove old .ipk files
+  shell: "rm -f /var/tmp/*-packet-forwarder_*.ipk"
+  tags: forwarder
+
 - name: Clean up poly-packet-forwarder crud
   file:
     name: /var/config/lora/local_conf.json-opkg
@@ -294,6 +374,7 @@
     mode: "0644"
     owner: root
     group: root
+  when: poly_package | match("(mp|poly)-packet-forwarder_.*")
   tags: loraconfig
 
 - name: Fetch appropriate global conf file
@@ -301,6 +382,7 @@
   args:
     url: "https://raw.githubusercontent.com/TheThingsNetwork/gateway-conf/master/{{region }}-global_conf.json"
     dest: "{{ role_path }}/files"
+  when: poly_package | match("(mp|poly)-packet-forwarder_.*")
   tags: loraconfig
 
 - name: /var/config/lora/ttn_global_conf.json
@@ -310,11 +392,42 @@
     mode: "0644"
     owner: root
     group: root
+  when: poly_package | match("(mp|poly)-packet-forwarder_.*")
   tags: loraconfig
 
 - name: Merge multitech_overrides in global_conf.json
   shell: node /opt/lora/merge.js /var/config/lora/ttn_global_conf.json /var/config/lora/multitech_overrides.json /var/config/lora/global_conf.json
   notify: restart ttn-pkt-forwarder
+  when: poly_package | match("(mp|poly)-packet-forwarder_.*")
+  tags: loraconfig
+
+- name: Remove json files from non-TTN forwarder
+  file:
+    name: "{{ item }}"
+    state: absent
+  when: poly_package | match("ttn-packet-forwarder_.*")
+  with_items:
+    - global_conf.json
+    - local_conf.json
+    - ttn_global_conf.json
+  tags: loraconfig
+  
+- name: Provide TTN packet forwarder config
+  template:
+    src: config.yml.j2
+    dest: /var/config/lora/config.yml
+    mode: "0644"
+    owner: root
+    group: root
+  notify: restart ttn-pkt-forwarder
+  when: poly_package | match("ttn-packet-forwarder_.*")
+  tags: loraconfig
+
+- name: Remove TTN packet forwarder config
+  file:
+    name: /var/config/lora/config.yaml
+    state: absent
+  when: poly_package | match("(mp|poly)-packet-forwarder_.*")
   tags: loraconfig
 
 #
@@ -348,15 +461,6 @@
     - lets-encrypt-x3-cross-signed.pem
   notify: update-ca-certificates
   tags: ca-certificates
-
-#
-#	Register gateway
-#
-- name: register gateway with TTN
-  local_action:
-    module: shell
-    args: "bin/register --eui {{ansible_local.lora.eui}} --region {{region}} --latitude {{ latitude }} --longitude {{ longitude }}"
-  tags: register
 
 #
 #	Set up ssh tunnel

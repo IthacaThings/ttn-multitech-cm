@@ -1,7 +1,7 @@
 ---
 # Global variables for this TTN organization
 
-# Conduits do not have sudo and su dows not work with Ansible
+# Conduits do not have sudo and su on mLinux does not work with Ansible
 ansible_user: root
 
 # User to log in and poke around on a Conduit
@@ -16,15 +16,24 @@ ssh_tunnel_daemon: /usr/bin/autossh
 ssh_tunnel_daemon_args: -f -M 10084 -o ServerAliveInterval=30
 
 # Version of the Poly Packet Fowarder
-poly_url: https://github.com/kersing/multitech-installer/raw/master
-poly_version: 3.0.0-r5
-poly_package: "mp-packet-forwarder_{{ poly_version }}_arm926ejste.ipk"
+poly_url: https://github.com/TheThingsNetwork/packet_forwarder/releases/download
+poly_version: 2.0.2
+poly_package: "ttn-packet-forwarder_{{ poly_version }}_arm926ejste.ipk
+#poly_url: https://github.com/kersing/multitech-installer/raw/master
+#poly_version: 2.1-r5
+#poly_package: "poly-packet-forwarder_{{ poly_version }}_arm926ejste.ipk"
+#poly_url: https://github.com/kersing/multitech-installer/raw/master
+#poly_version: 3.0.0-r5
+#poly_package: "mp-packet-forwarder_{{ poly_version }}_arm926ejste.ipk"
 
 # Pick a value from /usr/share/zoneinfo/REGION/ZONE, i.e. US/Eastern
 timezone: "US/Eastern"
 
 # Pick one of US (915) EU (868) AU (915)
 region: US
+
+# Pick a router ( switch-router ttn-router-asia-se ttn-router-brazil # ttn-router-eu ttn-router-us-west )
+router: ttn-router-us-west
 
 # Whom to contact about issues with this gateway
 contact_email: ttn-org@example.com
