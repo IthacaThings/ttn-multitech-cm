@@ -6,14 +6,15 @@ hostname: ttn-org-example
 # Define this to use an ssh tunnel
 ssh_tunnel_remote_port: 15022
 
-# Actual address or hostname of the gateway
+# Actual address or hostname of the gateway.  This can be a hostname
+# or IP address.
 ansible_host: hostname.example.com
 ansible_port: 22
 
 # Descriptive location of the gateway
 description: Test node in Org
 
-# Location, use -1 for altitude if not known
+# Location, use -1 for altitude if not known.
 latitude: 42.55555
 longitude: -76.55555
 altitude: -1
