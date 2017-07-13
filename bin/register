@@ -38,22 +38,30 @@ register_url = "https://account.thethingsnetwork.org/users/authorize?client_id=t
 #
 class Gateway(object):
     """Class to hold Gateway info"""
-    def __init__(self, options, name, frequency_plan, latitude, longitude):
+
+    info_re = re.compile(r"^\s+(?P<key>[A-za-z ]+):\s(?P<value>.*)\s*$")
+
+    def __init__(self, options, id, frequency_plan, latitude, longitude, router):
         """"""
         self.options = options
-        self.name = name
+        self.id = id
         self.frequency_plan = frequency_plan
         self.latitude = float(latitude)
         self.longitude = float(longitude)
+        self.router = router
         self.registered = False
 
     def __repr__(self):
-        return "%s: %s %s %f, %f" % (self.name, self.activated, self.frequency_plan, self.latitude, self.longitude)
+        return "%s: %s %s %f, %f %s" % (self.id, self.activated, self.frequency_plan, self.latitude, self.longitude, self.router)
 
     def register(self):
+        """ Register the gateway """
         rc = 0
         try:
-            cmd = [ self.options.binary, "gateway", "register", self.name, self.frequency_plan, '%f,%f' % (self.latitude, self.longitude) ]
+            cmd = [ self.options.binary, "gateway", "register", self.id, self.frequency_plan, '%f,%f' % (self.latitude, self.longitude) ]
+            if self.router:
+                cmd.append("--router-id")
+                cmd.append(self.router)
             if self.options.noop:
                 output = "NOOP: %s " % " ".join(cmd)
             else:
@@ -67,7 +75,7 @@ class Gateway(object):
             
         return [ rc, output ] 
 
-    def edit(self, frequency_plan, latitude, longitude):
+    def edit(self, frequency_plan, latitude, longitude, router):
         """ Change registration if something is different """
         changes = []
         if self.frequency_plan != frequency_plan:
@@ -76,27 +84,63 @@ class Gateway(object):
         if self.latitude != latitude or self.longitude != longitude:
             changes.append("--location")
             changes.append("%f,%f" % (latitude, longitude))
+        if router and self.router != router:
+            changes.append("--router-id")
+            changes.append(router)
 
         if not changes:
             return [ 0, "No changes required" ]
                 
-        if changes:
-            try:
-                cmd = [ self.options.binary, "gateway", "edit", self.name ] + changes
-                if self.options.noop:
-                    output = "NOOP: %s " % " ".join(cmd)
-                else:
-                    if self.options.debug:
-                        print("DBG: %s" % " ".join(cmd))
-                    output = subprocess.check_output(cmd)
-                    self.frequency_plan = frequency_plan
-                    self.latitude = latitude
-                    self.longitude = longitude
-            except subprocess.CalledProcessError as e:
-                rc = e.returncode
-                output = e.output
+        try:
+            cmd = [ self.options.binary, "gateway", "edit", self.id ] + changes
+            if self.options.noop:
+                output = "NOOP: %s " % " ".join(cmd)
+            else:
+                if self.options.debug:
+                    print("DBG: %s" % " ".join(cmd))
+                output = subprocess.check_output(cmd)
+                self.frequency_plan = frequency_plan
+                self.latitude = latitude
+                self.longitude = longitude
+            rc = 0
+        except subprocess.CalledProcessError as e:
+            rc = e.returncode
+            output = e.output
             
-            return [ rc, output ] 
+        return [ rc, output ] 
+
+    def get_info(self):
+        """ Get additional info via 'info' subcommand """
+
+        try:
+            cmd = [ self.options.binary, "gateway", "info", self.id ]
+            if self.options.debug:
+                print("DBG: %s" % " ".join(cmd))
+            lines = subprocess.check_output(cmd)
+        except subprocess.CalledProcessError as e:
+            print(e.output, file=sys.stderr, end="")
+
+        good_stuff = False
+        for line in lines.split("\n"):
+            if line.strip() == "":
+                continue
+
+            if line.strip().find("Found gateway") != -1:
+                good_stuff = True
+                continue
+
+            if line.strip() == "Collaborators:":
+                break
+            
+            match = self.info_re.match(line)
+            if not match:
+                continue
+
+            if match.group('key') == "Router":
+                self.router = match.group('value')
+            elif match.group('key') == "Access Key":
+                self.key = match.group('value')
+
         
 def ttn_gateway_list(options):
     """Return a dict of Gateways"""
@@ -125,9 +169,10 @@ def ttn_gateway_list(options):
         match = line_re.match(line)
         if not match:
             continue
-        gateway = Gateway(options, match.group(1), match.group(3), match.group(5), match.group(6))
+        gateway = Gateway(options, match.group(1), match.group(3), match.group(5), match.group(6), None)
         gateway.activated = bool(match.group(2))
-        gateways[gateway.name] = gateway
+        gateways[gateway.id] = gateway
+        gateway.get_info()
 
     return gateways
         
@@ -160,16 +205,22 @@ def main():
 
     #	Options
     group = parser.add_argument_group("Configuration options")
-    group.add_argument("--name",
-                       dest="name",
-                       help="Gateway name")
-    group.add_argument("--eui",
-                       dest="eui", required=True,
-                       help="EUI of Conduit")
+    group.add_argument("--id",
+                       dest="id", required=True,
+                       help="Gateway ID")
     group.add_argument("--region",
                        dest="region", required=True,
 		       choices=[ "AU", "EU", "US" ],
                        help="Frequency region, one of AU, EU, US")
+    group.add_argument("--router",
+                       dest="router",
+                       choices=["",
+                                "switch-router",
+                                "ttn-router-asia-se",
+                                "ttn-router-brazil",
+                                "ttn-router-eu",
+                                "ttn-router-us-west"],
+                       help="TTN router to use")
     group.add_argument("--latitude",
                        dest="latitude", type=float, required=True,
                        help="Latitude of Conduit")
@@ -185,10 +236,6 @@ def main():
 
     options = parser.parse_args()
 
-    eui_re = re.compile('^(([a-fA-F0-9]{2}:?){7}[a-fA-F0-9]{2})$')
-    if not eui_re.match(options.eui):
-        parser.error("Invalid EUI: %s" % options.eui)
-
     # Find ttncli binary
     if options.debug:
         print("DBG: binary: %s" % options.binary)
@@ -201,24 +248,19 @@ def main():
     elif options.region == "US":
         frequency_plan = "US_902_928"
 
-    # If name is not specified, register the old way
-    if not options.name:
-        options.name = "eui-" + "".join(options.eui.split(":"))
-        if options.debug:
-            print("DBG: %s -> %s" % (options.eui, options.name))
-
     if options.debug:
-        print("DBG: Name: %s Frequency Plan: %s EUI: %s Location: %f, %f" % (options.name, frequency_plan, options.eui, options.latitude, options.longitude))
+        print("DBG: ID: %s Frequency Plan: %s Location: %f, %f Router: %s" % (options.id, frequency_plan, options.latitude, options.longitude, options.router))
 
     gateways = ttn_gateway_list(options)
     if gateways == None:
         print("Go to %s to get an access code" % register_url, file=sys.stderr)
         return (1)
 
-    if gateways.has_key(options.name):
-        rc, output = gateways[options.name].edit(frequency_plan, options.latitude, options.longitude)
-    else:
-        rc, output = Gateway(options, options.name, frequency_plan, options.latitude, options.longitude).register()
+    try:
+        rc, output = gateways[options.id].edit(frequency_plan, options.latitude, options.longitude, options.router)
+
+    except KeyError:
+        rc, output = Gateway(options, options.id, frequency_plan, options.latitude, options.longitude, options.router).register()
 
     if rc != 0:
         print("Registration failed: %s" % output, file=sys.stderr)
