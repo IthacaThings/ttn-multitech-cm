@@ -3,7 +3,8 @@
 # Hostname.  Start with ttn-ORG
 hostname: ttn-org-example
 
-# Define this to use an ssh tunnel
+# Define this to use an ssh tunnel.  Leave undefined or set to '0' to
+# disable ssh tunnel.
 ssh_tunnel_remote_port: 15022
 
 # Actual address or hostname of the gateway.  This can be a hostname

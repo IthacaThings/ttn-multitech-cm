@@ -48,6 +48,10 @@ issue the following command on the jump host.
 $ ssh -P PORT root@localhost
 ```
 
+If you do not want to use a jump host, comment out
+*ssh_tunnel_remote_port* or set it to *0* in your conduit's config
+file in *host_vars*.
+
 ## Branches 
 
 This repo has a few main branches:
@@ -121,7 +125,7 @@ and configure your global config items.  The default framework assumes
 that all gateways are in the same region and timezone.
 
 ### Start an inventory
-Copy *hosts-examnple* to *hosts*
+Copy *hosts-example* to *hosts*
 
 ### Set authorized keys for logging into conduits
 Copy *roles/conduit/files/authorized_keys-example* to
