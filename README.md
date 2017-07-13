@@ -139,7 +139,8 @@ ssh tunnel server, aka jumphost.
 
 ## Add each of your gateways to *hosts*
 Normally you would put them in the *production* group.  There is also
-a *test* group.
+a *test* group that you can use if you have one or more gateways you
+use for testing.
 
 You can divide them into other groups, such as different areas of
 your organizations region.  See Ansible documentation
@@ -149,7 +150,8 @@ for more information.
 ## Add a file for each of your hosts in *host_vars/**HOST**.yml*
 Copy *host_vars/ttn-org-example.yml* for each of your nodes.  Remember
 that *ttn-* is constant, *org* should be the name of your TTN
-organization and *example* will be a name for this conduit.
+organization and *example* will be a name for this conduit.  Use a
+short descriptive name.  I.e. ttn-nyc-midtown or ttn-ith-coopext.
 
 Most of the variables in this file should be self-explanitory.
 
