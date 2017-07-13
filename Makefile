@@ -40,6 +40,9 @@ all::	apply
 ping: true
 	ansible -o -m ping ${TARGET}
 
+test:
+	ansible-playbook ${PLAYBOOK_ARGS} -C site.yml
+
 list-hosts: true
 	@echo "${HOSTS}"
 
