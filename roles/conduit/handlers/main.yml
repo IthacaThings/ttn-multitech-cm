@@ -20,6 +20,12 @@
   shell: "update-ca-certificates"
 
 #
+#	Make sure init script is run
+#
+- name: update rc
+  shell: "update-rc.d -f ttn-pkt-forwarder remove; update-rc.d ttn-pkt-forwarder defaults 95 30"
+  
+#
 #	Restart the packet forwarder
 #
 - name: restart ttn-pkt-forwarder
