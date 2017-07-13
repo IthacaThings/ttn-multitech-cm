@@ -107,15 +107,6 @@ that nothing breaks before deploying them to a production environment.
 Before your initial configuration, run this command.
 
 ```
-$ make fetch
-```
-
-### make all
-Files that are required to run, or are built from data obtained from
-Gateways will be downloaded everytime *make* is run with *all* or no
-argument.
-
-```
 $ make all
 ```
 
