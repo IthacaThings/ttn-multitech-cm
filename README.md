@@ -97,12 +97,15 @@ Instructions for installing Ansible
 There is *Makefile* in the root of this repo that can be used to fetch
 files from upstream.  
 
-### make fetch
-There are two commands to relating to fetching upstream files.  This
-command will fetch files that are required, but updates can
-potentially break gateway configuration.  After an initial deploy,
-these updated files should be used in a test environment to ensure
-that nothing breaks before deploying them to a production environment.
+### make all
+This command will fetch files that are required to run ansible on the
+target.  Principly the ttnctl binary needed to register a gateway with
+TTN.
+
+Updates can potentially break gateway configuration.  After an initial
+deploy, these updated files should be used in a test environment to
+ensure that nothing breaks before deploying them to a production
+environment.
 
 Before your initial configuration, run this command.
 
