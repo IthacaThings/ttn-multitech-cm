@@ -18,7 +18,7 @@ ssh_tunnel_daemon_args: -f -M 10084 -o ServerAliveInterval=30
 # Version of the Poly Packet Fowarder
 poly_url: https://github.com/TheThingsNetwork/packet_forwarder/releases/download
 poly_version: 2.0.2
-poly_package: "ttn-packet-forwarder_{{ poly_version }}_arm926ejste.ipk
+poly_package: "ttn-packet-forwarder_{{ poly_version }}_arm926ejste.ipk"
 #poly_url: https://github.com/kersing/multitech-installer/raw/master
 #poly_version: 2.1-r5
 #poly_package: "poly-packet-forwarder_{{ poly_version }}_arm926ejste.ipk"
