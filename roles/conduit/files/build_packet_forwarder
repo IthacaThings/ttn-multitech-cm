@@ -14,7 +14,6 @@ progname=$(basename $0)
 
 ipk=$1
 
-url="$BASE_URL/v${1}/${SRC_TAR_NAME}"
 ipk_file=$(basename ${ipk})
 ipk_dir=$(dirname ${ipk})
 expr "${ipk_dir}" : "/.*" >/dev/null || ipk_dir="${PWD}/${ipk_dir}"
@@ -23,11 +22,13 @@ version=$(echo ${ipk_file} | sed -e 's/.*_\([0-9.]*\)_.*\.ipk/\1/')
 arch=$(echo ${ipk_file} | sed -e 's/.*_\(.*\)\.ipk/\1/')
 tar_name=multitech-packet-forwarder-${version}.tgz
 
+url="$BASE_URL/v${version}/${SRC_TAR_NAME}"
+
 # If the ipk was already built we have nothing to do
 test -e ${ipk} && exit 0
 
 # Work in a temporary directory and delete it on failure or success
-TMPDIR=$(mktemp -d -t ${progname})
+TMPDIR=$(mktemp -d -t ${progname}.XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX)
 cleanup () {
     rm -rf ${TMPDIR}
 }
@@ -37,7 +38,7 @@ trap "cleanup" 0 1 2 3 13 15
 if [ ! -e ${ipk_dir}/${tar_name} ]; then
     echo "Fetching ${tar_name}"
     (
-	cd ${TMPDIR}
+	cd ${TMPDIR} || exit 1
 	wget -q --tries=10 --continue "${url}" || exit 1
 	mv ${SRC_TAR_NAME} ${ipk_dir}/${tar_name} || exit 1
     )
@@ -47,13 +48,13 @@ fi
 (
     echo "building ${ipk_file}"
 
-    cd ${TMPDIR}
+    cd ${TMPDIR} || exit 1
 
     # Make the tree
-    mkdir -p opt/lora
+    mkdir -p opt/lora || exit 1
 
     # Extract the binary
-    tar xf ${ipk_dir}/${tar_name}
+    tar xf ${ipk_dir}/${tar_name} || exit 1
 
     # Move binary in place
     mv packet-forwarder opt/lora/${BINARY_NAME} || exit 1
@@ -81,10 +82,10 @@ chmod +x "/opt/lora/${BINARY_NAME}"
 EOF
     chmod +x "postinst"
 
-    tar -czvf "data.tar.gz" "etc" "var" "opt" &> /dev/null
-    tar -czvf "control.tar.gz" "control" "postinst" &> /dev/null
-    tar -czvf "${ipk_file}" "data.tar.gz" "control.tar.gz" &> /dev/null
-    mv ${ipk_file} ${ipk_dir}
+    tar -czvf "data.tar.gz" "opt" >/dev/null 2>&1
+    tar -czvf "control.tar.gz" "control" "postinst" >/dev/null 2>&1
+    tar -czvf "${ipk_file}" "data.tar.gz" "control.tar.gz" >/dev/null 2>&1
+    mv ${ipk_file} ${ipk_dir} || exit 1
 )
 
 exit 0
