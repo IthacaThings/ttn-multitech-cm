@@ -1,4 +1,4 @@
-[appurl]: http://www.thethingsnetwork.org/
+z[appurl]: http://www.thethingsnetwork.org/
 [![The Things Network](https://ttnstaticfile.blob.core.windows.net/static/ttn/media/logo/TheThingsRond.png)][appurl]
 
 # Configuration Management of Multi-Tech Conduits as The Things Network Gateways
@@ -171,17 +171,58 @@ $ make TARGET=*HOSTNAME* syntax-check
 ```
 $ make TARGET=*HOSTNAME* ping
 ```
+If ssh keys are not yet setup on the Conduit (i.e., if you've not done the first part of "Deploying a Conduit") this will fail.
 
 ## Apply the playbook to the host
 ```
 $ make TARGET=*HOSTNAME* apply
 ```
 
+## Set up authorized keys
+1. Copy *roles/conduit/files/authorized_keys-example* to *roles/conduit/files/authorized_keys*
+2. Edit *roles/conduit/files/authorized_keys* to add the SSH public keys of anyone you want to be able to log in as root.
+
 # Deploying a Conduit
 ## Configure host specific data in this control repo
 ## Configure the conduit on the local network
+Do this by updating conduit's `/etc/network/interfaces` appropriately.
+### For DHCP
+```
+auto eth0
+iface ech0 inet dhcp
+```
+### For static IPv4
+```
+auto eth0
+iface eth0 inet static
+address 192.168.0.2	# change this as needed
+netmask 255.255.255.0	# change this as needed
+gateway 192.168.0.1	# change this as needed
+
+# change this to your domain server; or leave at 8.8.8.8 to use the google public DNS.
+post-up echo 'nameserver 8.8.8.8` >/etc/resovl.conf
+
+# this alternate example sets two nameservers (these are fictitious) and a default domain.
+#
+# post-up printf 'search example.com\nnameserver 198.51.100.1\nnameserver 198.51.100.2' >/etc/resolv.conf
+```
+
 ## Set a secure root password
+On the Conduit:
+```
+mtctd login: root
+passwd: 
+root@mtcdt:~# passwd
+Enter new UNIX password:
+Retype new UNIX password:
+root@mtcdt:~#
+```
+Remember the password you supplied above.
+
 ## Copy *roles/conduit/files/authorized_keys* to */home/root/.ssh/*
+The easy way to do this is to open *authorized_keys* with `gedit` on your host, then copy/paste
+to a terminal window.
+
 ## Run the following commands so Ansible can run
 ```
 # opkg update
@@ -195,7 +236,7 @@ $ ansible HOSTNAME -m ping
 ```
 ## Run Ansible
 ```
-$ ansible-playbook -l HOSTNAME site.yaml
+$ ansible-playbook -l HOSTNAME site.yml
 ```
 ## Register the gateway
 Registration happens automatically during configuration of the router.  For this to happen, you need to be logged in.  To do this you need to log into [The Things Network](https://www.thethingsnetwork.org) and then click [this link](https://account.thethingsnetwork.org/users/authorize?client_id=ttnctl&redirect_uri=/oauth/callback/ttnctl&response_type=code) to generate a *TOKEN*.  Then log in using:
