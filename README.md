@@ -1,4 +1,4 @@
-z[appurl]: http://www.thethingsnetwork.org/
+[appurl]: http://www.thethingsnetwork.org/
 [![The Things Network](https://ttnstaticfile.blob.core.windows.net/static/ttn/media/logo/TheThingsRond.png)][appurl]
 
 # Configuration Management of Multi-Tech Conduits as The Things Network Gateways
