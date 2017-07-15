@@ -176,9 +176,9 @@
   tags: sshd
 
 #
-#	Setup local config stuff
+#	Move /usr/local to /var/config/local so it survives an upgrade
 #
-- name: /var/config/local
+- name: Create /var/config/local
   file:
     name: /var/config/local
     state: directory
@@ -201,11 +201,30 @@
     - share
   tags: localtree
 
+- name: Get stat info about /usr/local
+  stat:
+    path: /usr/local
+  register: usr_local
+  tags: localtree
+
+- name: Copy /usr/local content to /var/config/local
+  shell: "rsync -av /usr/local /var/config"
+  when: usr_local.stat.isdir is defined and usr_local.stat.isdir == True
+  tags: localtree
+
+- name: Remove /usr/local tree
+  file:
+    name: /usr/local
+    state: absent
+  when: usr_local.stat.isdir is defined and usr_local.stat.isdir == True
+  tags: localtree
+
 - name: Point /usr/local at /var/config/local
   file:
     name: /usr/local
     state: link
     src: /var/config/local
+  when: usr_local.stat.isdir is defined and usr_local.stat.isdir == True
   tags: localtree
 
 #

@@ -93,7 +93,7 @@ The following tags can be used to run a subset of the playbook.
 	<dt>sshd</dt>
 	<dd>Configures and secures sshd</dd>
 	<dt>localtree</dt>
-	<dd>Builds a <i>/usr/local</i> tree in <i>/var/config/local</i></dd>
+	<dd>Moves <i>/usr/local</i> tree to <i>/var/config/local</i></dd>
 	<dt>forwarder</dt>
 	<dd>Removes the Multi-Tech packet forwarder and installs the TTN Poly Packet Forwarder</dd>
 	<dt>loraconfig</dt>
