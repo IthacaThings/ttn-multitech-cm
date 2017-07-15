@@ -92,6 +92,8 @@ The following tags can be used to run a subset of the playbook.
 	<dd>Adds the <i>ttn</i> user and sets ssh login keys</dd>
 	<dt>sshd</dt>
 	<dd>Configures and secures sshd</dd>
+	<dt>services</dt>
+	<dd>Config for other services, currently just disables mosquitto</dd>
 	<dt>localtree</dt>
 	<dd>Moves <i>/usr/local</i> tree to <i>/var/config/local</i></dd>
 	<dt>forwarder</dt>

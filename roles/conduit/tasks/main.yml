@@ -176,6 +176,19 @@
   tags: sshd
 
 #
+#	Stop any services we don't want
+#
+
+    # 'enabled: no' does not work
+- name: Disable mosquitto
+  lineinfile: dest=/etc/default/mosquitto
+    regexp="^ENABLED="
+    line="ENABLED="no""
+    state=present
+  notify: Stop mosquitto
+  tags: services  
+
+#
 #	Move /usr/local to /var/config/local so it survives an upgrade
 #
 - name: Create /var/config/local
