@@ -218,14 +218,14 @@
     args: "bin/ttnctl user status"
   tags: loraconfig
 
-- name: register non-TTN forwader gateway
+- name: register non-TTN forwarder gateway
   local_action:
     module: shell
     args: "bin/register --id eui-{{ ansible_local.lora.eui }} --region {{ region }} --latitude {{ latitude }} --longitude {{ longitude }} --router {{ router }}"
   when: poly_package | match("(mp|poly)-packet-forwarder_.*")
   tags: loraconfig
 
-- name: register TTN forwader gateway
+- name: register TTN forwarder gateway
   local_action:
     module: shell
     args: "bin/register --id {{ hostname }} --region {{ region }} --latitude {{ latitude }} --longitude {{ longitude }} --router {{ router }}"
@@ -290,24 +290,6 @@
     module: shell
     args: "echo {{ poly_package }} | sed -e 's/_[a-z0-9]*.ipk//'"
   register: poly_wanted
-  tags: forwarder
-
-- debug:
-    msg: "Installed: {{ poly_installed.stdout }}"
-  tags: forwarder
-
-- debug:
-    msg: "Watned: {{ poly_wanted.stdout }}"
-  tags: forwarder
-
-- debug:
-    msg: "Same version"
-  when: poly_installed.stdout == poly_wanted.stdout
-  tags: forwarder
-
-- debug:
-    msg: "Different versions"
-  when: poly_installed.stdout != poly_wanted.stdout
   tags: forwarder
 
 - name: Copy over packet-forwarder
