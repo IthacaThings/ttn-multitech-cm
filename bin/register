@@ -68,6 +68,8 @@ class Gateway(object):
                 if self.options.debug:
                     print("DBG: %s" % " ".join(cmd))
                 output = subprocess.check_output(cmd)
+                if self.options.debug:
+                    print("DBG: %s" % "\nDBG: ".join(output.split("\n")))
                 self.registered = True
         except subprocess.CalledProcessError as e:
             rc = e.returncode
@@ -99,6 +101,8 @@ class Gateway(object):
                 if self.options.debug:
                     print("DBG: %s" % " ".join(cmd))
                 output = subprocess.check_output(cmd)
+                if self.options.debug:
+                    print("DBG: %s" % "\nDBG: ".join(output.split("\n")))
                 self.frequency_plan = frequency_plan
                 self.latitude = latitude
                 self.longitude = longitude
@@ -212,7 +216,7 @@ def main():
                        dest="region", required=True,
 		       choices=[ "AU", "EU", "US" ],
                        help="Frequency region, one of AU, EU, US")
-    group.add_argument("--router",
+    group.add_argument("--router", "--router-id",
                        dest="router",
                        choices=["",
                                 "switch-router",
