@@ -407,7 +407,7 @@
 
 - name: Remove TTN packet forwarder config
   file:
-    name: /var/config/lora/config.yaml
+    name: /var/config/lora/config.yml
     state: absent
   when: poly_package | match("(mp|poly)-packet-forwarder_.*")
   tags: loraconfig
