@@ -179,13 +179,14 @@
 #	Stop any services we don't want
 #
 
-    # 'enabled: no' does not work
+- name: Stop mosquitto
+  service: name=mosquitto state=stopped
+
 - name: Disable mosquitto
   lineinfile: dest=/etc/default/mosquitto
     regexp="^ENABLED="
     line="ENABLED="no""
     state=present
-  notify: Stop mosquitto
   tags: services  
 
 #
