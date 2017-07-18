@@ -279,8 +279,16 @@
 #
 - name: Remove Multi-Tech lora-network-server
   opkg:
-    name: lora-network-server,lora-packet-forwarder
+    name: lora-network-server
     state: absent
+  when: ansible_local.opkg.lora_network_server is defined
+  tags: forwarder
+
+- name: Remove Multi-Tech lora-packet-forwarder
+  opkg:
+    name: lora-packet-forwarder
+    state: absent
+  when: ansible_local.opkg.lora_packet_forwarder is defined
   tags: forwarder
 
 #
