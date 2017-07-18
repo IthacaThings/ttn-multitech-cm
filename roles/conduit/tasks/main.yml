@@ -21,15 +21,14 @@
     group: root
   tags: setup
 
-- name: /var/config/ansible/dirs
-  file:
-    name: "/var/config/ansible/{{ item }}"
-    state: directory
+- name: /var/config/ansible/facts.d
+  copy:
+    dest: "/var/config/ansible/"
     mode: "0755"
+    directory_mode: "0755"
     owner: root
     group: root
-  with_flattened:
-    - facts.d
+    src: facts.d
   tags: setup
 
 - name: Point /etc/ansible at /var/config/ansible

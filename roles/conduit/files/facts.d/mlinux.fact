@@ -1,0 +1,8 @@
+#!/bin/sh
+
+cat << EOF
+{
+	"version": "$(cat /etc/mlinux-version | sed -n -e '/^mLinux/s/mLinux //p')",
+	"revision": "$(cat /etc/mlinux-version | sed -n -e '/^Revision: /s/Revision: //p')"
+}
+EOF
