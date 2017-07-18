@@ -1,0 +1,138 @@
+---
+#
+#	Check mLinux version
+#
+
+- name: Check if md5sums_{{ mlinux_version }}.txt is downloaded
+  local_action: stat
+  args:
+    path: "{{ role_path }}/files/md5sums_{{ mlinux_version }}.txt"
+  register: mlinux_md5sums_stat
+  
+- name: Download md5sums_{{ mlinux_version }}.txt
+  local_action: get_url
+  args:
+    url: "{{ mlinux_url }}/md5sums.txt"
+    dest: "{{ role_path }}/files/md5sums_{{ mlinux_version }}.txt"
+    timeout: 14400
+  when:
+    - mlinux_md5sums_stat.stat.exists == False
+
+- name: Create /var/volatile/flash-upgrade
+  file:
+    name: /var/volatile/flash-upgrade
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+
+  # upgrade.bin
+- name: Get expected md5 of {{ mlinux_upgrade_bin }}
+  local_action:
+    module: shell
+    args: "grep '{{ mlinux_upgrade_bin }}' {{ role_path }}/files/md5sums_{{ mlinux_version }}.txt | cut -d ' ' -f 1"
+  register: mlinux_upgrade_expected_md5
+
+- name: Get info about /var/volatile/flash-upgrade/upgrade.bin
+  stat:
+    path: "/var/volatile/flash-upgrade/upgrade.bin"
+    get_md5: yes
+  register: mlinux_upgrade_target_stat
+
+- name: Check if {{ mlinux_upgrade_bin }} is downloaded
+  local_action: stat
+  args:
+    path: "{{ role_path }}/files/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
+  register: mlinux_upgrade_stat
+  when:
+    - mlinux_upgrade_target_stat.stat.exists == False or mlinux_upgrade_target_stat.stat.md5 != mlinux_upgrade_expected_md5.stdout
+  
+- name: Remove bad copy of {{ mlinux_upgrade }}
+  local_action: file
+  args:
+    name: "{{ role_path }}/files/{{ mlinux_upgrade }}_{{ mlinux_version }}"
+    state: absent
+  when:
+    - mlinux_upgrade_target_stat.stat.exists == False or mlinux_upgrade_target_stat.stat.md5 != mlinux_upgrade_expected_md5.stdout
+    - mlinux_upgrade_stat.stat.exists and mlinux_upgrade_stat.stat.md5 != mlinux_upgrade_expected_md5.stdout
+
+- name: Download {{ mlinux_upgrade_bin }}
+  local_action: get_url
+  args:
+    url: "{{ mlinux_url }}/{{ mlinux_upgrade_bin }}"
+    dest: "{{ role_path }}/files/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
+    timeout: 14400
+    checksum: "md5:{{ mlinux_upgrade_expected_md5.stdout }}"
+  when:
+    - mlinux_upgrade_target_stat.stat.exists == False or mlinux_upgrade_target_stat.stat.md5 != mlinux_upgrade_expected_md5.stdout
+    - mlinux_upgrade_stat.stat.exists == False
+
+- name: Get info about {{ mlinux_upgrade_bin }}
+  local_action: stat
+  args:
+    path: "{{ role_path }}/files/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
+  register: mlinux_upgrade_stat
+  when:
+    - mlinux_upgrade_target_stat.stat.exists == False or mlinux_upgrade_target_stat.stat.md5 != mlinux_upgrade_expected_md5.stdout
+  
+- name: Copy {{ mlinux_upgrade_bin }} to {{ hostname }}
+  copy:
+    dest: /var/volatile/flash-upgrade/upgrade.bin
+    src: "{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
+    mode: "0600"
+    owner: root
+    group: root
+    unsafe_writes: yes
+  register: upgrade_copy
+  when:
+    - mlinux_upgrade_target_stat.stat.exists == False or mlinux_upgrade_target_stat.stat.md5 != mlinux_upgrade_expected_md5.stdout
+
+- name: Verify target checksum
+  fail:
+    msg: "Target checksum mis-match on /var/volatile/flash-upgrade/upgrade.bin"
+  when: 
+    - (upgrade_copy|changed and upgrade_copy.checksum != mlinux_upgrade_stat.stat.checksum) or
+        (mlinux_upgrade_target_stat.stat.exists and mlinux_upgrade_target_stat.stat.md5 != mlinux_upgrade_expected_md5.stdout)
+
+  # If everything is good, do upgrade
+- name: Signal ready for flash upgrade
+  file:
+    state: touch
+    name: /var/volatile/do_flash_upgrade
+
+  # Reboot and wait for it to return
+- name: Reboot for flash upgrade
+  shell: /sbin/reboot
+  async: 0
+  poll: 0
+
+- name: Wait for reboot
+  wait_for:
+    host: "{{ ansible_host }}"
+    state: started
+    port: "{{ ansible_port }}"
+    delay: 30 
+    timeout: 1200
+    connect_timeout: 15
+  connection: local
+
+  # Recover state
+- name: Install Ansible dependencies
+  local_action: shell
+  args: "ssh -p {{ ansible_port }} {{ ansible_user }}@{{ ansible_host }} opkg install python-pkgutil python-distutils"
+
+- name: Point /etc/ansible at /var/config/ansible
+  file:
+    name: /etc/ansible
+    state: link
+    src: /var/config/ansible
+  
+- name: Reload ansible_local
+  setup: filter=ansible_local
+
+# XXX - Rest root password
+# XXX - Fix version in /etc/opkg/mlinux-feeds.conf
+# XXX - opkg update
+# XXX - opkg install python-distutils python-pkgutil
+# XXX - Authorized keys
+
