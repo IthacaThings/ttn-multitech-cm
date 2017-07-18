@@ -3,13 +3,18 @@
 #
 #	Ansible first pass setup
 #
-- name: Install Ansible dependencies
+- name: Install Ansible dependency python-distutils
   opkg: 
     state: installed
-    pkg: "{{ item }}"
-  with_flattened:
-    - python-pkgutil
-    - python-distutils
+    pkg: "python-distutils"
+  when: ansible_local.opkg.python_distutils is not defined
+  tags: setup
+
+- name: Install Ansible dependency python-pkgutil
+  opkg: 
+    state: installed
+    pkg: "python-pkgutil"
+  when: ansible_local.opkg.python_pkgutil is not defined
   tags: setup
 
 - name: /var/config/ansible
@@ -38,22 +43,18 @@
     src: /var/config/ansible
   tags: setup
 
-- name: Install fact scripts
-  copy:
-    src: "{{ item }}"
-    dest: /var/config/ansible/facts.d/
-    mode: "0755"
-    owner: root
-    group: root
-  with_flattened:
-    - lora.fact
-    - conduit.fact
-  tags: setup
-
 - name: Reload ansible_local
   setup: filter=ansible_local
   tags: setup
 
+- name: Upgrade mlinux
+  include_role:
+    name: mlinux
+  when:
+    - mlinux_version is defined
+    - mlinux_version != ansible_local.mlinux.version
+  tags: setup
+  
 #
 #	Set hostname
 #
@@ -243,6 +244,8 @@
 #
 #	Register gateway
 #
+
+# XXX - If changing from mp/poly <-> ttn delete the GW first
 
 - name: check if logged into TTN
   local_action:
