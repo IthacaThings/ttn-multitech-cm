@@ -11,7 +11,7 @@
 #	Restart sshd after config changes
 #
 - name: Restart ssh
-  service: name=ssh state=restarted
+  service: name=sshd state=restarted
 
 #
 #	Run update-ca-certificates
