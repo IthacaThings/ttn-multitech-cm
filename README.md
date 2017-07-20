@@ -255,8 +255,8 @@ updated.
 
 # Syncing with Upstream
 This is necessary when the global configurations change, or if there
-is a new version of the poly-packet-forwarder.  The same testing steps
-apply if there is a new version of mLinux.
+is a new version of one of the packet forwarder applications.  The
+same testing steps apply if there is a new version of mLinux.
 
 ## Commit all your changes
 Before upgrading to new upstream files you should at least commit all
