@@ -7,14 +7,18 @@
   opkg: 
     state: installed
     pkg: "python-distutils"
-  when: ansible_local.opkg.python_distutils is not defined
+  when:
+    - ansible_local.opkg is defined
+    - ansible_local.opkg.python_distutils is not defined
   tags: setup
 
 - name: Install Ansible dependency python-pkgutil
   opkg: 
     state: installed
     pkg: "python-pkgutil"
-  when: ansible_local.opkg.python_pkgutil is not defined
+  when:
+    - ansible_local.opkg is defined
+    - ansible_local.opkg.python_pkgutil is not defined
   tags: setup
 
 - name: /var/config/ansible
