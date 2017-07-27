@@ -3,8 +3,6 @@
 # Info for Ansible to config the SSH tunnel server
 ansible_host: jumphost.example.com
 ansible_port: 2222
+
 # The user to log into the host
 ansible_user: ttn-org
-ansible_become: true
-ansible_become_user: root
-ansible_become_method: sudo

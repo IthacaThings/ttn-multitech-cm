@@ -1,2 +1,6 @@
 ---
 # defaults file for sshhost
+
+ansible_become: true
+ansible_become_user: root
+ansible_become_method: sudo
