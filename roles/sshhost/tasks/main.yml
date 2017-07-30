@@ -23,7 +23,12 @@
     group: "{{ ssh_tunnel_remote_user }}"
   tags: users
 
-# Build dynaically by harvesting catalog data?
+- name: Create authorized keys
+  local_action:
+    module: shell
+    args: "( cat roles/conduit/files/authorized_keys; bin/gen_authorized_keys ) > {{ role_path }}/files/authorized_keys"
+  tags: users
+
 # Using a template?
 - name: "Install {{ ssh_tunnel_remote_user }} authorized keys"
   copy:
