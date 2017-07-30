@@ -7,7 +7,7 @@ forwarder_baseurl_ttn: https://github.com/TheThingsNetwork/packet_forwarder/rele
 
 # mLinux upgrade info
 mlinux_upgrade_bin: "mlinux-factory-image-mtcdt-upgrade.bin"
-mlinux_url: "http://www.multitech.net/mlinux/images/mtcdt/{{mlinux_version }}/mtcdt"
+mlinux_url: "http://www.multitech.net/mlinux/images/mtcdt/{{mlinux_version }}"
 
 # SSH tunnel
 ssh_tunnel_ssh_key: /etc/ssh/ssh_host_rsa_key
