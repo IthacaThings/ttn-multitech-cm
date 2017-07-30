@@ -2,12 +2,6 @@
 # handlers file for setup
 
 #
-#	Set hostname when /etc/hostsname is updated
-#
-- name: Set hostname
-  shell: "hostname $(cat /etc/hostname)"
-
-#
 #	Restart sshd after config changes
 #
 - name: Restart ssh
@@ -42,3 +36,11 @@
 #
 - name: restart ssh_tunnel
   service: name=ssh_tunnel state=restarted
+
+#
+#	Set hostname when /etc/hostsname is updated
+#
+- name: Set hostname
+  shell: "hostname $(cat /etc/hostname)"
+
+  
