@@ -12,6 +12,11 @@ ssh_tunnel_remote_port: 15022
 ansible_host: hostname.example.com
 ansible_port: 22
 
+# To upgrade to a specific version of mLinux, specify it here.
+# It's best to do this when you are on the same network, or have
+# serial console access to the gateway
+# mlinux_version 3.3.7
+
 # Descriptive location of the gateway
 description: Test node in Org
 
