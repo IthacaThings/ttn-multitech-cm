@@ -47,7 +47,7 @@
   when:
     - mlinux_upgrade_target_stat.stat.exists == False or mlinux_upgrade_target_stat.stat.md5 != mlinux_upgrade_expected_md5.stdout
   
-- name: Remove bad copy of {{ mlinux_upgrade }}
+- name: Remove bad copy of {{ mlinux_upgrade_bin }}
   local_action: file
   args:
     name: "{{ role_path }}/files/{{ mlinux_upgrade }}_{{ mlinux_version }}"
