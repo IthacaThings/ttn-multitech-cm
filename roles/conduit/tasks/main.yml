@@ -71,7 +71,9 @@
     mode: "0644"
     owner: root
     group: root
-  tags: hostname
+  tags:
+    - hostname
+    - setup
   notify: Set hostname
 
 #
@@ -83,26 +85,34 @@
     state: link
     force: yes
     src: "/usr/share/zoneinfo/{{ timezone }}"
-  tags: time
+  tags:
+    - time
+    - setup
 
 - name: Set time from ntp server
   shell: "ntpdate {{ ntp_servers[0] }} && hwclock -wu"
   ignore_errors: yes
-  tags: time
+  tags:
+    - time
+    - setup
 
 - name: Install ntpd
   opkg:
     name: ntp
     state: installed
   when: ansible_local.opkg.ntp is not defined
-  tags: time
+  tags:
+    - time
+    - setup
 
 - name: Install ntp-utils
   opkg:
     name: ntp-utils
     state: installed
   when: ansible_local.opkg.ntp_utils is not defined
-  tags: time
+  tags:
+    - time
+    - setup
 
 - name: /etc/ntp.conf
   template:
@@ -111,7 +121,9 @@
     mode: "0644"
     owner: root
     group: root
-  tags: time
+  tags:
+    - time
+    - setup
   notify: restart ntpd
     
   
@@ -125,7 +137,9 @@
     mode: "0700"
     owner: root
     group: root
-  tags: users
+  tags:
+    - users
+    - setup
 
 - name: Install root authorized keys
   copy:
@@ -134,7 +148,9 @@
     mode: "0600"
     owner: root
     group: root
-  tags: users
+  tags:
+    - users
+    - setup
 
 #
 #	Create ttn user
@@ -146,7 +162,9 @@
     groups: adm,plugdev,sudo
     shell: /bin/bash
     password: "*"
-  tags: users
+  tags:
+    - users
+    - setup
 
 - name: Create {{ ttn_user }}  .ssh dir
   file:
@@ -155,7 +173,9 @@
     mode: "0700"
     owner: "{{ ttn_user }}"
     group: "{{ ttn_user }}"
-  tags: users
+  tags:
+    - users
+    - setup
 
 - name: "Install {{ ttn_user }} authorized keys"
   copy:
@@ -164,7 +184,9 @@
     mode: "0600"
     owner: "{{ ttn_user }}"
     group: "{{ ttn_user }}"
-  tags: users
+  tags:
+    - users
+    - setup
 
 #
 #	Secure ssh
@@ -176,7 +198,9 @@
     line="PasswordAuthentication no"
     state=present
   notify: Restart ssh
-  tags: sshd
+  tags:
+    - sshd
+    - setup
 
 - name: Disallow root SSH access
   lineinfile: dest=/etc/ssh/sshd_config
@@ -184,7 +208,9 @@
     line="PermitRootLogin without-password"
     state=present
   notify: Restart ssh
-  tags: sshd
+  tags:
+    - sshd
+    - setup
 
 #
 #	Stop any services we don't want
@@ -198,7 +224,9 @@
     regexp="^ENABLED="
     line="ENABLED="no""
     state=present
-  tags: services  
+  tags:
+    - services
+    - setup
 
 #
 #	Move /usr/local to /var/config/local so it survives an upgrade
@@ -210,7 +238,9 @@
     mode: "0755"
     owner: root
     group: root
-  tags: localtree
+  tags:
+    - localtree
+    - setup
 
 - name: /var/config/local/tree
   file:
@@ -224,25 +254,33 @@
     - lib
     - sbin
     - share
-  tags: localtree
+  tags:
+    - localtree
+    - setup
 
 - name: Get stat info about /usr/local
   stat:
     path: /usr/local
   register: usr_local
-  tags: localtree
+  tags:
+    - localtree
+    - setup
 
 - name: Copy /usr/local content to /var/config/local
   shell: "rsync -av /usr/local /var/config"
   when: usr_local.stat.isdir is defined and usr_local.stat.isdir == True
-  tags: localtree
+  tags:
+    - localtree
+    - setup
 
 - name: Remove /usr/local tree
   file:
     name: /usr/local
     state: absent
   when: usr_local.stat.isdir is defined and usr_local.stat.isdir == True
-  tags: localtree
+  tags:
+    - localtree
+    - setup
 
 - name: Point /usr/local at /var/config/local
   file:
@@ -250,7 +288,9 @@
     state: link
     src: /var/config/local
   when: usr_local.stat.isdir is defined and usr_local.stat.isdir == True
-  tags: localtree
+  tags:
+    - localtree
+    - setup
 
 #
 #	Register gateway
@@ -501,7 +541,9 @@
   with_flattened:
     - lets-encrypt-x3-cross-signed.pem
   notify: update-ca-certificates
-  tags: ca-certificates
+  tags:
+    - ca-certificates
+    - setup
 
 #
 #	Set up ssh tunnel
@@ -517,7 +559,9 @@
   when: 
     - ssh_tunnel_remote_port is defined
     - ssh_tunnel_remote_port > 0
-  tags: ssh_tunnel
+  tags:
+    - ssh_tunnel
+    - setup
 
 - name: /etc/init.d/ssh_tunnel
   copy:
@@ -530,7 +574,9 @@
   when:
     - ssh_tunnel_remote_port is defined
     - ssh_tunnel_remote_port > 0
-  tags: ssh_tunnel
+  tags:
+    - ssh_tunnel
+    - setup
 
   
   
