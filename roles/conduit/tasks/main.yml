@@ -8,6 +8,7 @@
     state: installed
     pkg: "python-distutils"
   when:
+    - ansible_local is defined
     - ansible_local.opkg is defined
     - ansible_local.opkg.python_distutils is not defined
   tags: setup
@@ -17,6 +18,7 @@
     state: installed
     pkg: "python-pkgutil"
   when:
+    - ansible_local is defined
     - ansible_local.opkg is defined
     - ansible_local.opkg.python_pkgutil is not defined
   tags: setup
