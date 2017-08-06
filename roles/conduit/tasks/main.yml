@@ -40,6 +40,7 @@
     owner: root
     group: root
     src: facts.d
+  register: ansible_facts_d
   tags: setup
 
 - name: Point /etc/ansible at /var/config/ansible
@@ -47,10 +48,12 @@
     name: /etc/ansible
     state: link
     src: /var/config/ansible
+  register: var_config_ansible
   tags: setup
 
 - name: Reload ansible_local
   setup: filter=ansible_local
+  when: ansible_facts_d|changed or var_config_ansible|changed
   tags: setup
 
 - name: Upgrade mlinux
