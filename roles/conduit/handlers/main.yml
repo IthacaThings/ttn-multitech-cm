@@ -2,10 +2,10 @@
 # handlers file for setup
 
 #
-#	Restart sshd after config changes
+#	Set hostname when /etc/hostsname is updated
 #
-- name: Restart ssh
-  service: name=sshd state=restarted
+- name: Set hostname
+  shell: "hostname $(cat /etc/hostname)"
 
 #
 #	Run update-ca-certificates
@@ -38,9 +38,10 @@
   service: name=ssh_tunnel state=restarted
 
 #
-#	Set hostname when /etc/hostsname is updated
+#	Restart sshd after config changes
 #
-- name: Set hostname
-  shell: "hostname $(cat /etc/hostname)"
+- name: Restart ssh
+  service: name=sshd state=restarted
+  async: 1
+  ignore_errors: true
 
-  
