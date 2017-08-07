@@ -245,10 +245,19 @@ def main():
         print("DBG: binary: %s" % options.binary)
 
     # Translate region into frequency plan
-    if options.region == "AU":
+    # EU_863_870, US_902_928, AU_915_928, AS_920_923, AS_923_925, KR_920_923, IN_865_867
+    if options.region == "AS1":
+        frequency_plan = "AS_920_923"
+    elif options.region == "AS2":
+        frequency_plan = "AU_923_925"
+    elif options.region == "AU":
         frequency_plan = "AU_915_928"
     elif options.region == "EU":
         frequency_plan = "EU_863_870"
+    elif options.region == "KR":
+        frequency_plan = "KR_920_923":
+    elif options.region == "IN":
+        frequency_plan = "IN_865_867"
     elif options.region == "US":
         frequency_plan = "US_902_928"
 

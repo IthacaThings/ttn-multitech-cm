@@ -364,6 +364,14 @@
 #	Register gateway
 #
 
+- name: Check if using correct card for the region
+  fail:
+    msg: "Lora card {{ ansible_local.lora.product_id }} and region {{region }} mismatch"
+  when: 
+    - ( ansible_local.lora.product_id|match("MTAC-LORA-(H-)?915") and region|match("EU|IN") ) or ( ansible_local.lora.product_id|match("MTAC-LORA-(H-)?868") and region|match("US|AU|AS1|AS2|KR") )
+    - radio_mismatch is not defined
+  tags: loraconfig
+
 - name: check if logged into TTN
   local_action:
     module: shell
@@ -534,7 +542,7 @@
 
     - local_action: get_url
       args:
-        url: "https://raw.githubusercontent.com/TheThingsNetwork/gateway-conf/master/{{region }}-global_conf.json"
+        url: "https://raw.githubusercontent.com/TheThingsNetwork/gateway-conf/master/{{ region }}-global_conf.json"
         dest: "{{ role_path }}/files"
 
     - copy:
