@@ -185,29 +185,23 @@ $ make TARGET=*HOSTNAME* apply
 # Deploying a Conduit
 ## Configure host specific data in this control repo
 ## Configure the conduit on the local network
-Do this by updating conduit's `/etc/network/interfaces` appropriately.
-### For DHCP
-```
-auto eth0
-iface ech0 inet dhcp
-```
-### For static IPv4
-```
-auto eth0
-iface eth0 inet static
-address 192.168.0.2	# change this as needed
-netmask 255.255.255.0	# change this as needed
-gateway 192.168.0.1	# change this as needed
+By default a conduit will come up requesting a DHCP address on the
+local network.  DHCP should also supply one or more nameservers.
 
-# change this to your domain server; or leave at 8.8.8.8 to use the google public DNS.
-post-up echo 'nameserver 8.8.8.8` >/etc/resovl.conf
+You can override this in *host_vars/**HOST**.yml* by uncommenting and
+setting the appropriate variable definitions.  See the examples in
+*host_vars/ttn-org-example.yml*. 
 
-# this alternate example sets two nameservers (these are fictitious) and a default domain.
-#
-# post-up printf 'search example.com\nnameserver 198.51.100.1\nnameserver 198.51.100.2' >/etc/resolv.conf
-```
+Note that if you make a mistake you may render your Conduit
+unreachable except via the USB serial console.  So double check the
+values you set.
 
 ## Set a secure root password
+Ansible uses ssh keys to access the Conduit for configuation.  But it
+is very important that you change the root password (which by default
+is `root`).  This will keep someone from logging in and changing your
+configuration, or turning your Conduit into a BotNet node.
+
 On the Conduit:
 ```
 mtctd login: root
@@ -217,7 +211,7 @@ Enter new UNIX password:
 Retype new UNIX password:
 root@mtcdt:~#
 ```
-Remember the password you supplied above.
+Remember the password you supplied above.  
 
 ## Copy *roles/conduit/files/authorized_keys* to */home/root/.ssh/*
 The easy way to do this is to open *authorized_keys* with `gedit` on your host, then copy/paste
@@ -263,6 +257,10 @@ An upgrade requires lots of space on `/var/volatile` and will fail if
 a lot of space is used by log files.  The best way to clear out the
 space is to reboot, or stop the packet forwarder and delete the log
 file.
+
+Note that you will lose anything you have manually installed outside
+of this control repo, except for files in /usr/local.  That includes
+the home directories for root and the 'ttn' user defined by this repo.
 
 To force a Conduit to mLinux 3.3.7, in *host_vars/**HOST**.yml* set:
 

@@ -45,3 +45,8 @@
   async: 1
   ignore_errors: true
 
+#
+#	Restart eth0 after reconfig
+#
+- name: Restart networking
+  service: name=networking state=restarted

@@ -1,0 +1,6 @@
+o{% if static_domain is defined and static_domain %}
+search {{ static_domain }}
+{% endif %}
+{% for nameserver in static_nameservers %}
+nameserver {{ nameserver }}
+{% endfor %}
