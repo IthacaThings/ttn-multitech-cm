@@ -22,7 +22,14 @@ forwarder_version: 2.1-r5
 # Pick a value from /usr/share/zoneinfo/REGION/ZONE, i.e. US/Eastern
 timezone: "US/Eastern"
 
-# Pick one of US (915) EU (868) AU (915)
+# Pick the correct region:
+# AS1	AS_920_923	Asia 1
+# AS2	AS_923_925	Asia 2
+# AU	AU_915_928	Australia
+# EU	EU_863_870	Europe
+# KR	KR_920_923	Korea
+# IN	IN_865_867	India
+# US	US_902_928	US
 region: US
 
 # Pick a router ( switch-router ttn-router-asia-se ttn-router-brazil # ttn-router-eu ttn-router-us-west )
