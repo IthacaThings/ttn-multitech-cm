@@ -267,7 +267,7 @@ file.
 To force a Conduit to mLinux 3.3.7, in *host_vars/**HOST**.yml* set:
 
 ```
-mlinux: 3.3.7
+mlinux_version: 3.3.7
 ```
 
 and run
