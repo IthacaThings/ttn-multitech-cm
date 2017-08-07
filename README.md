@@ -253,6 +253,27 @@ Specify the name of your Conduit with *HOSTNAME*.  If you leave that
 off, all Conduit's will be registered, or their registration will be
 updated. 
 
+# Upgrading mLinux
+It is possible to remotely upgrade to a specific version of mLinux
+using this control repo.  This should be used with caution because if
+an upgrade goes wrong you may leave your Conduit in a state that
+requires manual intervention to restore it.
+
+An upgrade requires lots of space on `/var/volatile` and will fail if
+a lot of space is used by log files.  The best way to clear out the
+space is to reboot, or stop the packet forwarder and delete the log
+file.
+
+To force a Conduit to mLinux 3.3.7, in *host_vars/**HOST**.yml* set:
+
+```
+mlinux: 3.3.7
+```
+
+and run
+
+```make apply```
+
 # Syncing with Upstream
 This is necessary when the global configurations change, or if there
 is a new version of one of the packet forwarder applications.  The
@@ -381,10 +402,10 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 ### Firmware updates
 Can we deploy a new version of Multi-Tech mLinux remotely without
 needing to be hands on with the gateways?
-+ [ ] Does /var/config survive firmware updates
-    + [ ] Move root and ttn users home dirs to /var/config
-	+ [ ] Test remote updates
-	+ [ ] Add /etc/init.d service to install Ansible dependencies
++ [X] Does /var/config survive firmware updates
++ [ ] Move root and ttn users home dirs to /var/config
++ [X] Test remote updates
++ [ ] Add /etc/init.d service to install Ansible dependencies
 
 ### Setup
 #### Makefile targets to
