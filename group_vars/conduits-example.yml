@@ -38,6 +38,12 @@ router: ttn-router-us-west
 # Whom to contact about issues with this gateway
 contact_email: ttn-org@example.com
 
+# Assign additional gateway collaborators.  If rights are not
+# specified they default to those defined in roles/conduit/defaults/main.yml
+#gateway_collaborators:
+#  - { username: jchonig, rights: [ gateway:status, gateway:delete ] }
+#  - { username: terrillmoore }
+
 # Pick servers appropriate for the installed region
 ntp_servers:
   - 0.north-america.pool.ntp.org

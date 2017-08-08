@@ -23,3 +23,13 @@ static_nameservers:
 # WPA stuff
 wpa_conf: /var/config/wpa_supplicant.conf
 wpa_driver: nl80211
+
+# Gateway collaborator rights
+gateway_collaborator_rights:
+  - gateway:settings
+  - gateway:collaborators
+  - gateway:delete
+  - gateway:location
+  - gateway:status
+  - gateway:owner
+  - gateway:messages

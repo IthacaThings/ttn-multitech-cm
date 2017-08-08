@@ -11,3 +11,8 @@ forwarder_installed_package: "{{ 'poly-packet-forwarder' if ansible_local.opkg.p
 forwarder_installed_version: "{{ ansible_local.opkg.poly_packet_forwarder if ansible_local.opkg.poly_packet_forwarder is defined else ansible_local.opkg.mp_packet_forwarder if ansible_local.opkg.mp_packet_forwarder is defined else ansible_local.opkg.ttn_packet_forwarder if ansible_local.opkg.ttn_packet_forwarder is defined else False }}"
 
 forwarder_installed: "{{ forwarder_installed_package }}_{{ forwarder_installed_version }}"
+
+# EUI for use with non-TTN forwarders
+lora_eui: "eui-{{ ansible_local.lora.eui|lower }}"
+lora_hostname: "{{ hostname if forwarder_variant == 'ttn' else lora_eui }}"
+

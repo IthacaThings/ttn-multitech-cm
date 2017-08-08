@@ -390,24 +390,22 @@
 - name: delete gateway because changing from ttn
   local_action:
     module: shell
-    args: "bin/ttnctl gateway delete eui-{{ ansible_local.lora.eui }}"
+    args: "bin/ttnctl gateway delete {{ lora_eui }}"
   ignore_errors: true
   when:
     - forwarder_variant == 'ttn'
   tags: loraconfig
 
-- name: register non-TTN forwarder gateway
+- name: register gateway
   local_action:
     module: shell
-    args: "bin/register --id eui-{{ ansible_local.lora.eui }} --region {{ region }} --latitude {{ latitude }} --longitude {{ longitude }} --router {{ router }}"
-  when: forwarder_variant != 'ttn'
+    args: "bin/register --id {{ lora_hostname }} --region {{ region }} --latitude {{ latitude }} --longitude {{ longitude }} --router {{ router }}"
   tags: loraconfig
 
-- name: Reigster TTN forwarder gateway
-  local_action:
-    module: shell
-    args: "bin/register --id {{ hostname }} --region {{ region }} --latitude {{ latitude }} --longitude {{ longitude }} --router {{ router }}"
-  when: forwarder_variant == 'ttn'
+- name: Assign gateway collaborators
+  shell: "bin/ttnctl gateway collaborators add {{ lora_hostname }} {{ item.username }} {{item.rights|default(gateway_collaborator_rights)|join(' ') }}"
+  with_items: "{{ gateway_collaborators }}"
+  connection: local
   tags: loraconfig
 
 - name: Get TTN fowarder Access Key
