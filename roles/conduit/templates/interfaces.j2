@@ -19,7 +19,7 @@ iface eth0 inet {{ eth0_type }}
     gateway {{ eth0_gateway }}
 {% endif %}
 {% endif %}
-   post-up ln -sf /var/config/resolv.conf-static /etc/resolv.conf
+    post-up ln -sf {{ resolv_conf_static }} /etc/resolv.conf
 {% endif %}
 
 {% if br0_type is defined and br0_type %}

@@ -67,10 +67,19 @@
 #
 #	Set up networking
 #
+- name: Check that wlan0 exists if we are configuring it as only interface
+  shell: ifconfig wlan0
+  when:
+    - eth0_type is not defined or eth0_type == 'manual'
+    - wlan0_type is defined
+  tags:
+    - networking
+    - setup
+  
 - name: Static /etc/resolv.conf
   template:
     src: resolv.conf-static.j2
-    dest: /var/config/resolv.conf-static
+    dest: "{{ resolv_conf_static }}"
     mode: "0644"
     owner: root
     group: root
@@ -80,9 +89,22 @@
     - networking
     - setup
 
+- name: Set up dhcp /etc/resolv.conf
+  file:
+    name: /etc/resolv.conf
+    state: link
+    force: yes
+    src: /var/run/resolv.conf
+  when:
+    - eth0_type is not defined or eth0_type != 'static'
+    - wlan0_type is not defined or wlan0_type != 'static'
+  tags:
+    - networking
+    - setup
+
 - name: Delete static /etc/resolv.conf if not used
   file:
-    name: /var/config/resolv.conf-static
+    name: "{{ resolv_conf_static }}"
     state: absent
   when:
     - eth0_type is not defined or eth0_type != 'static'
@@ -98,7 +120,6 @@
     mode: "0644"
     owner: root
     group: root
-  notify: Restart networking
   when:
     - eth0_type is defined or wlan0_type is defined
   tags:

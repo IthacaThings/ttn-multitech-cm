@@ -16,6 +16,7 @@ ssh_tunnel_daemon_args: -f -M 10084 -o ServerAliveInterval=30
 ssh_tunnel_ssh_port: 22
 
 # Static Nameserver defaults
+resolv_conf_static: /var/config/network/resolv.conf-static
 static_nameservers:
   - 8.8.8.8
   - 8.8.4.4
