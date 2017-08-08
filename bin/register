@@ -255,7 +255,7 @@ def main():
     elif options.region == "EU":
         frequency_plan = "EU_863_870"
     elif options.region == "KR":
-        frequency_plan = "KR_920_923":
+        frequency_plan = "KR_920_923"
     elif options.region == "IN":
         frequency_plan = "IN_865_867"
     elif options.region == "US":
