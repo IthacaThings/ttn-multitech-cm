@@ -1,3 +1,0 @@
----
-# defaults file for mlinux
-authorized_keys: "{{ lookup('file', 'roles/conduit/files/authorized_keys') }}"
