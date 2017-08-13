@@ -196,6 +196,10 @@ Note that if you make a mistake you may render your Conduit
 unreachable except via the USB serial console.  So double check the
 values you set.
 
+Also note that changing an interface to/from DHCP will require a
+manual reboot of the Conduit after applying the Ansible
+configuration. 
+
 ## Set a secure root password
 Ansible uses ssh keys to access the Conduit for configuation.  But it
 is very important that you change the root password (which by default
