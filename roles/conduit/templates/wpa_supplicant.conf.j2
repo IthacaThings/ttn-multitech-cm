@@ -4,7 +4,7 @@ update_config=1
 
 {% for wifi in wireless_keys %}
 network={
-        key_mgmt="{{ wifi.key_mgmt if wifi.key_mgmt is defined else 'WPA-PSK' }}"
+        key_mgmt={{ wifi.key_mgmt if wifi.key_mgmt is defined else 'WPA-PSK' }}
 	ssid="{{ wifi.ssid }}"
 	psk="{{ wifi.psk }}"
 }
