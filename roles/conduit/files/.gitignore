@@ -1,3 +1,6 @@
 /*.ipk
 /*.json
 /*.tgz
+/mlinux-factory-image-mtcdt-upgrade.bin_*
+/md5sums_*.txt
+
