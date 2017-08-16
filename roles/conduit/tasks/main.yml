@@ -90,7 +90,7 @@
     owner: root
     group: root
   when:
-    - ( eth0_type is defined and eth0_type == 'static' ) or ( wlan0_type is defined and wlan_type == 'static' )
+    - ( eth0_type is defined and eth0_type == 'static' ) or ( wlan0_type is defined and wlan0_type == 'static' )
   tags:
     - networking
     - setup
@@ -126,13 +126,14 @@
     mode: "0644"
     owner: root
     group: root
+  notify: interface reboot
   when:
     - eth0_type is defined or wlan0_type is defined
   tags:
     - networking
     - setup
 
-- name: Set up wpa_supplicant.conf
+- name: Set up {{ wpa_conf }}
   template:
     src: wpa_supplicant.conf.j2
     dest: "{{ wpa_conf }}"
@@ -146,12 +147,12 @@
     - networking
     - setup
 
-- name: Delete wpa_supplicant.conf if no wireless keys
+- name: Delete {{ wpa_conf }} if no wireless keys
   file:
     name: "{{ wpa_conf }}"
     state: absent
   when:
-    - wireless_keys is defined
+    - wireless_keys is not defined
   tags:
     - networking
     - setup

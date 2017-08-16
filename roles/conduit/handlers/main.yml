@@ -44,3 +44,10 @@
   service: name=sshd state=restarted
   async: 1
   ignore_errors: true
+
+#
+#	Remind 
+#
+- name: interface reboot
+  debug:
+    msg: Interface configuration changed, remember to reboot

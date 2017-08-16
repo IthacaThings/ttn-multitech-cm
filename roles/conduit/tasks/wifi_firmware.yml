@@ -1,0 +1,41 @@
+#
+#
+#
+
+- name: WiFi firmware dirs
+  file:
+    dest: "/lib/firmware/{{ item }}"
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+  with_items:
+    - rtlwifi
+
+- name: Check if rtl8192cu firmware is downloaded
+  local_action: stat
+  args:
+    path: "{{ role_path }}/files/{{ rtl8192cu_firmware_file }}"
+  register: rtl8192cufw_stat
+  when:
+    - "'rtl8192cu' in ansible_local.usb.drivers"
+    - rtl8192cu_firmware_path not in ansible_local.firmware
+
+- name: Download rtl8192cu firmware
+  local_action: get_url
+  args:
+    url: "{{ rtl8192cu_firmware_url }}"
+    dest: "{{ role_path }}/files"
+  when:
+    - "'rtl8192cu' in ansible_local.usb.drivers"
+    - rtl8192cu_firmware_path not in ansible_local.firmware
+    - rtl8192cufw_stat.stat.exists == false
+
+- name: Install rtl8192cu firmware
+  copy:
+    src: "{{ role_path }}/files/{{ rtl8192cu_firmware_file }}"
+    dest: "/lib/firmware/{{ rtl8192cu_firmware_path }}"
+  notify: interface reboot
+  when:
+    - "'rtl8192cu' in ansible_local.usb.drivers"
+    - rtl8192cu_firmware_path not in ansible_local.firmware

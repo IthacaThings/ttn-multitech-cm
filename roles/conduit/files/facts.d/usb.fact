@@ -1,0 +1,13 @@
+#!/bin/bash
+
+drivers=$(ls -1 /sys/bus/usb/drivers | (
+    comma=
+    while read driver; do
+	echo "${comma}\"${driver//-/_}\""
+	comma=", "
+    done
+))
+
+echo '{'
+echo "	\"drivers\": [" ${drivers} "]"
+echo '}'

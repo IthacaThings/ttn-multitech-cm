@@ -26,7 +26,12 @@ static_nameservers:
 
 # WPA stuff
 wpa_conf: /var/config/wpa_supplicant.conf
-wpa_driver: nl80211
+#wpa_driver: nl80211
+
+# Wireless firmware
+rtl8192cu_firmware_file: "rtl8192cufw_TMSC.bin"
+rtl8192cu_firmware_path: "rtlwifi/{{ rtl8192cu_firmware_file }}"
+rtl8192cu_firmware_url: "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/{{ rtl8192cu_firmware_path }}"
 
 # Gateway collaborator rights
 gateway_collaborator_rights:
@@ -37,3 +42,4 @@ gateway_collaborator_rights:
   - gateway:status
   - gateway:owner
   - gateway:messages
+

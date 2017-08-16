@@ -6,6 +6,7 @@
 auto lo
 iface lo inet loopback
 
+{% if eth0_type is defined and eth0_type %}
 # Wired interface
 auto eth0
 iface eth0 inet {{ eth0_type }}
@@ -21,6 +22,7 @@ iface eth0 inet {{ eth0_type }}
 {% endif %}
     post-up ln -sf {{ resolv_conf_static }} /etc/resolv.conf
 {% endif %}
+{% endif %}
 
 {% if br0_type is defined and br0_type %}
 # Bridge interface with eth0 (comment out eth0 lines above to use with bridge)
@@ -35,9 +37,7 @@ iface eth0 inet {{ eth0_type }}
 
 {% if wlan0_type is defined and wlan0_type %}
 # Wifi client
-# NOTE: udev rules will bring up wlan0 automatically if a wifi device is detected
-# and the wlan0 interface is defined, therefore an "auto wlan0" line is not needed.
-# If "auto wlan0" is also specified, startup conflicts may result.
+auto wlan0
 iface wlan0 inet {{ wlan0_type }}
 {% if wlan0_type == 'static' %}
 {% if wlan0_address is defined and wlan0_address %}
