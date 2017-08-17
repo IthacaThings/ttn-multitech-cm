@@ -198,7 +198,18 @@ values you set.
 
 Also note that changing an interface to/from DHCP will require a
 manual reboot of the Conduit after applying the Ansible
-configuration. 
+configuration.
+
+###
+
+It is also possible to support WiFi on the conduit with USB devices
+that have the RealTek 8192cu chip, such as the Edimax EW-7811U.  It
+may be possible to support other devices if you send one to our
+developers.
+
+With mLinux 3.3 we've tried the official Raspberry Pi adapter and the
+Edimax combination Bluetooth/WiFi adapter without success.  A newer
+kernel is required to support those devices.
 
 ## Set a secure root password
 Ansible uses ssh keys to access the Conduit for configuation.  But it
@@ -395,11 +406,6 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 + [ ] Document sudo password
 + [X] Use autossh
 + [ ] Manage tunnel ports
-
-### Registration
-+ [X] Fetch the correct version of [ttnctl](https://www.thethingsnetwork.org/docs/network/cli/quick-start.html#device-management)
-+ [X] Register gateway with TTN
-+ [X] Configure router if specified
 
 ### Firmware updates
 Can we deploy a new version of Multi-Tech mLinux remotely without
