@@ -1,6 +1,6 @@
 ---
 # Authorized keys
-authorized_keys: "{{ lookup('file', role_path'/files/authorized_keys') }}"
+authorized_keys: "{{ lookup('file', 'files/authorized_keys') }}"
 
 # Where to fetch the kersing packages
 forwarder_baseurl_kersing: https://github.com/kersing/multitech-installer/raw/master
