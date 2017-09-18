@@ -152,7 +152,7 @@ def ttn_gateway_list(options):
 #        ID              Activated       Frequency Plan  Coordinates                        
     header_re = re.compile("^\s+ID")
 #1       ttn-ith-test    false           AU_915_928      (42.517288, -76.710183, %!f(int=0))    
-    line_re = re.compile("^\d+\s+([a-z0-9-]+)\s+(true|false)\s+((AU|EU|US|AS)_\d{3}_\d{3})\s+\((-?\d+\.\d+),\s+(-?\d+.\d+),.*$")
+    line_re = re.compile("^\d+\s+([a-z0-9-]+)\s+(true|false)\s+((AU|EU|IN|KR|US|AS)_\d{3}_\d{3})\s+\((-?\d+\.\d+),\s+(-?\d+.\d+),.*$")
 
     gateways = dict()
     
