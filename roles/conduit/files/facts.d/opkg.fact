@@ -1,0 +1,11 @@
+#!/bin/bash
+
+echo '{'
+opkg list-installed | (
+    comma=
+    while read package dummy version; do
+	echo -n "${comma}\"${package//-/_}\": \"${version}\""
+	comma=","
+    done
+)
+echo '}'

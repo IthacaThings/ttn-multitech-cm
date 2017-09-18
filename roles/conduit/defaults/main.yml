@@ -1,2 +1,45 @@
 ---
-# defaults file for setup
+# Authorized keys
+authorized_keys: "{{ lookup('file', 'files/authorized_keys') }}"
+
+# Where to fetch the kersing packages
+forwarder_baseurl_kersing: https://github.com/kersing/multitech-installer/raw/master
+
+# Where to fetch the TTN packages
+forwarder_baseurl_ttn: https://github.com/TheThingsNetwork/packet_forwarder/releases/download
+
+# mLinux upgrade info
+mlinux_upgrade_bin: "mlinux-factory-image-mtcdt-upgrade.bin"
+mlinux_url: "http://www.multitech.net/mlinux/images/mtcdt/{{mlinux_version }}"
+
+# SSH tunnel
+ssh_tunnel_ssh_key: /etc/ssh/ssh_host_rsa_key
+ssh_tunnel_daemon: /usr/bin/autossh
+ssh_tunnel_daemon_args: -f -M 10084 -o ServerAliveInterval=30
+ssh_tunnel_ssh_port: 22
+
+# Static Nameserver defaults
+resolv_conf_static: /var/config/network/resolv.conf-static
+static_nameservers:
+  - 8.8.8.8
+  - 8.8.4.4
+
+# WPA stuff
+wpa_conf: /var/config/wpa_supplicant.conf
+#wpa_driver: nl80211
+
+# Wireless firmware
+rtl8192cu_firmware_file: "rtl8192cufw_TMSC.bin"
+rtl8192cu_firmware_path: "rtlwifi/{{ rtl8192cu_firmware_file }}"
+rtl8192cu_firmware_url: "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/{{ rtl8192cu_firmware_path }}"
+
+# Gateway collaborator rights
+gateway_collaborator_rights:
+  - gateway:settings
+  - gateway:collaborators
+  - gateway:delete
+  - gateway:location
+  - gateway:status
+  - gateway:owner
+  - gateway:messages
+

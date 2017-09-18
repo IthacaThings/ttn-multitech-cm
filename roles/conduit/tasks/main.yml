@@ -3,13 +3,24 @@
 #
 #	Ansible first pass setup
 #
-- name: Install Ansible dependencies
+- name: Install Ansible dependency python-distutils
   opkg: 
     state: installed
-    pkg: "{{ item }}"
-  with_flattened:
-    - python-pkgutil
-    - python-distutils
+    pkg: "python-distutils"
+  when:
+    - ansible_local is defined
+    - ansible_local.opkg is defined
+    - ansible_local.opkg.python_distutils is not defined
+  tags: setup
+
+- name: Install Ansible dependency python-pkgutil
+  opkg: 
+    state: installed
+    pkg: "python-pkgutil"
+  when:
+    - ansible_local is defined
+    - ansible_local.opkg is defined
+    - ansible_local.opkg.python_pkgutil is not defined
   tags: setup
 
 - name: /var/config/ansible
@@ -21,15 +32,15 @@
     group: root
   tags: setup
 
-- name: /var/config/ansible/dirs
-  file:
-    name: "/var/config/ansible/{{ item }}"
-    state: directory
+- name: /var/config/ansible/facts.d
+  copy:
+    dest: "/var/config/ansible/"
     mode: "0755"
+    directory_mode: "0755"
     owner: root
     group: root
-  with_flattened:
-    - facts.d
+    src: facts.d
+  register: ansible_facts_d
   tags: setup
 
 - name: Point /etc/ansible at /var/config/ansible
@@ -37,23 +48,114 @@
     name: /etc/ansible
     state: link
     src: /var/config/ansible
-  tags: setup
-
-- name: Install fact scripts
-  copy:
-    src: "{{ item }}"
-    dest: /var/config/ansible/facts.d/
-    mode: "0755"
-    owner: root
-    group: root
-  with_flattened:
-    - lora.fact
-    - conduit.fact
+  register: var_config_ansible
   tags: setup
 
 - name: Reload ansible_local
   setup: filter=ansible_local
+  when: ansible_facts_d|changed or var_config_ansible|changed
   tags: setup
+
+- name: Upgrade mlinux
+  include: mlinux.yml
+  when:
+    - mlinux_version is defined
+    - mlinux_version != ansible_local.mlinux.version
+  tags: setup
+
+#
+#	Set up networking
+#
+- name: Check that wlan0 exists if we are configuring it as only interface
+  shell: ifconfig wlan0
+  when:
+    - eth0_type is not defined or eth0_type == 'manual'
+    - wlan0_type is defined
+  tags:
+    - networking
+    - setup
+
+- name: Check if we need WiFi firmware
+  include: wifi_firmware.yml
+  when: wlan0_type is defined
+  tags:
+    - networking
+    - setup
+
+- name: Static /etc/resolv.conf
+  template:
+    src: resolv.conf-static.j2
+    dest: "{{ resolv_conf_static }}"
+    mode: "0644"
+    owner: root
+    group: root
+  when:
+    - ( eth0_type is defined and eth0_type == 'static' ) or ( wlan0_type is defined and wlan0_type == 'static' )
+  tags:
+    - networking
+    - setup
+
+- name: Set up dhcp /etc/resolv.conf
+  file:
+    name: /etc/resolv.conf
+    state: link
+    force: yes
+    src: /var/run/resolv.conf
+  when:
+    - eth0_type is not defined or eth0_type != 'static'
+    - wlan0_type is not defined or wlan0_type != 'static'
+  tags:
+    - networking
+    - setup
+
+- name: Delete static /etc/resolv.conf if not used
+  file:
+    name: "{{ resolv_conf_static }}"
+    state: absent
+  when:
+    - eth0_type is not defined or eth0_type != 'static'
+    - wlan0_type is not defined or wlan0_type != 'static'
+  tags:
+    - networking
+    - setup
+
+- name: Set up /var/config/network/interfaces
+  template:
+    src: interfaces.j2
+    dest: /var/config/network/interfaces
+    mode: "0644"
+    owner: root
+    group: root
+  notify: interface reboot
+  when:
+    - eth0_type is defined or wlan0_type is defined
+  tags:
+    - networking
+    - setup
+
+- name: Set up {{ wpa_conf }}
+  template:
+    src: wpa_supplicant.conf.j2
+    dest: "{{ wpa_conf }}"
+    mode: "0600"
+    owner: root
+    group: root
+  when:
+    - wpa_conf is defined
+    - wireless_keys is defined
+  tags:
+    - networking
+    - setup
+
+- name: Delete {{ wpa_conf }} if no wireless keys
+  file:
+    name: "{{ wpa_conf }}"
+    state: absent
+  when:
+    - wireless_keys is not defined
+  tags:
+    - networking
+    - setup
 
 #
 #	Set hostname
@@ -65,7 +167,9 @@
     mode: "0644"
     owner: root
     group: root
-  tags: hostname
+  tags:
+    - hostname
+    - setup
   notify: Set hostname
 
 #
@@ -77,21 +181,34 @@
     state: link
     force: yes
     src: "/usr/share/zoneinfo/{{ timezone }}"
-  tags: time
+  tags:
+    - time
+    - setup
 
 - name: Set time from ntp server
   shell: "ntpdate {{ ntp_servers[0] }} && hwclock -wu"
   ignore_errors: yes
-  tags: time
+  tags:
+    - time
+    - setup
 
-- name: Install ntpd and utilities
+- name: Install ntpd
   opkg:
-    name: "{{ item }}"
+    name: ntp
     state: installed
-  with_flattened:
-    - ntp
-    - ntp-utils
-  tags: time
+  when: ansible_local.opkg.ntp is not defined
+  tags:
+    - time
+    - setup
+
+- name: Install ntp-utils
+  opkg:
+    name: ntp-utils
+    state: installed
+  when: ansible_local.opkg.ntp_utils is not defined
+  tags:
+    - time
+    - setup
 
 - name: /etc/ntp.conf
   template:
@@ -100,7 +217,9 @@
     mode: "0644"
     owner: root
     group: root
-  tags: time
+  tags:
+    - time
+    - setup
   notify: restart ntpd
     
   
@@ -114,7 +233,9 @@
     mode: "0700"
     owner: root
     group: root
-  tags: users
+  tags:
+    - users
+    - setup
 
 - name: Install root authorized keys
   copy:
@@ -123,7 +244,9 @@
     mode: "0600"
     owner: root
     group: root
-  tags: users
+  tags:
+    - users
+    - setup
 
 #
 #	Create ttn user
@@ -135,7 +258,9 @@
     groups: adm,plugdev,sudo
     shell: /bin/bash
     password: "*"
-  tags: users
+  tags:
+    - users
+    - setup
 
 - name: Create {{ ttn_user }}  .ssh dir
   file:
@@ -144,7 +269,9 @@
     mode: "0700"
     owner: "{{ ttn_user }}"
     group: "{{ ttn_user }}"
-  tags: users
+  tags:
+    - users
+    - setup
 
 - name: "Install {{ ttn_user }} authorized keys"
   copy:
@@ -153,7 +280,9 @@
     mode: "0600"
     owner: "{{ ttn_user }}"
     group: "{{ ttn_user }}"
-  tags: users
+  tags:
+    - users
+    - setup
 
 #
 #	Secure ssh
@@ -165,7 +294,9 @@
     line="PasswordAuthentication no"
     state=present
   notify: Restart ssh
-  tags: sshd
+  tags:
+    - sshd
+    - setup
 
 - name: Disallow root SSH access
   lineinfile: dest=/etc/ssh/sshd_config
@@ -173,19 +304,39 @@
     line="PermitRootLogin without-password"
     state=present
   notify: Restart ssh
-  tags: sshd
+  tags:
+    - sshd
+    - setup
 
 #
-#	Setup local config stuff
+#	Stop any services we don't want
 #
-- name: /var/config/local
+
+- name: Stop mosquitto
+  service: name=mosquitto state=stopped
+
+- name: Disable mosquitto
+  lineinfile: dest=/etc/default/mosquitto
+    regexp="^ENABLED="
+    line="ENABLED="no""
+    state=present
+  tags:
+    - services
+    - setup
+
+#
+#	Move /usr/local to /var/config/local so it survives an upgrade
+#
+- name: Create /var/config/local
   file:
     name: /var/config/local
     state: directory
     mode: "0755"
     owner: root
     group: root
-  tags: localtree
+  tags:
+    - localtree
+    - setup
 
 - name: /var/config/local/tree
   file:
@@ -199,51 +350,198 @@
     - lib
     - sbin
     - share
-  tags: localtree
+  tags:
+    - localtree
+    - setup
+
+- name: Get stat info about /usr/local
+  stat:
+    path: /usr/local
+  register: usr_local
+  tags:
+    - localtree
+    - setup
+
+- name: Copy /usr/local content to /var/config/local
+  shell: "rsync -av /usr/local /var/config"
+  when: usr_local.stat.isdir is defined and usr_local.stat.isdir == True
+  tags:
+    - localtree
+    - setup
+
+- name: Remove /usr/local tree
+  file:
+    name: /usr/local
+    state: absent
+  when: usr_local.stat.isdir is defined and usr_local.stat.isdir == True
+  tags:
+    - localtree
+    - setup
 
 - name: Point /usr/local at /var/config/local
   file:
     name: /usr/local
     state: link
     src: /var/config/local
-  tags: localtree
+  when: usr_local.stat.isdir is defined and usr_local.stat.isdir == True
+  tags:
+    - localtree
+    - setup
 
 #
-#	Remove Multi-Tech stuff that we don't want and install the TTN poly-packet-forwarder
+#	Register gateway
+#
+
+- name: Check if using correct card for the region
+  fail:
+    msg: "Lora card {{ ansible_local.lora.product_id }} and region {{region }} mismatch"
+  when: 
+    - ( ansible_local.lora.product_id|match("MTAC-LORA-(H-)?915") and region|match("EU|IN") ) or ( ansible_local.lora.product_id|match("MTAC-LORA-(H-)?868") and region|match("US|AU|AS1|AS2|KR") )
+    - radio_mismatch is not defined
+  tags: loraconfig
+
+- name: check if logged into TTN
+  local_action:
+    module: shell
+    args: "bin/ttnctl user status"
+  tags: loraconfig
+
+- name: delete gateway because changing to ttn
+  local_action:
+    module: shell
+    args: "bin/ttnctl gateway delete {{ hostname }}"
+  ignore_errors: true
+  when:
+    - forwarder_variant != 'ttn'
+  tags: loraconfig
+
+- name: delete gateway because changing from ttn
+  local_action:
+    module: shell
+    args: "bin/ttnctl gateway delete {{ lora_eui }}"
+  ignore_errors: true
+  when:
+    - forwarder_variant == 'ttn'
+  tags: loraconfig
+
+- name: register gateway
+  local_action:
+    module: shell
+    args: "bin/register --id {{ lora_hostname }} --region {{ region }} --latitude {{ latitude }} --longitude {{ longitude }} --router {{ router }}"
+  tags: loraconfig
+
+- name: Assign gateway collaborators
+  shell: "bin/ttnctl gateway collaborators add {{ lora_hostname }} {{ item.username }} {{item.rights|default(gateway_collaborator_rights)|join(' ') }}"
+  with_items: "{{ gateway_collaborators }}"
+  connection: local
+  tags: loraconfig
+
+- name: Get TTN fowarder Access Key
+  local_action:
+    module: shell
+    args: "bin/ttnctl gateway info {{ hostname }} | awk '/Access Key/{print $3}'"
+  register: gateway_key
+  when: forwarder_variant == 'ttn'
+  tags: loraconfig
+
+- name: Verify we have Access Key {{ gateway_key.stdout }}
+  fail:
+    msg: "No gateway key returned from bin/ttnctl"
+  when:
+    - forwarder_variant == 'ttn'
+    - gateway_key.stdout == ""
+  tags: loraconfig
+
+#
+#	Remove Multi-Tech stuff that we don't want and install the TTN packet-forwarder
 #
 - name: Remove Multi-Tech lora-network-server
   opkg:
     name: lora-network-server
     state: absent
+  when: ansible_local.opkg.lora_network_server is defined
   tags: forwarder
 
-- name: Get version of poly-packet-forwarder installed
-  shell: "opkg list-installed | grep poly-packet-forwarder | cut -d ' ' -f 3"
-  register: poly_version_installed
+- name: Remove Multi-Tech lora-packet-forwarder
+  opkg:
+    name: lora-packet-forwarder
+    state: absent
+  when: ansible_local.opkg.lora_packet_forwarder is defined
   tags: forwarder
-  
-- name: Copy over poly-packet-forwarder
+
+#
+#	Make sure we have package for correct version
+#
+- name: Get info on local copy of packet-forwarder package
+  local_action: stat
+  args:
+    path: "{{ role_path }}/files/{{ forwarder_package_full }}"
+  register: forwarder_package_stat
+  tags: forwarder
+
+- name: Download requested version of packet-forwarder
+  local_action: get_url
+  args:
+    url: "{{ forwarder_url }}"
+    dest: "{{ role_path }}/files"
+  when:
+    - forwarder_package_stat.stat.exists == false
+    - forwarder_variant != 'ttn'
+  tags: forwarder
+
+- name: Fetch and build ttn_packet_forwarder package
+  local_action:
+    module: shell
+    args: "{{ role_path }}/files/build_packet_forwarder '{{ role_path }}/files/{{ forwarder_package_full }}'"
+  when:
+    - forwarder_package_stat.stat.exists == false
+    - forwarder_variant == 'ttn'
+  tags: forwarder
+
+- name: Copy over packet-forwarder
   copy:
-    src: "{{ poly_package }}"
-    dest: "/var/tmp/{{ poly_package }}"
-  when: poly_version_installed.stdout != poly_version
+    src: "{{ forwarder_package_full }}"
+    dest: "/var/tmp/{{ forwarder_package_full }}"
+  when: forwarder_installed != forwarder_package_version
   tags: forwarder
 
-- name: Install poly-packet-forwarder
-  shell: "opkg install /var/tmp/{{ poly_package }}"
-  when: poly_version_installed.stdout != poly_version
+- name: Stop packet-forwarder
+  service: name=ttn-pkt-forwarder state=stopped
+  when: forwarder_installed != forwarder_package_version
+  ignore_errors: yes
   tags: forwarder
 
-- name: Override /etc/init.d/ttn-pkt-forwarder
+- name: Remove all existing packet-forwarder packages
+  shell: "opkg remove poly-packet-forwarder mp-packet-forwarder ttn-packet-forwarder"
+  when: forwarder_installed != forwarder_package_version
+  tags: forwarder
+
+- name: Install {{ forwarder_package_full }}
+  shell: "opkg install /var/tmp/{{ forwarder_package_full }}"
+  when: forwarder_installed != forwarder_package_version
+  notify: restart ttn-pkt-forwarder
+  tags: forwarder
+
+- name: Install /etc/init.d/ttn-pkt-forwarder
   copy:
     src: ttn-pkt-forwarder
     dest: /etc/init.d/
     mode: "0755"
     owner: root
     group: root
+  notify:
+    - update rc
+    - restart ttn-pkt-forwarder
   tags: forwarder
-    
-- name: Clean up poly-packet-forwarder crud
+
+- name: Remove old .ipk files
+  file:
+    path={{ item }}
+    state=absent
+  with_fileglob: /var/tmp/*-packet-forwarder_*.ipk
+  tags: forwarder
+
+- name: Clean up packet-forwarder crud
   file:
     name: /var/config/lora/local_conf.json-opkg
     state: absent
@@ -260,27 +558,59 @@
     group: root
   tags: loraconfig
 
-- name: /var/config/lora/local_conf.json
-  template:
-    src: local_conf.json.j2
-    dest: /var/config/lora/local_conf.json
-    mode: "0644"
-    owner: root
-    group: root
-  tags: loraconfig
-    
-- name: /var/config/lora/ttn_global_conf.json
-  copy:
-    src: "{{ region }}-global_conf.json"
-    dest: /var/config/lora/ttn_global_conf.json
-    mode: "0644"
-    owner: root
-    group: root
+- block:
+    - template:
+        src: local_conf.json.j2
+        dest: /var/config/lora/local_conf.json
+        mode: "0644"
+        owner: root
+        group: root
+
+    - local_action: get_url
+      args:
+        url: "https://raw.githubusercontent.com/TheThingsNetwork/gateway-conf/master/{{ region }}-global_conf.json"
+        dest: "{{ role_path }}/files"
+
+    - copy:
+        src: "{{ region }}-global_conf.json"
+        dest: /var/config/lora/ttn_global_conf.json
+        mode: "0644"
+        owner: root
+        group: root
+
+    - shell: node /opt/lora/merge.js /var/config/lora/ttn_global_conf.json /var/config/lora/multitech_overrides.json /var/config/lora/global_conf.json
+      notify: restart ttn-pkt-forwarder
+
+  when: forwarder_variant != 'ttn'
   tags: loraconfig
 
-- name: Merge multitech_overrides in global_conf.json
-  shell: node /opt/lora/merge.js /var/config/lora/ttn_global_conf.json /var/config/lora/multitech_overrides.json /var/config/lora/global_conf.json
+- name: Remove json files from non-TTN forwarder
+  file:
+    name: "/var/config/lora/{{ item }}"
+    state: absent
+  when: forwarder_variant == 'ttn'
+  with_items:
+    - global_conf.json
+    - local_conf.json
+    - ttn_global_conf.json
+  tags: loraconfig
+  
+- name: Provide TTN packet forwarder config
+  template:
+    src: config.yml.j2
+    dest: /var/config/lora/config.yml
+    mode: "0644"
+    owner: root
+    group: root
   notify: restart ttn-pkt-forwarder
+  when: forwarder_variant == 'ttn'
+  tags: loraconfig
+
+- name: Remove TTN packet forwarder config
+  file:
+    name: /var/config/lora/config.yml
+    state: absent
+  when: forwarder_variant != 'ttn'
   tags: loraconfig
 
 #
@@ -296,6 +626,13 @@
     group: root
   tags: ca-certificates
 
+- name: "Fetch Let's Encrypt root cert"
+  local_action: get_url
+  args:
+    url: "https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem"
+    dest: "{{ role_path }}/files"
+  tags: ca-certificates
+
 - name: "Install Let's Encrypt root cert"
   copy:
     dest: /usr/local/share/ca-certificates/lets-encrypt-x3-cross-signed.crt
@@ -306,16 +643,9 @@
   with_flattened:
     - lets-encrypt-x3-cross-signed.pem
   notify: update-ca-certificates
-  tags: ca-certificates
-
-#
-#	Register gateway
-#
-- name: register gateway with TTN
-  local_action:
-    module: shell
-    args: "bin/register --eui {{ansible_local.lora.eui}} --region {{region}} --latitude {{ latitude }} --longitude {{ longitude }}"
-  tags: register
+  tags:
+    - ca-certificates
+    - setup
 
 #
 #	Set up ssh tunnel
@@ -331,7 +661,9 @@
   when: 
     - ssh_tunnel_remote_port is defined
     - ssh_tunnel_remote_port > 0
-  tags: ssh_tunnel
+  tags:
+    - ssh_tunnel
+    - setup
 
 - name: /etc/init.d/ssh_tunnel
   copy:
@@ -344,7 +676,9 @@
   when:
     - ssh_tunnel_remote_port is defined
     - ssh_tunnel_remote_port > 0
-  tags: ssh_tunnel
+  tags:
+    - ssh_tunnel
+    - setup
 
   
   

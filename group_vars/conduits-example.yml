@@ -1,7 +1,7 @@
 ---
 # Global variables for this TTN organization
 
-# Conduits do not have sudo and su dows not work with Ansible
+# Conduits do not have sudo and su on mLinux does not work with Ansible
 ansible_user: root
 
 # User to log in and poke around on a Conduit
@@ -10,23 +10,39 @@ ttn_user: ttn
 # Tunnel to SSH server
 ssh_tunnel_remote_user: ttn
 ssh_tunnel_remote_host: jumphost.example.com
-ssh_tunnel_ssh_key: /etc/ssh/ssh_host_rsa_key
 ssh_tunnel_ssh_port: 2222
-ssh_tunnel_daemon: /usr/bin/autossh
-ssh_tunnel_daemon_args: -f -M 10084 -o ServerAliveInterval=30
 
-# Version of the Poly Packet Fowarder
-poly_version: 2.1-r5
-poly_package: "poly-packet-forwarder_{{ poly_version }}_arm926ejste.ipk"
+# Which TTN packet forwarder to install
+# 'mp' for Kersing version 2.*
+# 'poly' for Kersing version 3.*
+# 'ttn' for TTN packet forwarder
+forwarder_variant: poly
+forwarder_version: 2.1-r5
 
 # Pick a value from /usr/share/zoneinfo/REGION/ZONE, i.e. US/Eastern
 timezone: "US/Eastern"
 
-# Pick one of US (915) EU (868) AU (915)
+# Pick the correct region:
+# AS1	AS_920_923	Asia 1
+# AS2	AS_923_925	Asia 2
+# AU	AU_915_928	Australia
+# EU	EU_863_870	Europe
+# KR	KR_920_923	Korea
+# IN	IN_865_867	India
+# US	US_902_928	US
 region: US
+
+# Pick a router ( switch-router ttn-router-asia-se ttn-router-brazil # ttn-router-eu ttn-router-us-west )
+router: ttn-router-us-west
 
 # Whom to contact about issues with this gateway
 contact_email: ttn-org@example.com
+
+# Assign additional gateway collaborators.  If rights are not
+# specified they default to those defined in roles/conduit/defaults/main.yml
+#gateway_collaborators:
+#  - { username: jchonig, rights: [ gateway:status, gateway:delete ] }
+#  - { username: terrillmoore }
 
 # Pick servers appropriate for the installed region
 ntp_servers:

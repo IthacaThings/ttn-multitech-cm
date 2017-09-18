@@ -1,0 +1,32 @@
+#!/bin/sh -x
+
+# XXX Setup /etc/network/interfaces and /etc/resolv.conf?
+
+if [ ! -e /etc/mlinux-version ]; then
+   echo "Not running on mLinux" >&2
+   exit 1
+fi
+
+mlinux_version=$(cat /etc/mlinux-version | sed -n -e '/^mLinux/s/mLinux //p')
+
+if [ ! -e "${HOME}/.ssh" ]; then
+   mkdir -p "${HOME}/.ssh"
+   chmod 700 "${HOME}/.ssh"
+fi
+
+cat << EOF > "${HOME}/.ssh/authorized_keys"
+{{ authorized_keys }}
+EOF
+
+# Fix version in opkg feeds config
+expr ${mlinux_version} : "3.3.[0-9]" && sed -i -e "s%/3.3/%/${mlinux_version}/%" /etc/opkg/mlinux-feed.conf
+
+# Install ansible dependencies
+opkg update
+opkg install python-pkgutil python-distutils
+
+test -d /var/config/ansible && ln -s /var/config/ansible /etc/ansible
+
+rm -f /var/config/mlinux_setup
+
+exit 0
