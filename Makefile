@@ -33,7 +33,7 @@ export TAGS=
 export TARGET=conduits
 TIMEOUT=60
 HOSTS=$(shell ansible --list-hosts ${TARGET} | sed -e 's/^ *//' -e '/^hosts ([0-9]*):/d')
-PLAYBOOK_ARGS=-T ${TIMEOUT} $${TAGS:+-t $${TAGS}} $${TARGET:+-l $${TARGET}}
+PLAYBOOK_ARGS=-T ${TIMEOUT} -i hosts $${TAGS:+-t $${TAGS}} $${TARGET:+-l $${TARGET}}
 
 all::	apply
 
