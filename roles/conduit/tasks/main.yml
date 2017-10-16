@@ -57,7 +57,7 @@
   tags: setup
 
 - name: Upgrade mlinux
-  include: mlinux.yml
+  import_tasks: mlinux.yml
   when:
     - mlinux_version is defined
     - mlinux_version != ansible_local.mlinux.version
@@ -76,7 +76,7 @@
     - setup
 
 - name: Check if we need WiFi firmware
-  include: wifi_firmware.yml
+  import_tasks: wifi_firmware.yml
   when: wlan0_type is defined
   tags:
     - networking
