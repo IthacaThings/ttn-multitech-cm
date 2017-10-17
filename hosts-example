@@ -1,8 +1,8 @@
 [test]
-ttn-org-testgateway1
+ttn-org-example
 
 [production]
-ttn-org-prodgateway1
+ttn-org-example-2
 
 [conduits]
 
