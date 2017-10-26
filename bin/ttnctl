@@ -13,5 +13,13 @@ case $arch in
 	;;
 esac
 
-exec $0-$system-$arch "${@}"
+# Fetch binary if it does not exist
+if [ ! -f "$0-$system-$arch" ]; then
+   (
+	dir=$(dirname "$0")
+	cd $dir || exit $?
+	make -s || exit $?
+   )
+fi
 
+exec $0-$system-$arch "${@}"
