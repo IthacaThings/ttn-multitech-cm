@@ -13,11 +13,10 @@ ssh_tunnel_remote_host: jumphost.example.com
 ssh_tunnel_ssh_port: 2222
 
 # Which TTN packet forwarder to install
-# 'mp' for Kersing version 2.*
-# 'poly' for Kersing version 3.*
-# 'ttn' for TTN packet forwarder
-forwarder_variant: poly
-forwarder_version: 2.1-r5
+# 'poly' for Kersing version 2.*
+# 'mp' for Kersing version 3.*
+forwarder_variant: mp
+forwarder_version: 3.0.0-r14
 
 # Pick a value from /usr/share/zoneinfo/REGION/ZONE, i.e. US/Eastern
 timezone: "US/Eastern"
