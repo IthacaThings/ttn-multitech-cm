@@ -1,0 +1,39 @@
+---
+
+- name: Clean old upgrade turds to reduce noise
+  file: path=/etc/apt/apt.conf.d/50unattended-upgrades.ucf-dist state=absent
+
+- name: Update APT package cache
+  apt: update_cache=yes cache_valid_time=3600
+
+- name: Install aptitude
+  apt: state=installed pkg=aptitude
+
+- name: Upgrade APT to the latest packages
+  apt: upgrade=safe
+
+- name: Install required packages
+  apt: state=installed pkg={{ item }}
+  with_flattened:
+    - "unattended-upgrades"
+    - "{{ apt_packages_all|default([]) }}"
+    - "{{ apt_packages_group|default([]) }}"
+    - "{{ apt_packages|default([]) }}"
+
+- name: Apt config files  
+  copy: >
+    src={{ item.src }} dest={{ item.dest }}
+    mode={{ item.mode }}
+    owner=root
+    group=root
+  with_items:
+    - src: apt_periodic
+      dest: /etc/apt/apt.conf.d/10periodic
+      mode: "644"
+    - src: apt_unattended
+      dest: /etc/apt/apt.conf.d/50unattended-upgrades      
+      mode: "644"
+
+- name: Clean up old packages
+#  apt:  autoremove=yes
+  shell: apt-get -y autoremove --purge 

@@ -1,6 +1,10 @@
 ---
 # defaults file for sshhost
 
+ssh_port: 22
+
+ansible_port: "{{ ssh_port }}"
 ansible_become: true
 ansible_become_user: root
 ansible_become_method: sudo
+

@@ -1,0 +1,11 @@
+---
+
+- name: install ntp
+  apt: pkg=ntp state=present
+  when: ansible_distribution in [ 'Debian', 'Ubuntu' ]
+
+- name: enable ntp
+  systemd: name=ntp enabled=yes
+
+- name: start ntp
+  systemd: name=ntp state=started

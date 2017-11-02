@@ -1,0 +1,17 @@
+---
+
+- name: install ufw
+  apt: pkg=ufw state=present
+  when: ansible_distribution in [ 'Debian', 'Ubuntu' ]
+
+- name: Setup ufw
+  ufw: state=enabled policy=deny
+
+- name: Indicate ufw configured
+  set_fact:
+    have_ufw: true
+
+- name: Allow ssh traffic
+  ufw: rule=allow port={{ ansible_port }} proto=tcp
+
+  

@@ -1,4 +1,11 @@
 ---
+
+#
+#	Update CA certificates
+#
+- name: update_ca_certificates
+  shell: /usr/sbin/update-ca-certificates
+
 #
 #	Restart sshd after config changes
 #

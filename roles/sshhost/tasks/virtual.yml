@@ -1,0 +1,10 @@
+---
+
+- name: Install packages for Virtual machines
+  apt: state=installed pkg={{ item }}
+  with_flattened:
+    - "open-vm-tools"
+    - "open-vm-tools-dkms"
+    - "linux-virtual"
+  when: ansible_distribution in [ 'Debian', 'Ubuntu' ]
+  tags: virtual

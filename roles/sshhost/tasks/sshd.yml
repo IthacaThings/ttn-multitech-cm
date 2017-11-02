@@ -1,0 +1,40 @@
+---
+
+- name: install ssh server
+  apt: pkg=openssh-server state=present
+  when: ansible_distribution in [ 'Debian', 'Ubuntu' ]
+
+- name: Disallow password authentication
+  lineinfile: dest=/etc/ssh/sshd_config
+    regexp="^PasswordAuthentication"
+    line="PasswordAuthentication no"
+    state=present
+  notify: Restart ssh
+
+- name: Disallow root SSH access
+  lineinfile: dest=/etc/ssh/sshd_config
+    regexp="^PermitRootLogin"
+    line="PermitRootLogin no"
+    state=present
+  notify: Restart ssh
+
+- name: Change ssh port
+  lineinfile: dest=/etc/ssh/sshd_config
+              regexp="^Port\s"
+              line="Port {{ ssh_port }}"
+              state=present
+  notify: Restart ssh
+
+- name: Only allow gateway ports from localhost
+  lineinfile: dest=/etc/ssh/sshd_config
+    regexp="^GatewayPorts"
+    line="GatewayPorts no"
+    state=present
+  notify: Restart ssh
+
+- name: Allow ssh traffic
+  ufw: rule=allow port={{ ssh_port }} proto=tcp
+  when: have_ufw is defined
+
+  
+
