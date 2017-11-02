@@ -14,7 +14,7 @@ test
 
 [all:vars]
 
-[ssh_host]
+[jumphosts]
 jumphost.example.com
 
 
