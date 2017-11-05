@@ -32,13 +32,14 @@ export TAGS=
 # Target or group
 export TARGET=conduits
 TIMEOUT=60
-HOSTS=$(shell ansible --list-hosts ${TARGET} | sed -e 's/^ *//' -e '/^hosts ([0-9]*):/d')
-PLAYBOOK_ARGS=-T ${TIMEOUT} -i hosts $${TAGS:+-t $${TAGS}} $${TARGET:+-l $${TARGET}}
+INVENTORY=hosts
+HOSTS=$(shell ansible --inventory ${INVENTORY} --list-hosts ${TARGET} | sed -e 's/^ *//' -e '/^hosts ([0-9]*):/d')
+PLAYBOOK_ARGS=-T ${TIMEOUT} --inventory ${INVENTORY} $${TAGS:+-t $${TAGS}} $${TARGET:+-l $${TARGET}}
 
 all::	apply
 
 ping: true
-	ansible -o -m ping ${TARGET}
+	ansible --inventory ${INVENTORY} -o -m ping ${TARGET}
 
 test:
 	ansible-playbook ${PLAYBOOK_ARGS} -C site.yml
@@ -56,7 +57,7 @@ apply: true
 harvest: true
 	@mkdir -p ${CATALOG} 2>/dev/null || exit 0
 	@for host in ${HOSTS}; do \
-		ansible -o -m setup $${host} > $${host}.json; \
+		ansible --inventory ${INVENTORY} -o -m setup $${host} > $${host}.json; \
 		[ $$? == 0 ] && sed -e "s/^$${host} | SUCCESS => //" < $${host}.json > ${CATALOG}/$${host}.json; \
 		rm $${host}.json; \
 	done
