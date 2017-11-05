@@ -165,10 +165,10 @@ DAEMON=/usr/bin/autossh
 LOCAL_PORT=22
 REMOTE_HOST="$JUMPHOST"
 REMOTE_USER="$MYNAME"
-REMOTE_PORT=$JUMPUID
-SSH_KEY=$HOME/.ssh/id_${MYNAME}
+REMOTE_PORT="$JUMPUID"
+SSH_KEY="$HOME/.ssh/id_${MYNAME}"
 SSH_PORT=22
-DAEMON_ARGS=-f -M 0 -o ServerAliveInterval=30 -i ${HOME}/.ssh/id_${MYNAME}
+DAEMON_ARGS=-"f -M 0 -o ServerAliveInterval=30 -i ${HOME}/.ssh/id_${MYNAME}"
 EOF
 
 chmod 755 /etc/default/ssh_tunnel || _error "can't chmod defaults"
