@@ -24,18 +24,39 @@ clean::	true
 	done
 
 
-# Where we keep a catalog of conduit configuration
-CATALOG=catalog
-
 # List of tags to limit playbook
 export TAGS=
 # Target or group
 export TARGET=conduits
 TIMEOUT=60
-INVENTORY=hosts
 OPTIONS=
-HOSTS=$(shell ansible --inventory ${INVENTORY} --list-hosts ${TARGET} | sed -e 's/^ *//' -e '/^hosts ([0-9]*):/d')
-PLAYBOOK_ARGS=-T ${TIMEOUT} --inventory ${INVENTORY} $${TAGS:+-t $${TAGS}} $${TARGET:+-l $${TARGET}} ${OPTIONS}
+
+#
+# figure out the inventory.
+#  - if MY_INVENTORY is given from the command line or env, just use it.
+#  - Otherwise, if there's a hosts file in this directory, use it
+#  - Otherwise, if there's a directory ../inventory, use it
+#  - Otherwise complain and quit.
+#
+ifeq ($(INVENTORY),)
+ ifneq ($(wildcard hosts),)
+   INVENTORY=hosts
+   # Where we keep a catalog of conduit configuration
+   CATALOG=catalog
+ else ifneq ($(wildcard ../inventory/.),)
+   INVENTORY=../inventory
+   # Where we keep a catalog of conduit configuration
+   CATALOG=../catalog
+ else
+   $(error Can't find an inventory file)
+ endif
+endif
+
+# now that we know the inventory, get the hosts.
+HOSTS=$(shell ansible -i ${INVENTORY} --list-hosts ${TARGET} | sed -e 's/^ *//' -e '/^hosts ([0-9]*):/d')
+
+# set the default playbook parameters
+PLAYBOOK_ARGS=-T ${TIMEOUT} -i ${INVENTORY} $${TAGS:+-t $${TAGS}} $${TARGET:+-l $${TARGET}} ${OPTIONS}
 
 all::	apply
 
