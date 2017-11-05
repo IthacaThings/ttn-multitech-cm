@@ -22,6 +22,9 @@ iface eth0 inet {{ eth0_type }}
 {% endif %}
     post-up ln -sf {{ resolv_conf_static }} /etc/resolv.conf
 {% endif %}
+{% if eth0_mtu is defined and eth0_mtu %}
+    post-up ifconfig eth0 mtu {{ eth0_mtu }}
+{% endif %}
 {% endif %}
 
 {% if br0_type is defined and br0_type %}
@@ -50,6 +53,9 @@ iface wlan0 inet {{ wlan0_type }}
 {% endif %}
 {% endif %}
    post-up ln -sf /var/config/resolv.conf-static /etc/resolv.conf
+{% if wlan0_mtu is defined and wlan0_mtu %}
+    post-up ifconfig wlan0 mtu {{ wlan0_mtu }}
+{% endif %}
 {% endif %}
     wpa-conf {{ wpa_conf }}
 {% if wpa_driver is defined and wpa_driver %}

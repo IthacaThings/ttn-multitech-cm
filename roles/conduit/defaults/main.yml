@@ -24,6 +24,12 @@ static_nameservers:
   - 8.8.8.8
   - 8.8.4.4
 
+# In some cases the use of ssh tunnels and PathMTU cause issues, so
+# reduce the MTU of interfaces to avoid this issue.
+# See http://changelog.complete.org/archives/9335-ssh-suddenly-stops-communicating-with-some-hosts
+eth0_mtu: 1100
+wlan_mtu: 1100
+
 # WPA stuff
 wpa_conf: /var/config/wpa_supplicant.conf
 #wpa_driver: nl80211
