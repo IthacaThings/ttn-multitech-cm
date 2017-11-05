@@ -39,18 +39,36 @@ fi
 # get our mac address, and then our name
 ETHADDR=$(ifconfig eth0 | grep HWaddr | awk '{ print $5 }' | tr : -)
 MYNAME="${MYPREFIX}-${ETHADDR}"
+MYGROUP="${MYPREFIX}-gateways"
 echo "MYNAME: ${MYNAME}"
+echo "MYGROUP: ${MYGROUP}"
 
 # check that we can connect to jumphost
 echo -n "Check basic connectivity..."
 ssh -p "$JUMPPORT" "$JUMPADMIN"@"$JUMPHOST" true || 
-	_error "\nCan't connect to $JUMPHOST as $JUMPADMIN"
+	_error "Can't connect to $JUMPHOST as $JUMPADMIN"
 echo "OK"
 
 echo -n "Check sudo..."
-ssh -p "$JUMPPORT" "$JUMPADMIN"@"$JUMPHOST" sudo true || 
+ssh -p "$JUMPPORT" "$JUMPADMIN"@"$JUMPHOST" -t sudo true || 
 	_error "Can't sudo on $JUMPHOST as $JUMPADMIN"
 echo "OK"
+
+# get the date right
+ntpdate -ub pool.ntp.org || _error "Couldn't set date/time"
+
+# get the mlinux version
+mlinux_version=$(cat /etc/mlinux-version | sed -n -e '/^mLinux/s/mLinux //p')
+
+# Fix version in opkg feeds config
+expr ${mlinux_version} : "3.3.[0-9]" && sed -i -e "s%/3.3/%/${mlinux_version}/%" /etc/opkg/mlinux-feed.conf
+
+# Install ansible dependencies
+opkg update || _error "opkg update failed"
+opkg install python-pkgutil python-distutils || _error "opkg installed"
+
+test -d /var/config/ansible && ln -s /var/config/ansible /etc/ansible
+
 
 # create our identity
 NEEDKEY=0
@@ -66,47 +84,82 @@ if [ $NEEDKEY -eq 0 ]; then
 		_error "permissions wrong on ${HOME}/.ssh/id_$MYNAME"
 	fi
 else
+	echo "About to generate key; this may take some time"
 	ssh-keygen -f "${HOME}/.ssh/id_$MYNAME" -b 4096 -t rsa -N '' -C "$MYNAME" ||
 		_error "ssh-keygen failed"
-	fi
 fi
 
 # create our user
+FOUNDUSER=0
 ssh -p "$JUMPPORT" "$JUMPADMIN"@"$JUMPHOST" \
-	sudo adduser --gecos "$MYNAME" --disabled-password \
-		--ingroup "${MYPREFIX}-gateways" \
-		--firstuid "${FIRSTUID}" || \
-			_error "adduser ${MYNAME} failed"
+	grep -q "^$MYNAME:" /etc/passwd && FOUNDUSER=1
+FOUNDGROUP=0
+ssh -p "$JUMPPORT" "$JUMPADMIN"@"$JUMPHOST" \
+	grep -q "^$MYGROUP:" /etc/group && FOUNDGROUP=1
+
+if [ $FOUNDGROUP -eq 0 ]; then
+	echo "Creating group $MYGROUP"
+	ssh -p "$JUMPPORT" "$JUMPADMIN"@"$JUMPHOST" -t \
+		sudo groupadd "$MYGROUP" || \
+			_error "groupadd ${MYGROUP} failed"
+else
+	echo "Group already exists: $MYGROUP"
+fi
+
+if [ $FOUNDUSER -eq 0 ]; then 
+echo "Creating $MYNAME"
+ssh -p "$JUMPPORT" "$JUMPADMIN"@"$JUMPHOST" -t \
+	sudo useradd --comment "$MYNAME" --password "*" \
+		--gid "${MYGROUP}" \
+		--no-user-group \
+		--create-home \
+		--key UID_MIN="${FIRSTUID}" "$MYNAME" || \
+			_error "useradd ${MYNAME} failed"
+else
+	echo "User already exists: $MYNAME"
+fi
 
 # copy ssh dir across
-ssh -p "$JUMPPORT" "$JUMPADMIN"@"$JUMPHOST" \
-        sudo -u "$MYNAME" \
-		if [ ! -d .ssh ] ; then \
-			mkdir -m 700 .ssh '||' exit 1 ; \
-		fi
+echo "Creating .ssh dir"
+ssh -p "$JUMPPORT" "$JUMPADMIN"@"$JUMPHOST" -t \
+        sudo -u "$MYNAME" "sh -c '
+		cd &&
+		if [ ! -d .ssh ] ; then 
+			mkdir -m 700 .ssh || exit 1 ;
+		fi'"
 if [ $? -ne 0 ]; then
 	_error "mkdir .ssh failed"
 fi
 
 # copy public key
-scp -p "$JUMPPORT" "${HOME}/.ssh/id_${MYNAME}.pub" "$JUMPADMIN"@"$JUMPHOST":/~"$MYNAME"/.ssh || exit 1;
+echo "Copy public key"
+scp -P "$JUMPPORT" -p "${HOME}/.ssh/id_${MYNAME}.pub" "$JUMPADMIN"@"$JUMPHOST":/tmp || exit 1;
 
-ssh -p "$JUMPPORT" "$JUMPADMIN"@"$JUMPHOST" \
-	sudo chown "$MYNAME" "~$MYNAME/.ssh/id_${MYNAME}.pub" || \
-		_error "can't chown id_${MYNAME}.pub"
+echo "Move public key"
+ssh -p "$JUMPPORT" "$JUMPADMIN"@"$JUMPHOST" -t \
+	sudo cp "/tmp/id_${MYNAME}.pub" "~$MYNAME/.ssh/authorized_keys" || \
+		_error "can't move id_${MYNAME}.pub"
+
+echo "Change ownership of public key"
+ssh -p "$JUMPPORT" "$JUMPADMIN"@"$JUMPHOST" -t \
+	sudo chown "$MYNAME" "~$MYNAME/.ssh/authorized_keys" || \
+		_error "can't chown authorized_keys"
 
 # test that we can now log in
-ssh -p "$JUMPPORT" "$MYNAME"@"$JUMPHOST" true || 
+ssh -i ".ssh/id_${MYNAME}" -p "$JUMPPORT" "$MYNAME"@"$JUMPHOST" true || 
 	_error "can't login as $MYNAME"
 
 # get our ID
-JUMPUID=$(ssh -p "$JUMPPORT" "$MYNAME"@"$JUMPHOST" id -u)
+JUMPUID=$(ssh -i ".ssh/id_${MYNAME}" -p "$JUMPPORT" "$MYNAME"@"$JUMPHOST" id -u)
 
 if [ X"$JUMPUID" = X ]; then
 	_error "Can't get JUMPUID"
 fi
 
+echo "JUMPUID: ${JUMPUID}"
+
 # finally, set up the parameters for the ssh setup
+echo "Set up ssh tunnel"
 cat << EOF > /etc/default/ssh_tunnel
 DAEMON=/usr/bin/autossh
 LOCAL_PORT=22
@@ -115,11 +168,11 @@ REMOTE_USER="$MYNAME"
 REMOTE_PORT=$JUMPUID
 SSH_KEY=$HOME/.ssh/id_${MYNAME}
 SSH_PORT=22
-DAEMON_ARGS=-f -M 0 -o ServerAliveInterval=30
+DAEMON_ARGS=-f -M 0 -o ServerAliveInterval=30 -i ${HOME}/.ssh/id_${MYNAME}
 EOF
 
-chmod 755 /etc/defaults/ssh_tunnel || _error "can't chmod defaults"
-chown root.root /etc/defaults/ssh_tunnel || _error "can't chown defaults"
+chmod 755 /etc/default/ssh_tunnel || _error "can't chmod defaults"
+chown root.root /etc/default/ssh_tunnel || _error "can't chown defaults"
 
 # update the ssh_tunnel script
 cat /tmp/ssh_tunnel.initd > /etc/init.d/ssh_tunnel	|| _error "can't create ssh_tunnel"
@@ -128,7 +181,8 @@ chown root.root /etc/init.d/ssh_tunnel		|| _error "can't chown ssh_tunnel"
 
 echo -n "Press enter to restart daemon: "
 read JUNK 
-/etc/init.d ssh_tunnel restart 			|| _error "can't restart ssh_tunnel"
+/etc/init.d/ssh_tunnel restart 			|| _error "can't restart ssh_tunnel"
 
+rm -f "$0"
 exit 0
 
