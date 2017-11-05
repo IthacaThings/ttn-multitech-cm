@@ -22,6 +22,8 @@ iface eth0 inet {{ eth0_type }}
 {% endif %}
     post-up ln -sf {{ resolv_conf_static }} /etc/resolv.conf
 {% endif %}
+    # always reduce the MTU in case path mtu isn't working
+    post-up ifconfig eth0 mtu 1100
 {% endif %}
 
 {% if br0_type is defined and br0_type %}
