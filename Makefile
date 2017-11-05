@@ -60,7 +60,7 @@ PLAYBOOK_ARGS=-T ${TIMEOUT} -i ${MY_INVENTORY} $${TAGS:+-t $${TAGS}} $${TARGET:+
 all::	apply
 
 ping: true
-	ansible -o -m ping ${TARGET}
+	ansible -i ${MY_INVENTORY} -o -m ping ${TARGET}
 
 test:
 	ansible-playbook ${PLAYBOOK_ARGS} -C site.yml
@@ -78,7 +78,7 @@ apply: true
 harvest: true
 	@mkdir -p ${CATALOG} 2>/dev/null || exit 0
 	@for host in ${HOSTS}; do \
-		ansible -o -m setup $${host} > $${host}.json; \
+		ansible -i ${MY_INVENTORY} -o -m setup $${host} > $${host}.json; \
 		[ $$? == 0 ] && sed -e "s/^$${host} | SUCCESS => //" < $${host}.json > ${CATALOG}/$${host}.json; \
 		rm $${host}.json; \
 	done
