@@ -22,17 +22,12 @@ iface eth0 inet {{ eth0_type }}
 {% endif %}
     post-up ln -sf {{ resolv_conf_static }} /etc/resolv.conf
 {% endif %}
-<<<<<<< 4ca2894124ae3fe328397c25ca3f2fb75b1ff616
 {% if eth0_mtu is defined and eth0_mtu %}
     post-up ifconfig eth0 mtu {{ eth0_mtu }}
 {% endif %}
 {% if eth0_udhcpc_opts is defined and eth0_udhcpc_opts %}
     udhcpc_opts {{ eth0_udhcpc_opts }}
 {% endif %}
-=======
-    # always reduce the MTU in case path mtu isn't working
-    post-up ifconfig eth0 mtu 1100
->>>>>>> reduce MTU to 1100 (arbitrarily) to work around issues with path MTU discovery (#20)
 {% endif %}
 
 {% if br0_type is defined and br0_type %}
