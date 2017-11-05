@@ -64,6 +64,7 @@ cat << 'EOF' > /etc/network/interfaces
 # Wired interface
 auto eth0
 iface eth0 inet dhcp 
+post-up ifconfig eth0 mtu 1100
 EOF
 
 echo 'All set: press enter to enable DHCP'
