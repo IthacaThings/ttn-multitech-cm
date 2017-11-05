@@ -1,0 +1,134 @@
+#!/bin/sh
+
+# second stage boot. Set up autossh on the jump host.
+# if I knew how to do it, I'd either use a template or have 
+# smarter scheme for doing this.
+
+# safety check
+if [ ! -e /etc/mlinux-version ]; then
+   echo "Not running on mLinux" >&2
+   exit 1
+fi
+
+function _error {
+	echo "$*" 1>&2
+	exit 1
+}
+
+FIRSTUID=20000
+
+# check that JUMPHOST and JUMPADMIN are set
+if [ X"$JUMPHOST" = X ]; then
+	_error "JUMPHOST not defined -- see instructions"
+fi
+if [ X"$JUMPADMIN" = X ]; then
+	_error "JUMPADMIN not defined -- see instructions"
+fi
+if [ X"$JUMPPORT" = X ]; then
+	_error "JUMPPORT not defined -- see instructions"
+fi
+if [ X"$MYPREFIX" = X ]; then
+	_error "MYPREFIX not defined -- see instructions"
+fi
+
+# check that ssh_tunnel has been copied across
+if [ ! -f /tmp/ssh_tunnel.initd ]; then
+	_error "ssh_tunnel.initd not copied across"
+fi
+
+# get our mac address, and then our name
+ETHADDR=$(ifconfig eth0 | grep HWaddr | awk '{ print $5 }' | tr : -)
+MYNAME="${MYPREFIX}-${ETHADDR}"
+echo "MYNAME: ${MYNAME}"
+
+# check that we can connect to jumphost
+echo -n "Check basic connectivity..."
+ssh -p "$JUMPPORT" "$JUMPADMIN"@"$JUMPHOST" true || 
+	_error "\nCan't connect to $JUMPHOST as $JUMPADMIN"
+echo "OK"
+
+echo -n "Check sudo..."
+ssh -p "$JUMPPORT" "$JUMPADMIN"@"$JUMPHOST" sudo true || 
+	_error "Can't sudo on $JUMPHOST as $JUMPADMIN"
+echo "OK"
+
+# create our identity
+NEEDKEY=0
+if [ -f "${HOME}/.ssh/id_$MYNAME" -a -f "${HOME}/.ssh/id_${MYNAME}.pub" ]; then
+	true
+else
+	NEEDKEY=1
+fi
+
+if [ $NEEDKEY -eq 0 ]; then
+	IDOK=$(find "${HOME}/.ssh/id_$MYNAME" -perm 600)
+	if [ X"$IDOK" = X ]; then
+		_error "permissions wrong on ${HOME}/.ssh/id_$MYNAME"
+	fi
+else
+	ssh-keygen -f "${HOME}/.ssh/id_$MYNAME" -b 4096 -t rsa -N '' -C "$MYNAME" ||
+		_error "ssh-keygen failed"
+	fi
+fi
+
+# create our user
+ssh -p "$JUMPPORT" "$JUMPADMIN"@"$JUMPHOST" \
+	sudo adduser --gecos "$MYNAME" --disabled-password \
+		--ingroup "${MYPREFIX}-gateways" \
+		--firstuid "${FIRSTUID}" || \
+			_error "adduser ${MYNAME} failed"
+
+# copy ssh dir across
+ssh -p "$JUMPPORT" "$JUMPADMIN"@"$JUMPHOST" \
+        sudo -u "$MYNAME" \
+		if [ ! -d .ssh ] ; then \
+			mkdir -m 700 .ssh '||' exit 1 ; \
+		fi
+if [ $? -ne 0 ]; then
+	_error "mkdir .ssh failed"
+fi
+
+# copy public key
+scp -p "$JUMPPORT" "${HOME}/.ssh/id_${MYNAME}.pub" "$JUMPADMIN"@"$JUMPHOST":/~"$MYNAME"/.ssh || exit 1;
+
+ssh -p "$JUMPPORT" "$JUMPADMIN"@"$JUMPHOST" \
+	sudo chown "$MYNAME" "~$MYNAME/.ssh/id_${MYNAME}.pub" || \
+		_error "can't chown id_${MYNAME}.pub"
+
+# test that we can now log in
+ssh -p "$JUMPPORT" "$MYNAME"@"$JUMPHOST" true || 
+	_error "can't login as $MYNAME"
+
+# get our ID
+JUMPUID=$(ssh -p "$JUMPPORT" "$MYNAME"@"$JUMPHOST" id -u)
+
+if [ X"$JUMPUID" = X ]; then
+	_error "Can't get JUMPUID"
+fi
+
+# finally, set up the parameters for the ssh setup
+cat << EOF > /etc/default/ssh_tunnel
+DAEMON=/usr/bin/autossh
+LOCAL_PORT=22
+REMOTE_HOST="$JUMPHOST"
+REMOTE_USER="$MYNAME"
+REMOTE_PORT=$JUMPUID
+SSH_KEY=$HOME/.ssh/id_${MYNAME}
+SSH_PORT=22
+DAEMON_ARGS=-f -M 0 -o ServerAliveInterval=30
+EOF
+
+chmod 755 /etc/defaults/ssh_tunnel || _error "can't chmod defaults"
+chown root.root /etc/defaults/ssh_tunnel || _error "can't chown defaults"
+
+# update the ssh_tunnel script
+cat /tmp/ssh_tunnel.initd > /etc/init.d/ssh_tunnel	|| _error "can't create ssh_tunnel"
+chmod 755 /etc/init.d/ssh_tunnel		|| _error "can't chmod ssh_tunnel"
+chown root.root /etc/init.d/ssh_tunnel		|| _error "can't chown ssh_tunnel"
+
+echo -n "Press enter to restart daemon: "
+read JUNK 
+/etc/init.d ssh_tunnel restart 			|| _error "can't restart ssh_tunnel"
+
+exit 0
+
