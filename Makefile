@@ -36,6 +36,10 @@ INVENTORY=hosts
 HOSTS=$(shell ansible --inventory ${INVENTORY} --list-hosts ${TARGET} | sed -e 's/^ *//' -e '/^hosts ([0-9]*):/d')
 PLAYBOOK_ARGS=-T ${TIMEOUT} --inventory ${INVENTORY} $${TAGS:+-t $${TAGS}} $${TARGET:+-l $${TARGET}}
 
+ifeq (${RETRY},1)
+  PLAYBOOK_ARGS	+= --limit @$(realpath site.retry)
+endif
+
 all::	apply
 
 ping: true
