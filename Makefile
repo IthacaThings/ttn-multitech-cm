@@ -55,7 +55,7 @@ endif
 HOSTS=$(shell ansible -i ${MY_INVENTORY} --list-hosts ${TARGET} | sed -e 's/^ *//' -e '/^hosts ([0-9]*):/d')
 
 # set the default playbook parameters
-PLAYBOOK_ARGS=-T ${TIMEOUT} -i ${MY_INVENTORY} $${TAGS:+-t $${TAGS}} $${TARGET:+-l $${TARGET}}
+PLAYBOOK_ARGS=-T ${TIMEOUT} -i ${MY_INVENTORY} $${TAGS:+-t $${TAGS}} $${TARGET:+-l $${TARGET}} ${PLAYBOOK_ARGS_USER}
 
 ifeq (${RETRY},1)
   PLAYBOOK_ARGS	+= --limit @$(realpath site.retry)
