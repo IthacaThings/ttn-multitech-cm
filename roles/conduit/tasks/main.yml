@@ -186,7 +186,7 @@
     - setup
 
 - name: Set time from ntp server
-  shell: "ntpdate {{ ntp_servers[0] }} && hwclock -wu"
+  shell: "ntpdate -bu {{ ntp_servers[0] }} && hwclock -wu"
   ignore_errors: yes
   tags:
     - time
