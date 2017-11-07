@@ -33,15 +33,19 @@ export TAGS=
 export TARGET=conduits
 TIMEOUT=60
 INVENTORY=hosts
+OPTIONS=
 HOSTS=$(shell ansible --inventory ${INVENTORY} --list-hosts ${TARGET} | sed -e 's/^ *//' -e '/^hosts ([0-9]*):/d')
-PLAYBOOK_ARGS=-T ${TIMEOUT} --inventory ${INVENTORY} $${TAGS:+-t $${TAGS}} $${TARGET:+-l $${TARGET}}
+PLAYBOOK_ARGS=-T ${TIMEOUT} --inventory ${INVENTORY} $${TAGS:+-t $${TAGS}} $${TARGET:+-l $${TARGET}} ${OPTIONS}
 
 all::	apply
 
 ping: true
-	ansible --inventory ${INVENTORY} -o -m ping ${TARGET}
+	ansible --inventory ${INVENTORY} -o -m ping ${OPTIONS} ${TARGET}
 
 test:
+	ansible-playbook ${PLAYBOOK_ARGS} -C site.yml
+
+test-debug:
 	ansible-playbook ${PLAYBOOK_ARGS} -C site.yml
 
 list-hosts: true
@@ -52,6 +56,12 @@ syntax-check: true
 
 apply: true
 	ansible-playbook ${PLAYBOOK_ARGS} site.yml
+
+retry: site.retry
+	ansible-playbook ${PLAYBOOK_ARGS} -l @site.retry site.yml
+
+apply-debug: true
+	ansible-playbook ${PLAYBOOK_ARGS} -vvv site.yml
 
 # Grab configs from all nodes
 harvest: true
