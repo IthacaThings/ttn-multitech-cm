@@ -67,6 +67,10 @@ expr ${mlinux_version} : "3.3.[0-9]" && sed -i -e "s%/3.3/%/${mlinux_version}/%"
 opkg update || _error "opkg update failed"
 opkg install python-pkgutil python-distutils || _error "opkg installed"
 
+if [ ! -d /var/config/ansible ]; then
+	mkdir -m 755 /var/config/ansible
+fi
+
 test -d /var/config/ansible && ln -s /var/config/ansible /etc/ansible
 
 
