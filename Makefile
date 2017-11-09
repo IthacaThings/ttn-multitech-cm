@@ -42,10 +42,10 @@ all::	apply
 ping: true
 	ansible --inventory ${INVENTORY} -o -m ping ${OPTIONS} ${TARGET}
 
-test:
+test:	${CATALOG}
 	ansible-playbook ${PLAYBOOK_ARGS} -C site.yml
 
-test-debug:
+test-debug:	${CATALOG}
 	ansible-playbook ${PLAYBOOK_ARGS} -C site.yml
 
 list-hosts: true
@@ -54,23 +54,21 @@ list-hosts: true
 syntax-check: true
 	ansible-playbook ${PLAYBOOK_ARGS} --syntax-check site.yml
 
-apply: true
+apply: ${CATALOG}
 	ansible-playbook ${PLAYBOOK_ARGS} site.yml
 
-retry: site.retry
+retry: site.retry ${CATALOG}
 	ansible-playbook ${PLAYBOOK_ARGS} -l @site.retry site.yml
 
-apply-debug: true
+apply-debug: ${CATALOG}
 	ansible-playbook ${PLAYBOOK_ARGS} -vvv site.yml
 
 # Grab configs from all nodes
-harvest: true
+harvest: ${CATALOG}
+	ansible-playbook ${PLAYBOOK_ARGS} -t ping -C site.yml -l conduits
+
+${CATALOG}:	true
 	@mkdir -p ${CATALOG} 2>/dev/null || exit 0
-	@for host in ${HOSTS}; do \
-		ansible --inventory ${INVENTORY} -o -m setup $${host} > $${host}.json; \
-		[ $$? == 0 ] && sed -e "s/^$${host} | SUCCESS => //" < $${host}.json > ${CATALOG}/$${host}.json; \
-		rm $${host}.json; \
-	done
 
 #
 # 	Make stuff
