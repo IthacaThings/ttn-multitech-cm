@@ -4,5 +4,12 @@
 ansible_host: jumphost.example.com
 ansible_port: 2222
 
-# The user to log into the host
-ansible_user: ttn-org
+# Uncomment if you need to change the defaults
+# ansible_port: 22
+ansible_user: ubuntu
+# ansible_become: true
+# ansible_become_user: root
+# ansible_become_method: sudo
+
+# autossh_authorized_keys: [ ]
+# autossh_groups: [ conduits ]

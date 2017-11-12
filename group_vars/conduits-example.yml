@@ -7,6 +7,12 @@ ansible_user: root
 # User to log in and poke around on a Conduit
 ttn_user: ttn
 
+# Authorized keys for login to those users
+#authorized_keys:
+#  - KEY1
+#  - KEY2
+#  - ...
+
 # Tunnel to SSH server
 ssh_tunnel_remote_user: ttn
 ssh_tunnel_remote_host: jumphost.example.com

@@ -128,12 +128,12 @@ that all gateways are in the same region and timezone.
 Copy *hosts-example* to *hosts*
 
 ### Set authorized keys for logging into conduits
-Copy *roles/conduit/files/authorized_keys-example* to
-*roles/conduit/files/authorized_keys* and add the keys of anyone you
-want to be able to ssh into the conduit. These keys same keys will
-also allow logging in to the jump host.  As mentioned above, it's
-recommended that you use ssh-agent and forward keys from your laptop
-or desktop.
+Edit the *authorized_keys* variable in the group configuration for
+your conduits (i.e. *group_vars/conduits.yml*) *AND* the jumphost
+configuration (*host_vars/jumphost.example.com/yml*) to provide a list
+of ssh public keys that can have access to your conduits and jumphost.
+As mentioned above, it's recommended that you use ssh-agent and
+forward keys from your laptop or desktop.
 
 ### Add an ssh tunnel server (i.e. jump host)
 1. Edit *hosts* and change *jumphost.example.com* to the FQDN of your
@@ -177,10 +177,6 @@ If ssh keys are not yet setup on the Conduit (i.e., if you've not done the first
 ```
 $ make TARGET=*HOSTNAME* apply
 ```
-
-## Set up authorized keys
-1. Copy *roles/conduit/files/authorized_keys-example* to *roles/conduit/files/authorized_keys*
-2. Edit *roles/conduit/files/authorized_keys* to add the SSH public keys of anyone you want to be able to log in as root.
 
 # Deploying a Conduit
 ## Configure host specific data in this control repo
@@ -228,7 +224,7 @@ root@mtcdt:~#
 ```
 Remember the password you supplied above.  
 
-## Copy *roles/conduit/files/authorized_keys* to */home/root/.ssh/*
+## Provide initial authorizied keys in .root/.ssh/authorized_keys
 The easy way to do this is to open *authorized_keys* with `gedit` on your host, then copy/paste
 to a terminal window.
 

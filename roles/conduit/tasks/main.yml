@@ -238,9 +238,9 @@
     - setup
 
 - name: Install root authorized keys
-  copy:
+  template:
     dest: ~root/.ssh/authorized_keys
-    src: authorized_keys
+    src: authorized_keys.j2
     mode: "0600"
     owner: root
     group: root
@@ -274,9 +274,9 @@
     - setup
 
 - name: "Install {{ ttn_user }} authorized keys"
-  copy:
+  template:
     dest: "~{{ ttn_user }}/.ssh/authorized_keys"
-    src: authorized_keys
+    src: authorized_keys.j2
     mode: "0600"
     owner: "{{ ttn_user }}"
     group: "{{ ttn_user }}"
