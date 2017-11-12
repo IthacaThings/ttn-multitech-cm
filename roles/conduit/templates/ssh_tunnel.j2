@@ -4,7 +4,7 @@
 DAEMON={{ ssh_tunnel_daemon }}
 {% endif %}
 {% if ssh_tunnel_local_port is defined and ssh_tunnel_local_port %}
-LOCAL_PORT= { ssh_tunnel_local_port }}
+LOCAL_PORT={{ ssh_tunnel_local_port }}
 {% endif %}
 {% if ssh_tunnel_remote_host %}
 REMOTE_HOST={{ ssh_tunnel_remote_host }}
