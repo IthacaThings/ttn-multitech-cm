@@ -3,8 +3,22 @@
 
 ssh_port: 22
 
+#
+#	Default ansible parameters
+#
+
 ansible_port: "{{ ssh_port }}"
 ansible_become: true
 ansible_become_user: root
 ansible_become_method: sudo
+
+#
+#	Default values for autossh connections
+#
+
+# Additional authorized keys
+autossh_authorized_keys: [ ]
+# Default autossh user
+autossh_users:
+  - [ autossh, conduits ]
 

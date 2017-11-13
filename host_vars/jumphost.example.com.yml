@@ -11,5 +11,12 @@ ansible_user: ubuntu
 # ansible_become_user: root
 # ansible_become_method: sudo
 
+# AutoSSH accounts are those used by the conduits to establish a
+# reverse tunnel.
+# Additional keys to enable for autossh accounts
 # autossh_authorized_keys: [ ]
-# autossh_groups: [ conduits ]
+# List of autossh users and groups that can access them.  Default is
+# that the 'autossh' user is accessed by all 'conduits'
+# autossh_users:
+#  - [ autossh, conduits ]
+

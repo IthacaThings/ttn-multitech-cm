@@ -1,0 +1,27 @@
+---
+#
+#
+#	Create auto ssh user (used by conduits to create reverse tunnel)
+#
+- name: "Set up {{ autossh_user }} user"
+  user:
+    name: "{{ autossh_user }}"
+    append: yes
+    shell: /bin/bash
+    password: "*"
+
+- name: Create {{ autossh_user }}  .ssh dir
+  file:
+    dest: "~{{ autossh_user }}/.ssh"
+    state: directory
+    mode: "0700"
+    owner: "{{ autossh_user }}"
+    group: "{{ autossh_user }}"
+
+- name: "Install {{ autossh_user }} authorized keys"
+  template:
+    dest: "~{{ autossh_user }}/.ssh/authorized_keys"
+    src: autossh_user_authorizedkeys.j2
+    mode: "0600"
+    owner: "{{ autossh_user }}"
+    group: "{{ autossh_user }}"

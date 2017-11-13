@@ -26,10 +26,19 @@
   import_tasks: ntp.yml
   static: yes
 
+# XXX - fix this
 - name: Set up postfix
   import_tasks: postfix.yml
   static: yes
   when: false
 
-  
+- name: Set up autossh users
+  include_tasks: autossh_user.yml
+  vars:
+    autossh_user: "{{ item[0] }}"
+    autossh_group: "{{ item[1] }}"
+  static: no
+  with_nested:
+    - "{{ autossh_users }}"
+  tags: users
   
