@@ -14,7 +14,6 @@ ttn_user: ttn
 #  - ...
 
 # Tunnel to SSH server
-ssh_tunnel_remote_user: ttn
 ssh_tunnel_remote_host: jumphost.example.com
 ssh_tunnel_ssh_port: 2222
 
