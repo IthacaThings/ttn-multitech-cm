@@ -1,8 +1,6 @@
 {% for key in autossh_authorized_keys %}
 {{ key }}
 {% endfor %}
-{% for host in groups[autossh_group] %}
-{% if 'ansible_ssh_host_key_rsa_public' in hostvars[host] %}
-{{ hostvars[host]['ansible_ssh_host_key_rsa_public'] }} {{ host }}
+{% if 'ansible_ssh_host_key_rsa_public' in hostvars[autossh_host] %}
+{{ hostvars[autossh_host]['ansible_ssh_host_key_rsa_public'] }} {{ autossh_host }}
 {% endif %}
-{% endfor %}

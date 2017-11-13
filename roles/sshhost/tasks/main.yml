@@ -35,10 +35,10 @@
 - name: Set up autossh users
   include_tasks: autossh_user.yml
   vars:
-    autossh_user: "{{ item[0] }}"
-    autossh_group: "{{ item[1] }}"
+    autossh_user: "autossh-{{ item }}"
+    autossh_host: "{{ item }}"
   static: no
-  with_nested:
-    - "{{ autossh_users }}"
+  with_items:
+    - "{{ groups['conduits'] }}"
   tags: users
   
