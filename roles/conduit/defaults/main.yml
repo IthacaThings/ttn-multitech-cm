@@ -1,4 +1,8 @@
 ---
+
+# Conduit type
+conduit_type: "{{ ansible_local.conduit.hw_version | regex_replace('-[0-9.]+$') | lower }}"
+
 # Authorized keys
 authorized_keys: "{{ lookup('file', 'files/authorized_keys') }}"
 
@@ -9,8 +13,8 @@ forwarder_baseurl_kersing: https://github.com/kersing/multitech-installer/raw/ma
 forwarder_baseurl_ttn: https://github.com/TheThingsNetwork/packet_forwarder/releases/download
 
 # mLinux upgrade info
-mlinux_upgrade_bin: "mlinux-factory-image-mtcdt-upgrade.bin"
-mlinux_url: "http://www.multitech.net/mlinux/images/mtcdt/{{mlinux_version }}"
+mlinux_upgrade_bin: "mlinux-factory-image-{{ conduit_type }}-upgrade.bin"
+mlinux_url: "http://www.multitech.net/mlinux/images/{{ conduit_type }}/{{ mlinux_version }}"
 
 # SSH tunnel
 ssh_tunnel_ssh_key: /etc/ssh/ssh_host_rsa_key
