@@ -32,7 +32,13 @@ static_nameservers:
 # reduce the MTU of interfaces to avoid this issue.
 # See http://changelog.complete.org/archives/9335-ssh-suddenly-stops-communicating-with-some-hosts
 eth0_mtu: 1100
-wlan_mtu: 1100
+wlan0_mtu: 1100
+
+# By default the DHCP client sends three packets over three seconds
+# and then gives up.  Change this so it will keep going forever (90
+# days).
+eth0_udhcpc_opts: -b -t 2592000
+wlan0_udhcp_opts: -b -t 2592000
 
 # WPA stuff
 wpa_conf: /var/config/wpa_supplicant.conf
