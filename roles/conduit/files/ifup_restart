@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# Restart services when we get an address
+
+[ $METHOD = "dhcp" ] && exit 0
+
+echo "$METHOD interface $IFACE is up, restarting services"
+test -x /etc/init.d/ttn-pkt-forwarder && /etc/init.d/ttn-pkt-forwarder restart
+test -x /etc/init.d/ssh_tunnel && /etc/init.d/ssh_tunnel restart
+
+exit 0

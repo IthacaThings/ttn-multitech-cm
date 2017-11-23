@@ -661,6 +661,7 @@
   when: 
     - ssh_tunnel_remote_port is defined
     - ssh_tunnel_remote_port > 0
+    - ssh_tunnel_remote_user is defined
   tags:
     - ssh_tunnel
     - setup
@@ -676,9 +677,32 @@
   when:
     - ssh_tunnel_remote_port is defined
     - ssh_tunnel_remote_port > 0
+    - ssh_tunnel_remote_user is defined
   tags:
     - ssh_tunnel
     - setup
 
-  
-  
+#
+#	Scripts so services start when we get a new address
+#
+- name: Install /etc/udhcpc.d/60restart
+  copy:
+    dest: /etc/udhcpc.d/60restart
+    src: udhcpc_restart
+    mode: "0755"
+    owner: root
+    group: root
+  tags:
+    - setup
+
+- name: Install /etc/network/if-up.d/restart
+  copy:
+    dest: /etc/network/if-up.d/restart
+    src: ifup_restart
+    mode: "0755"
+    owner: root
+    group: root
+  tags:
+    - setup
+
+    
