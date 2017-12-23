@@ -175,53 +175,11 @@
 #
 #	Set timezone and time
 #
-- name: Set the timezone
-  file:
-    name: /etc/localtime
-    state: link
-    force: yes
-    src: "/usr/share/zoneinfo/{{ timezone }}"
+- name: Setup time
+  import_tasks: time.yml
   tags:
     - time
     - setup
-
-- name: Set time from ntp server
-  shell: "ntpdate -bu {{ ntp_servers[0] }} && hwclock -wu"
-  ignore_errors: yes
-  tags:
-    - time
-    - setup
-
-- name: Install ntpd
-  opkg:
-    name: ntp
-    state: installed
-  when: ansible_local.opkg.ntp is not defined
-  tags:
-    - time
-    - setup
-
-- name: Install ntp-utils
-  opkg:
-    name: ntp-utils
-    state: installed
-  when: ansible_local.opkg.ntp_utils is not defined
-  tags:
-    - time
-    - setup
-
-- name: /etc/ntp.conf
-  template:
-    src: ntp.conf.j2
-    dest: /etc/ntp.conf
-    mode: "0644"
-    owner: root
-    group: root
-  tags:
-    - time
-    - setup
-  notify: restart ntpd
-    
   
 #
 #	Set root authorized keys

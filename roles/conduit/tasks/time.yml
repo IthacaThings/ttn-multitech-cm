@@ -1,0 +1,48 @@
+---
+
+- name: Set the timezone
+  file:
+    name: /etc/localtime
+    state: link
+    force: yes
+    src: "/usr/share/zoneinfo/{{ timezone }}"
+
+- name: Set time from ntp server
+  shell: "ntpdate -bu {{ ntp_servers[0] }} && hwclock -wu"
+  ignore_errors: yes
+
+- name: Install ntpd
+  opkg:
+    name: ntp
+    state: installed
+  when: ansible_local.opkg.ntp is not defined
+
+- name: Install ntp-utils
+  opkg:
+    name: ntp-utils
+    state: installed
+  when: ansible_local.opkg.ntp_utils is not defined
+
+- name: Create /var/config/ntp.drift
+  file:
+    name: /var/config/ntp.drift
+    state: touch
+    mode: "0644"
+    owner: ntp
+    group: ntp
+    
+- name: /var/config/ntp.conf
+  template:
+    src: ntp.conf.j2
+    dest: /var/config/ntp.conf
+    mode: "0644"
+    owner: root
+    group: root
+
+- name: /etc/ntp.conf
+  file:
+    name: /etc/ntp.conf
+    state: link
+    force: yes
+    src: /var/config/ntp.conf
+  notify: restart ntpd
