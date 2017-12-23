@@ -1,0 +1,48 @@
+---
+
+#
+#	Move /usr/local to /var/config/local so it survives an upgrade
+#
+- name: Create /var/config/local
+  file:
+    name: /var/config/local
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: /var/config/local/tree
+  file:
+    name: "/var/config/local/{{ item }}"
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+  with_flattened:
+    - bin
+    - lib
+    - sbin
+    - share
+
+- name: Get stat info about /usr/local
+  stat:
+    path: /usr/local
+  register: usr_local
+
+- name: Copy /usr/local content to /var/config/local
+  shell: "rsync -av /usr/local /var/config"
+  when: usr_local.stat.isdir is defined and usr_local.stat.isdir == True
+
+- name: Remove /usr/local tree
+  file:
+    name: /usr/local
+    state: absent
+  when: usr_local.stat.isdir is defined and usr_local.stat.isdir == True
+
+- name: Point /usr/local at /var/config/local
+  file:
+    name: /usr/local
+    state: link
+    src: /var/config/local
+  when: usr_local.stat.isdir is defined and usr_local.stat.isdir == True
+
