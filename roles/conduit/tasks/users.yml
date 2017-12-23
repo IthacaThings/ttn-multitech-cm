@@ -108,3 +108,20 @@
     state: link
     src: "/var/config/home/{{ ttn_user }}/.ssh"
     force: yes
+
+- name: "Allow {{ ttn_user }} to sudo without a password"
+  copy:
+    dest: "/var/config/{{ ttn_user }}.sudo"
+    content: "{{ ttn_user }} ALL=(ALL) NOPASSWD: ALL"
+    mode: "0644"
+    owner: root
+    group: root
+  when: ansible_local.opkg.sudo is defined
+
+- name: "Create a link to /var/config/{{ ttn_user }}.sudo"
+  file:
+    dest: "/etc/sudoers.d/{{ ttn_user }}"
+    state: link
+    src: "/var/config/{{ ttn_user }}.sudo"
+    force: yes
+  when: ansible_local.opkg.sudo is defined
