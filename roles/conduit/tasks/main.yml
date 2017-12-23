@@ -180,64 +180,12 @@
   tags:
     - time
     - setup
-  
-#
-#	Set root authorized keys
-#
-- name: Create root .ssh dir
-  file:
-    dest: ~root/.ssh
-    state: directory
-    mode: "0700"
-    owner: root
-    group: root
-  tags:
-    - users
-    - setup
-
-- name: Install root authorized keys
-  template:
-    dest: ~root/.ssh/authorized_keys
-    src: authorized_keys.j2
-    mode: "0600"
-    owner: root
-    group: root
-  tags:
-    - users
-    - setup
 
 #
-#	Create ttn user
+#	Set up user stuff
 #
-- name: "Set up {{ ttn_user }} user"
-  user:
-    name: "{{ ttn_user }}"
-    append: yes
-    groups: adm,plugdev,sudo
-    shell: /bin/bash
-    password: "*"
-  tags:
-    - users
-    - setup
-
-- name: Create {{ ttn_user }}  .ssh dir
-  file:
-    dest: "~{{ ttn_user }}/.ssh"
-    state: directory
-    mode: "0700"
-    owner: "{{ ttn_user }}"
-    group: "{{ ttn_user }}"
-  tags:
-    - users
-    - setup
-
-- name: "Install {{ ttn_user }} authorized keys"
-  template:
-    dest: "~{{ ttn_user }}/.ssh/authorized_keys"
-    src: authorized_keys.j2
-    mode: "0600"
-    owner: "{{ ttn_user }}"
-    group: "{{ ttn_user }}"
+- name: Set up users
+  import_tasks: users.yml
   tags:
     - users
     - setup
