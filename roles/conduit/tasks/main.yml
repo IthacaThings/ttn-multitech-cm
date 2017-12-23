@@ -421,69 +421,19 @@
 
 #
 #	Install additional ca-certificates
-#	XXX - wget needs #	--ca-certificate=/etc/ssl/certs/ca-certificate.crt to work???
 #
-- name: Local certs directory
-  file:
-    dest: /usr/local/share/ca-certificates
-    state: directory
-    mode: "0755"
-    owner: root
-    group: root
-  tags: ca-certificates
 
-- name: "Fetch Let's Encrypt root cert"
-  local_action: get_url
-  args:
-    url: "https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem"
-    dest: "{{ role_path }}/files"
-  tags: ca-certificates
-
-- name: "Install Let's Encrypt root cert"
-  copy:
-    dest: /usr/local/share/ca-certificates/lets-encrypt-x3-cross-signed.crt
-    src: "{{ item }}"
-    mode: "0644"
-    owner: root
-    group: root
-  with_flattened:
-    - lets-encrypt-x3-cross-signed.pem
-  notify: update-ca-certificates
+- name: Additional Certificates
+  import_tasks: certs.yml
   tags:
     - ca-certificates
     - setup
 
 #
-#	Set up ssh tunnel
+#	Set up ssh_tunnel (autossh)
 #
-- name: /etc/default/ssh_tunnel
-  template:
-    src: ssh_tunnel.j2
-    dest: /etc/default/ssh_tunnel
-    mode: "0755"
-    owner: root
-    group: root
-  notify: restart ssh_tunnel
-  when: 
-    - ssh_tunnel_remote_port is defined
-    - ssh_tunnel_remote_port > 0
-    - ssh_tunnel_remote_user is defined
-  tags:
-    - ssh_tunnel
-    - setup
-
-- name: /etc/init.d/ssh_tunnel
-  copy:
-    dest: /etc/init.d/ssh_tunnel
-    src: ssh_tunnel.initd
-    mode: "0755"
-    owner: root
-    group: root
-  notify: restart ssh_tunnel
-  when:
-    - ssh_tunnel_remote_port is defined
-    - ssh_tunnel_remote_port > 0
-    - ssh_tunnel_remote_user is defined
+- name: Set up ssh_tunnel (autossh)
+  import_tasks: ssh_tunnel.yml
   tags:
     - ssh_tunnel
     - setup

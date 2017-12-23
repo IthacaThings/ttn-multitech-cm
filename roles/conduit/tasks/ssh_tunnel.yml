@@ -1,0 +1,60 @@
+---
+
+- name: /var/config/ssh_tunnel.default
+  template:
+    src: ssh_tunnel.j2
+    dest: /var/config/ssh_tunnel.default
+    mode: "0755"
+    owner: root
+    group: root
+  notify: restart ssh_tunnel
+  when: 
+    - ssh_tunnel_enabled
+
+- name: /var/config/ssh_tunnel.init
+  copy:
+    dest: /var/config/ssh_tunnel.init
+    src: ssh_tunnel.initd
+    mode: "0755"
+    owner: root
+    group: root
+  notify: restart ssh_tunnel
+  when:
+    - ssh_tunnel_enabled
+
+- name: Link /etc/default/ssh_tunnel to /var/config/ssh_tunnel.default
+  file:
+    dest: /etc/default/ssh_tunnel
+    state: link
+    src: /var/config/ssh_tunnel.default
+    force: yes
+  notify: restart ssh_tunnel
+  when:
+    - ssh_tunnel_enabled
+    
+- name: Link /etc/init.d/ssh_tunnel to /var/config/ssh_tunnel.init
+  file:
+    dest: /etc/init.d/ssh_tunnel
+    state: link
+    src: /var/config/ssh_tunnel.init
+    force: yes
+  notify: restart ssh_tunnel
+  when:
+    - ssh_tunnel_enabled
+
+- name: Stop ssh_tunnel if not enabled
+  service: name=ssh_tunnel state=stopped
+  when:
+    - not ssh_tunnel_enabled
+   
+- name: Clean up ssh_tunnel if not enabled
+  file:
+    dest: "{{ item }}"
+    state: absent
+  with_items:
+    - /var/config/ssh_tunnel.default
+    - /var/config/ssh_tunne.init
+    - /etc/default/ssh_tunnel
+    - /etc/init.d/ssh_tunnel
+  when:
+    - not ssh_tunnel_enabled
