@@ -15,6 +15,7 @@
   local_action:
     module: shell
     args: "bin/ttnctl user status"
+  run_once: true
 
 - name: register gateway
   local_action:
