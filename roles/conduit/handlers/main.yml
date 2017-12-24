@@ -5,7 +5,7 @@
 #	Set hostname when /etc/hostsname is updated
 #
 - name: Set hostname
-  shell: "hostname $(cat /etc/hostname)"
+  shell: "hostname -F /etc/hostname"
 
 #
 #	Run update-ca-certificates
