@@ -87,7 +87,7 @@
 - name: Install /var/config/ttn-pkt-forwarder
   copy:
     src: ttn-pkt-forwarder
-    dest: /etc/init.d/
+    dest: /var/config
     mode: "0755"
     owner: root
     group: root
