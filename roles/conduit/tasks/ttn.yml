@@ -16,22 +16,6 @@
     module: shell
     args: "bin/ttnctl user status"
 
-- name: delete gateway because changing to ttn
-  local_action:
-    module: shell
-    args: "bin/ttnctl gateway delete {{ hostname }}"
-  ignore_errors: true
-  when:
-    - forwarder_variant != 'ttn'
-
-- name: delete gateway because changing from ttn
-  local_action:
-    module: shell
-    args: "bin/ttnctl gateway delete {{ lora_eui }}"
-  ignore_errors: true
-  when:
-    - forwarder_variant == 'ttn'
-
 - name: register gateway
   local_action:
     module: shell
@@ -41,20 +25,6 @@
   shell: "bin/ttnctl gateway collaborators add {{ lora_hostname }} {{ item.username }} {{item.rights|default(gateway_collaborator_rights)|join(' ') }}"
   with_items: "{{ gateway_collaborators }}"
   connection: local
-
-- name: Get TTN fowarder Access Key
-  local_action:
-    module: shell
-    args: "bin/ttnctl gateway info {{ hostname }} | awk '/Access Key/{print $3}'"
-  register: gateway_key
-  when: forwarder_variant == 'ttn'
-
-- name: Verify we have Access Key {{ gateway_key.stdout }}
-  fail:
-    msg: "No gateway key returned from bin/ttnctl"
-  when:
-    - forwarder_variant == 'ttn'
-    - gateway_key.stdout == ""
 
 #
 #	Remove Multi-Tech stuff that we don't want and install the TTN packet-forwarder
@@ -87,15 +57,6 @@
     dest: "{{ role_path }}/files"
   when:
     - forwarder_package_stat.stat.exists == false
-    - forwarder_variant != 'ttn'
-
-- name: Fetch and build ttn_packet_forwarder package
-  local_action:
-    module: shell
-    args: "{{ role_path }}/files/build_packet_forwarder '{{ role_path }}/files/{{ forwarder_package_full }}'"
-  when:
-    - forwarder_package_stat.stat.exists == false
-    - forwarder_variant == 'ttn'
 
 - name: Copy over packet-forwarder
   copy:
@@ -177,28 +138,6 @@
 
     - shell: node /opt/lora/merge.js /var/config/lora/ttn_global_conf.json /var/config/lora/multitech_overrides.json /var/config/lora/global_conf.json
       notify: restart ttn-pkt-forwarder
-
-  when: forwarder_variant != 'ttn'
-
-- name: Remove json files from non-TTN forwarder
-  file:
-    name: "/var/config/lora/{{ item }}"
-    state: absent
-  when: forwarder_variant == 'ttn'
-  with_items:
-    - global_conf.json
-    - local_conf.json
-    - ttn_global_conf.json
-  
-- name: Provide TTN packet forwarder config
-  template:
-    src: config.yml.j2
-    dest: /var/config/lora/config.yml
-    mode: "0644"
-    owner: root
-    group: root
-  notify: restart ttn-pkt-forwarder
-  when: forwarder_variant == 'ttn'
 
 - name: Remove TTN packet forwarder config
   file:
