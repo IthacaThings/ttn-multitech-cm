@@ -92,6 +92,16 @@
   when: ansible_local.opkg.preserve is defined
   tags: setup
 
+- name: Mark restore as completed
+  file:
+    name: /var/lib/restore.done
+    state: touch
+    mode: "0644"
+    owner: root
+    group: root
+  when: ansible_local.opkg.preserve is defined
+  tags: setup
+
 #
 #	Update mLinux if required
 #
