@@ -44,6 +44,7 @@
 
 - name: Stop ssh_tunnel if not enabled
   service: name=ssh_tunnel state=stopped
+  ignore_errors: true
   when:
     - not ssh_tunnel_enabled
    
