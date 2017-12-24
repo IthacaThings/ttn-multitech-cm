@@ -30,11 +30,11 @@
     mode: "0755"
     owner: ntp
     group: ntp
-    
-- name: /var/config/ntp/ntp.conf
+
+- name: /var/config/ntp.conf
   template:
     src: ntp.conf.j2
-    dest: /var/config/ntp/ntp.conf
+    dest: /var/config/ntp.conf
     mode: "0644"
     owner: root
     group: root
@@ -44,5 +44,5 @@
     name: /etc/ntp.conf
     state: link
     force: yes
-    src: /var/config/ntp/ntp.conf
+    src: /var/config/ntp.conf
   notify: restart ntpd
