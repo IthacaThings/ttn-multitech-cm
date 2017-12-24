@@ -348,6 +348,12 @@ Things to do before this repo is ready to release to the world.
 
 ## TODO
 
+### Bugs and issues
++ [ ] Use /usr/sbin/mlinux-firmware-update as it checks validity and integrity
++ [ ] Break out ansible setup into ansible.yml
++ [ ] Break out other setup
++ [ ] Do not try to set hostname if it is not defined
+
 ### One-time Ansible setup
 This is performed one-time to setup secure networking and is basically
 repeating above configuration from master config.  Must be performed
@@ -361,35 +367,6 @@ restricting root access.
 + [X] ttn account
 + [X] Install SSH keys for root and ttn
 + [ ] Set root and ttn passwords?
-#### SSH config
-+ [X] Disable password login
-+ [X] Require Keys for root login
-### [X] Install Let's Encrypt Root Certificates
-+ This will avoid the need for --no-check-certificate on wget
-### [X] Set hostname
-This makes it obvious which gateway you are logged in to.
-+ ttn-ORG-NAME (where NAME is descriptive)
-### Set timezone
-+ [X] - Set from Ansible config
-An org is usually all in one timezone so it's just easier to configure
-this globally.  Ansible will spit out error messages if you get it wrong.
-### Set time
-+ [X] Set time when Ansible is run
-+ [X] Configure and start ntpd
-### Disable Multi-Tech Lora daemon
-+ [X] Uninstall lora-network-server with opkg
-+ [X] Uninstall lora-packet-forwarder with opkg
-### Install TTN packet forwarder
-+ [X] Works with TTN, MP and Poly packet-forwarders
-+ [X] Fetch ipkg of ttn packet forwarder
-+ [X] Install package
-+ [X] Avoid install step if already installed
-+ [X] Overwrite init.d file to not fetch updates
-+ [X] Fetch global config files
-+ [X] Install appropriate config file
-+ [X] Generate local config file
-+ [X] Merge overrides
-+ [X] Restart daemon when done
 
 ### SSH Tunnel
 + [X] Write init.d script
@@ -403,14 +380,6 @@ this globally.  Ansible will spit out error messages if you get it wrong.
 + [X] Use autossh
 + [ ] Manage tunnel ports
 
-### Firmware updates
-Can we deploy a new version of Multi-Tech mLinux remotely without
-needing to be hands on with the gateways?
-+ [X] Does /var/config survive firmware updates
-+ [ ] Move root and ttn users home dirs to /var/config
-+ [X] Test remote updates
-+ [ ] Add /etc/init.d service to install Ansible dependencies
-
 ### Setup
 #### Makefile targets to
 + [ ] Add a host
@@ -423,4 +392,42 @@ needing to be hands on with the gateways?
 + [X] Ping hosts
 + [X] Syntax check
 
-### Support new packet forwarder
+
+### Conduit/AP bootstrap
+#### Phase I
++ [ ] Configure for DHCP
+#### Phase II
++ [ ] Verify mlinux
++ [ ] Create ~root/.ssh (700)
++ [ ] Set authorized keys
++ [ ] 'PasswordAuthentication no' /etc/sshd_config
++ [ ] Configure ssh tunnel
+    + [ ] /etc/init.d/ssh_tunnel
+    + [ ] Jumphost
+	+ [ ] Port
+	+ [ ] Username
+	+ [ ] /etc/default/ssh_tunnel
+	+ [ ] /etc/init.d/ssh_tunnel restart
++ [ ] Fix /etc/opkg/mlinux-feed.conf (3.3 -> 3.3.X)
++ [ ] Install Ansible dependencies
+    + [ ] opkg update || _error "opkg update failed"
+    + [ ] opkg install python-pkgutil python-distutils || _error "opkg installed"
+
+### Data to provide to Conduit
++ [ ] authorizied keys
++ [ ] Jump Host info
+    + [ ] Address/IP
+    + [ ] Port number
+    + [ ] Username
+### Data get from conduit
++ [ ] authorized key
++ [ ] MAC address
+
+### DHCP fixes
++ [X] udhcpc_opts -t (86400*30) -b
++ [X] dhcp script to restart packet forwarder on DHCP up
++ [X] dhcp script to restart auto ssh on dhcp up?
+
+### Bugs
++ [ ] Not owner of gateway
+
