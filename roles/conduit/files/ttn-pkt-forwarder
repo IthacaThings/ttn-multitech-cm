@@ -20,9 +20,23 @@ pkt_fwd_pidfile=/var/run/lora-pkt-fwd.pid
 port1=/sys/devices/platform/mts-io/ap1
 port2=/sys/devices/platform/mts-io/ap2
 
-lora_mtac_id="MTAC-LORA"
-lora_1_0_hw="MTAC-LORA-1.0"
-lora_1_5_h_hw="MTAC-LORA-1.5"
+hw_version=$(mts-io-sysfs show hw-version)
+case ${hw_version} in
+    MTCDT-*)
+	lora_prefix="MTAC"
+    ;;
+    MTCAP-*)
+	lora_prefix="MTCAP"
+    ;;
+    *)
+	echo "$0: Unrecognized conduit version: ${hw_version}"
+	exit 1
+	;;
+esac
+
+lora_mt_id="${lora_prefix}-LORA"
+lora_1_0_hw="${lora_prefix}-LORA-1.0"
+lora_1_5_h_hw="${lora_prefix}-LORA-1.5"
 
 read_card_info() {
     # product-id of first lora card
@@ -40,7 +54,7 @@ card_found() {
         ln -sf /dev/spidev32765.2 /dev/spidev0.0
     fi
 
-    if [[ "$lora_id" =~ "$lora_mtac_id" ]]; then
+    if [[ "$lora_id" =~ "$lora_mt_id" ]]; then
         return 0
     else
         return 1
