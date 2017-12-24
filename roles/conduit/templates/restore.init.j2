@@ -1,0 +1,22 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          restore
+# Required-Start:    $local_fs $network
+# Required-Stop:     $local_fs $network
+# Default-Start:     2 3 4 5
+# Default-Stop:      
+# Description:       Finish recovery after reflash
+### END INIT INFO
+
+echo "Updating opkg database"
+opkg update
+
+echo "Removing packages we do not want"
+opkg remove mosquitto lora-network-server lora-packet-forwarder
+
+echo "Installing required packages"
+opkg install python-pkgutil python-distutils ntp ntp-utils libmpsse
+
+echo "Removing myself"
+rm "${0}"
+update-rc.d $(basename ${0}) remove

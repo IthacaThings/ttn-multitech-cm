@@ -56,6 +56,45 @@
   when: ansible_facts_d|changed or var_config_ansible|changed
   tags: setup
 
+#
+#  Install scripts to recover after an upgrade if enabled
+#
+- name: Create restore dir
+  file:
+    dest: /var/config/restore.d
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+  when: ansible_local.opkg.preserve is defined
+  tags: setup
+
+- name: Install restore scripts
+  template:
+    src: "{{ item }}.j2"
+    dest: "/var/config/restore.d/{{ item }}"
+    mode: "0755"
+    owner: root
+    group: root
+  with_items:
+    - 05restore
+    - 15restore
+  when: ansible_local.opkg.preserve is defined
+  tags: setup
+
+- name: Install restore initscript
+  template:
+    src: restore.init.j2
+    dest: "/var/config/restore.init"
+    mode: "0755"
+    owner: root
+    group: root
+  when: ansible_local.opkg.preserve is defined
+  tags: setup
+
+#
+#	Update mLinux if required
+#
 - name: Upgrade mlinux
   import_tasks: mlinux.yml
   when:

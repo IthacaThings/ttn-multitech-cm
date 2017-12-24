@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# Start recovery before links are restored
+
+echo "Running 05restore"
+
+if [ ! -e /home/{{ ttn_user }} -a -e /var/config/home/{{ ttn_user }} ]; then
+   # Read UID and GID from /var/config/home/{{ ttn_user }}
+   eval $(ls -1ldn /var/config/home/{{ ttn_user }} | awk -e '{printf "uid=%s; gid=%s\n", $3, $4}')
+   echo "Creating user and group {{ ttn_user }} with uid ${uid} gid ${gid}"
+   groupadd -g ${gid} {{ ttn_user }}
+   useradd -g ${gid} -G adm,plugdev,sudo -s /bin/bash -u ${uid} -p '*' {{ ttn_user }}
+fi
+
+echo "Setting hostname to {{ hostname }}"
+echo "{{ hostname }}" > /etc/hostname
+
+echo "Setting timezone to {{ timezone }}"
+ln -svf "/usr/share/zoneinfo/{{ timezone }}" /etc/localtime
+
+# Install packet forwarder here to ensure the link to
+# /var/config/ttn-packet-forwarder is restored
+echo "Installing " /var/config/*.ipk
+opkg install /var/config/*-packet-forwarder_*.ipk

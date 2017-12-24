@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# Continue recovery after links are restored
+
+echo "Running 15restore"
+
+echo "Configuring ttn-pkt-forwader to start"
+update-rc.d -f ttn-pkt-forwarder remove
+update-rc.d ttn-pkt-forwarder defaults 95 30
+
+if [ -f /var/config/restore.init ]; then
+    echo "Configuring last stage restore to run once network is available"
+    ln -sf /var/config/restore.init /etc/init.d/restore
+    update-rc.d restore defaults 90
+fi

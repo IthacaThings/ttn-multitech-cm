@@ -58,11 +58,17 @@
   when:
     - forwarder_package_stat.stat.exists == false
 
+- name: Remove old .ipk files
+  file:
+    path={{ item }}
+    state=absent
+  with_fileglob: /var/config/*-packet-forwarder_*.ipk
+  when: forwarder_installed != forwarder_package_version
+
 - name: Copy over packet-forwarder
   copy:
     src: "{{ forwarder_package_full }}"
-    dest: "/var/tmp/{{ forwarder_package_full }}"
-  when: forwarder_installed != forwarder_package_version
+    dest: "/var/config/{{ forwarder_package_full }}"
 
 - name: Stop packet-forwarder
   service: name=ttn-pkt-forwarder state=stopped
@@ -74,7 +80,7 @@
   when: forwarder_installed != forwarder_package_version
 
 - name: Install {{ forwarder_package_full }}
-  shell: "opkg install /var/tmp/{{ forwarder_package_full }}"
+  shell: "opkg install /var/config/{{ forwarder_package_full }}"
   when: forwarder_installed != forwarder_package_version
   notify: restart ttn-pkt-forwarder
 
@@ -88,18 +94,13 @@
 
 - name: Link /etc/init.d/ttn-pkt-forwarder to /var/config/ttn-pkt-forwarder
   file:
-    dest: /etc/init.d/ttn-pkg-forwarder
+    dest: /etc/init.d/ttn-pkt-forwarder
     state: link
     src: /var/config/ttn-pkt-forwarder
+    force: yes
   notify:
     - update rc
     - restart ttn-pkt-forwarder
-  
-- name: Remove old .ipk files
-  file:
-    path={{ item }}
-    state=absent
-  with_fileglob: /var/tmp/*-packet-forwarder_*.ipk
 
 - name: Clean up packet-forwarder crud
   file:
