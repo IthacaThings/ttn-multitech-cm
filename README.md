@@ -157,7 +157,7 @@ that *ttn-* is constant, *org* should be the name of your TTN
 organization and *example* will be a name for this conduit.  Use a
 short descriptive name.  I.e. ttn-nyc-midtown or ttn-ith-coopext.
 
-Most of the variables in this file should be self-explanitory.
+Most of the variables in this file should be self-explanatory.
 
 *NOTE*: that you will need to keep track of the *ssh_tunnel_remote_port*
 values on each of your conduits to make sure they are unique.
