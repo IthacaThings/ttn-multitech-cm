@@ -33,7 +33,8 @@ OPTIONS=
 
 #
 # figure out the inventory.
-#  - if MY_INVENTORY is given from the command line or env, just use it.
+#  - if INVENTORY is given from the command line or env, just use it
+#    (and use CATALOG)
 #  - Otherwise, if there's a hosts file in this directory, use it
 #  - Otherwise, if there's a directory ../inventory, use it
 #  - Otherwise complain and quit.
