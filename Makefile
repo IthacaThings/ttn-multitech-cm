@@ -74,6 +74,10 @@ HOSTS=$(shell ansible --inventory ${INVENTORY} --list-hosts ${TARGET} | sed -e '
 # set the default playbook parameters
 PLAYBOOK_ARGS=-T ${TIMEOUT} --inventory ${INVENTORY} $${TAGS:+-t $${TAGS}} $${TARGET:+-l $${TARGET}} ${OPTIONS}
 
+ifeq (${RETRY},1)
+  PLAYBOOK_ARGS	+= --limit @$(realpath site.retry)
+endif
+
 all::	apply
 
 ping: true

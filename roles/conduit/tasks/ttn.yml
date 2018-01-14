@@ -26,6 +26,7 @@
   shell: "bin/ttnctl gateway collaborators add {{ lora_hostname }} {{ item.username }} {{item.rights|default(gateway_collaborator_rights)|join(' ') }}"
   with_items: "{{ gateway_collaborators }}"
   connection: local
+  ignore_errors: true
 
 #
 #	Remove Multi-Tech stuff that we don't want and install the TTN packet-forwarder
