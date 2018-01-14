@@ -51,6 +51,21 @@ ifeq ($(INVENTORY),)
  else
    $(error Can't find an inventory file)
  endif
+else
+ ifeq ($(wildcard $(INVENTORY)/.),)
+   $(error not a directory: $(INVENTORY))
+ else ifeq ($(CATALOG),)
+   ifneq ($(wildcard $(dir $(INVENTORY))/catalog/.),)
+     CATALOG=$(dir $(INVENTORY))
+   else
+     $(error Can't infer CATALOG from INVENTORY -- please supply CATALOG)
+   endif
+ endif
+endif
+
+# another idiot check.
+ifeq ($(wildcard $(CATALOG)/.),)
+   $(error not a directory: $(CATALOG))
 endif
 
 # now that we know the inventory, get the hosts.
