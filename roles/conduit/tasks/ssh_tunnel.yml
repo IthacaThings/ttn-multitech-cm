@@ -54,7 +54,7 @@
     state: absent
   with_items:
     - /var/config/ssh_tunnel.default
-    - /var/config/ssh_tunne.init
+    - /var/config/ssh_tunnel.init
     - /etc/default/ssh_tunnel
     - /etc/init.d/ssh_tunnel
   when:
