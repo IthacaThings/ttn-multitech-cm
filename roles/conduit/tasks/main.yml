@@ -27,7 +27,9 @@
   when:
     - mlinux_version is defined
     - mlinux_version != ansible_local.mlinux.version
-  tags: setup
+  tags:
+    - setup
+    - mlinux
   
 #
 #	Set up networking
