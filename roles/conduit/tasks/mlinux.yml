@@ -3,43 +3,35 @@
 #	Check mLinux version
 #
 
-- name: Check if md5sums_{{ mlinux_version }}.txt is downloaded
+- name: Check if md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt is downloaded
   local_action: stat
   args:
-    path: "{{ role_path }}/files/md5sums_{{ mlinux_version }}.txt"
+    path: "{{ role_path }}/files/md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt"
   register: mlinux_md5sums_stat
   
-- name: Download md5sums_{{ mlinux_version }}.txt
+- name: Download md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt
   local_action: get_url
   args:
     url: "{{ mlinux_url }}/md5sums.txt"
-    dest: "{{ role_path }}/files/md5sums_{{ mlinux_version }}.txt"
+    dest: "{{ role_path }}/files/md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt"
     timeout: 14400
   when:
     - mlinux_md5sums_stat.stat.exists == False
 
-- name: Create /var/volatile/flash-upgrade
-  file:
-    name: /var/volatile/flash-upgrade
-    state: directory
-    mode: "0755"
-    owner: root
-    group: root
-
   # upgrade.bin
-- name: Get expected md5 of {{ mlinux_upgrade_bin }}
+- name: Get expected md5 of {{ mlinux_upgrade_bin }}_{{ mlinux_version }}
   local_action:
     module: shell
-    args: "grep '{{ mlinux_upgrade_bin }}' {{ role_path }}/files/md5sums_{{ mlinux_version }}.txt | cut -d ' ' -f 1"
+    args: "grep '{{ mlinux_upgrade_bin }}' {{ role_path}}/files/md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt | cut -d ' ' -f 1"
   register: mlinux_upgrade_expected_md5
 
-- name: Get info about /var/volatile/flash-upgrade/upgrade.bin
+- name: Get info about ~/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}
   stat:
-    path: "/var/volatile/flash-upgrade/upgrade.bin"
+    path: "~/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
     get_md5: yes
   register: mlinux_upgrade_target_stat
 
-- name: Check if {{ mlinux_upgrade_bin }} is downloaded
+- name: Check if {{ mlinux_upgrade_bin }}_{{ mlinux_version }} is downloaded
   local_action: stat
   args:
     path: "{{ role_path }}/files/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
@@ -47,7 +39,7 @@
   when:
     - mlinux_upgrade_target_stat.stat.exists == False or mlinux_upgrade_target_stat.stat.md5 != mlinux_upgrade_expected_md5.stdout
   
-- name: Remove bad copy of {{ mlinux_upgrade_bin }}
+- name: Remove bad copy of {{ mlinux_upgrade_bin }}_{{ mlinux_version }}
   local_action: file
   args:
     name: "{{ role_path }}/files/{{ mlinux_upgrade }}_{{ mlinux_version }}"
@@ -56,7 +48,7 @@
     - mlinux_upgrade_target_stat.stat.exists == False or mlinux_upgrade_target_stat.stat.md5 != mlinux_upgrade_expected_md5.stdout
     - mlinux_upgrade_stat.stat.exists and mlinux_upgrade_stat.stat.md5 != mlinux_upgrade_expected_md5.stdout
 
-- name: Download {{ mlinux_upgrade_bin }}
+- name: Download {{ mlinux_upgrade_bin }}_{{ mlinux_version }}
   local_action: get_url
   args:
     url: "{{ mlinux_url }}/{{ mlinux_upgrade_bin }}"
@@ -67,7 +59,7 @@
     - mlinux_upgrade_target_stat.stat.exists == False or mlinux_upgrade_target_stat.stat.md5 != mlinux_upgrade_expected_md5.stdout
     - mlinux_upgrade_stat.stat.exists == False
 
-- name: Get info about {{ mlinux_upgrade_bin }}
+- name: Get info about {{ mlinux_upgrade_bin }}_{{ mlinux_version }}
   local_action: stat
   args:
     path: "{{ role_path }}/files/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
@@ -75,9 +67,9 @@
   when:
     - mlinux_upgrade_target_stat.stat.exists == False or mlinux_upgrade_target_stat.stat.md5 != mlinux_upgrade_expected_md5.stdout
   
-- name: Copy {{ mlinux_upgrade_bin }} to {{ hostname }}
+- name: Copy {{ mlinux_upgrade_bin }}_{{ mlinux_version }} to {{ hostname }}
   copy:
-    dest: /var/volatile/flash-upgrade/upgrade.bin
+    dest: ~/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}
     src: "{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
     mode: "0600"
     owner: root
@@ -87,13 +79,6 @@
   when:
     - mlinux_upgrade_target_stat.stat.exists == False or mlinux_upgrade_target_stat.stat.md5 != mlinux_upgrade_expected_md5.stdout
 
-- name: Verify target checksum
-  fail:
-    msg: "Target checksum mis-match on /var/volatile/flash-upgrade/upgrade.bin"
-  when: 
-    - (upgrade_copy|changed and upgrade_copy.checksum != mlinux_upgrade_stat.stat.checksum) or
-        (mlinux_upgrade_target_stat.stat.exists and mlinux_upgrade_target_stat.stat.md5 != mlinux_upgrade_expected_md5.stdout)
-
 - name: Copy over setup script
   template:
     src: mlinux_setup.j2
@@ -101,14 +86,10 @@
     mode: "0755"
     owner: root
     group: root
+  when: ansible_local.opkg.preserve is not defined
 
-- name: Signal ready for flash upgrade
-  file:
-    state: touch
-    name: /var/volatile/do_flash_upgrade
-
-- name: Reboot for flash upgrade
-  shell: sleep 2 && /sbin/reboot
+- name: Run flash upgrade
+  shell: "mlinux-flash-upgrade ~/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
   async: 1
   poll: 0
   ignore_errors: true
@@ -131,11 +112,10 @@
   local_action:
     module: shell
     args: "sshpass -proot ssh root@{{ ansible_host }} /var/config/mlinux_setup"
-  tags: mlinux_config
+  when: ansible_local.opkg.preserve is not defined
 
 # XXX - Change root password
   
 - name: Reload ansible_local
   setup: filter=ansible_local
-  tags: mlinux_config
 
