@@ -33,12 +33,19 @@ OPTIONS=
 
 #
 # figure out the inventory.
-#  - if INVENTORY is given from the command line or env, just use it
+#  - if ORG is given from the command line or env, set INVENTORY to
+#    ${ORG}/inventory and CATALOG to ${ORG}/catalog
+#  - Otherwise, if INVENTORY is given from the command line or env, just use it
 #    (and use CATALOG)
 #  - Otherwise, if there's a hosts file in this directory, use it
 #  - Otherwise, if there's a directory ../inventory, use it
 #  - Otherwise complain and quit.
 #
+ifneq ($(ORG),)
+ INVENTORY=${ORG}/inventory
+ CATALOG=${ORG}/catalog
+endif
+
 ifeq ($(INVENTORY),)
  ifneq ($(wildcard hosts),)
    INVENTORY=hosts
@@ -52,9 +59,7 @@ ifeq ($(INVENTORY),)
    $(error Can't find an inventory file)
  endif
 else
- ifeq ($(wildcard $(INVENTORY)/.),)
-   $(error not a directory: $(INVENTORY))
- else ifeq ($(CATALOG),)
+ ifeq ($(CATALOG),)
    ifneq ($(wildcard $(dir $(INVENTORY))/catalog/.),)
      CATALOG=$(dir $(INVENTORY))
    else
@@ -63,7 +68,10 @@ else
  endif
 endif
 
-# another idiot check.
+# santity checks.
+ifeq ($(wildcard $(INVENTORY)/.),)
+   $(error not a directory: $(INVENTORY))
+endif
 ifeq ($(wildcard $(CATALOG)/.),)
    $(error not a directory: $(CATALOG))
 endif
