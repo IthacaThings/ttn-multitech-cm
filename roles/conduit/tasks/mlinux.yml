@@ -25,19 +25,15 @@
     args: "grep '{{ mlinux_upgrade_bin }}' {{ role_path}}/files/md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt | cut -d ' ' -f 1"
   register: mlinux_upgrade_expected_md5
 
-- name: Get info about ~/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}
-  stat:
-    path: "~/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
-    get_md5: yes
-  register: mlinux_upgrade_target_stat
+- name: DEBUG
+  debug:
+    msg: "{{ mlinux_upgrade_expected_md5 }}"
 
 - name: Check if {{ mlinux_upgrade_bin }}_{{ mlinux_version }} is downloaded
   local_action: stat
   args:
     path: "{{ role_path }}/files/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
   register: mlinux_upgrade_stat
-  when:
-    - mlinux_upgrade_target_stat.stat.exists == False or mlinux_upgrade_target_stat.stat.md5 != mlinux_upgrade_expected_md5.stdout
   
 - name: Remove bad copy of {{ mlinux_upgrade_bin }}_{{ mlinux_version }}
   local_action: file
@@ -45,7 +41,6 @@
     name: "{{ role_path }}/files/{{ mlinux_upgrade }}_{{ mlinux_version }}"
     state: absent
   when:
-    - mlinux_upgrade_target_stat.stat.exists == False or mlinux_upgrade_target_stat.stat.md5 != mlinux_upgrade_expected_md5.stdout
     - mlinux_upgrade_stat.stat.exists and mlinux_upgrade_stat.stat.md5 != mlinux_upgrade_expected_md5.stdout
 
 - name: Download {{ mlinux_upgrade_bin }}_{{ mlinux_version }}
@@ -56,17 +51,8 @@
     timeout: 14400
     checksum: "md5:{{ mlinux_upgrade_expected_md5.stdout }}"
   when:
-    - mlinux_upgrade_target_stat.stat.exists == False or mlinux_upgrade_target_stat.stat.md5 != mlinux_upgrade_expected_md5.stdout
     - mlinux_upgrade_stat.stat.exists == False
 
-- name: Get info about {{ mlinux_upgrade_bin }}_{{ mlinux_version }}
-  local_action: stat
-  args:
-    path: "{{ role_path }}/files/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
-  register: mlinux_upgrade_stat
-  when:
-    - mlinux_upgrade_target_stat.stat.exists == False or mlinux_upgrade_target_stat.stat.md5 != mlinux_upgrade_expected_md5.stdout
-  
 - name: Copy {{ mlinux_upgrade_bin }}_{{ mlinux_version }} to {{ hostname }}
   copy:
     dest: ~/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}
@@ -76,8 +62,6 @@
     group: root
     unsafe_writes: yes
   register: upgrade_copy
-  when:
-    - mlinux_upgrade_target_stat.stat.exists == False or mlinux_upgrade_target_stat.stat.md5 != mlinux_upgrade_expected_md5.stdout
 
 - name: Copy over setup script
   template:
