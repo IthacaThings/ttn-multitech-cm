@@ -10,7 +10,7 @@ authorized_keys: "{{ lookup('file', 'files/authorized_keys') }}"
 forwarder_baseurl_kersing: https://github.com/kersing/multitech-installer/raw/master
 
 # mLinux upgrade info
-mlinux_upgrade_bin: "mlinux-factory-image-{{ conduit_type }}-upgrade.bin"
+mlinux_upgrade_bin: "mlinux-{{ 'factory' if conduit_type == 'mtcdt' else conduit_type }}-image-{{ conduit_type }}-upgrade.bin"
 mlinux_url: "http://www.multitech.net/mlinux/images/{{ conduit_type }}/{{ mlinux_version }}"
 
 # SSH tunnel
