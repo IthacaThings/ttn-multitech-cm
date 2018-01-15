@@ -61,14 +61,20 @@ card_found() {
     fi
 }
 
-select_fwd() {
+do_start() {
+    read_card_info
+
+    if ! card_found; then
+        echo "$0: MTAC-LORA not detected"
+        exit 1
+    fi
+
+    # Select the packet forwarder to run
     if [ "$lora_hw" = "$lora_1_0_hw" ] ; then
 	if [ -x /opt/lora/mp_pkt_fwd.usb ]; then
 	    pkt_fwd=/opt/lora/mp_pkt_fwd.usb
 	elif [ -x /opt/lora/poly_pkt_fwd ]; then
 	    pkt_fwd=/opt/lora/poly_pkt_fwd
-	elif [ -x /opt/lora/ttn_pkt_fwd ]; then
-	    pkt_fwd=/opt/lora/ttn_pkt_fwd
 	else
 	    echo "$0: No USB packet forwarder found"
 	    exit 1
@@ -82,28 +88,7 @@ select_fwd() {
 	fi
     fi
 
-    echo $pkt_fwd
-}
-
-
-do_start() {
-    read_card_info
-
-    if ! card_found; then
-        echo "$0: MTAC-LORA not detected"
-        exit 1
-    fi
-
-    pkt_fwd=$(select_fwd)
-
     case ${pkt_fwd} in
-	/opt/lora/ttn_pkt_fwd)
-	    if [ ! -f $conf_dir/config.yml ]; then
-		echo "$0: Not configured"
-		exit 1
-	    fi
-	    cmd="start --config=$conf_dir/config.yml"
-	    ;;
 	/opt/lora/*)
 	    if [ ! -f $conf_dir/global_conf.json -o ! -f $conf_dir/local_conf.json ] ; then
 		echo "$0: Not configured"
