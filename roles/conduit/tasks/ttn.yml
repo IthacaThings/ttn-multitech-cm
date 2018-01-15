@@ -28,6 +28,7 @@
   local_action:
     module: shell
     args: "bin/register --id {{ lora_hostname }} --region {{ region }} --latitude {{ latitude }} --longitude {{ longitude }} --router {{ router }}"
+  notify: register gateway
 
 - name: Assign gateway collaborators
   shell: "bin/ttnctl gateway collaborators add {{ lora_hostname }} {{ item.username }} {{item.rights|default(gateway_collaborator_rights)|join(' ') }}"

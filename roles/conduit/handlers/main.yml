@@ -26,6 +26,12 @@
   service: name=ttn-pkt-forwarder state=restarted
 
 #
+#	Remind to
+- name: register gateway
+  debug:
+    msg: "If this is a new gateway, please go to https://console.thethingsnetwork.org/gateways and update the details for this gateway. The API doesn't not allow us to set all the necessary information"
+
+#
 #       Restart ntpd
 #
 - name: restart ntpd
