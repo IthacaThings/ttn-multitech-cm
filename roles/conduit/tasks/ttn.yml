@@ -11,6 +11,13 @@
     - ( ansible_local.lora.product_id|match("MTAC-LORA-(H-)?915") and region|match("EU|IN") ) or ( ansible_local.lora.product_id|match("MTAC-LORA-(H-)?868") and region|match("US|AU|AS1|AS2|KR") )
     - radio_mismatch is not defined
 
+- name: Check if using correct packet forwarder
+  fail:
+    msg: "Must use mp_packet_forwarder with SPI versions of lora cards"
+  when:
+    - ansible_local.lora.hw_version != "MTAC-LORA-1.0"
+    - forwarder_variant != "mp"
+
 - name: check if logged into TTN
   local_action:
     module: shell
