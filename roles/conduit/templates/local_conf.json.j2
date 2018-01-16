@@ -9,8 +9,11 @@
         /* Public description of this device, max 64 chars */
         "description": "{{ description }}",
         /* Enter VALID GPS coordinates below before enabling fake GPS */
-        "gps": "{{ true if ( latitude and longitude ) or ( use_gps and have_gps ) else false }}",
-        "fake_gps": "{{ false if ( use_gps and have_gps ) or not (latitude and longitude ) else true }}",
+        "gps": {{ 'true' if ( latitude and longitude ) or ( use_gps and have_gps ) else 'false' }},
+        "fake_gps": {{ 'false' if ( use_gps and have_gps ) or not (latitude and longitude ) else 'true' }},
+{% if use_gps and have_gps %}
+        "gps_tty_path": "/dev/{{ gps_device }}",
+{% endif %}
 {% if latitude and longitude %}
         "ref_latitude": {{ latitude }},
         "ref_longitude": {{ longitude }},
