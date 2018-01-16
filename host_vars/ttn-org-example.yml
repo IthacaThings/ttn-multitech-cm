@@ -47,7 +47,11 @@ ansible_port: 22
 # Descriptive location of the gateway
 description: Test node in Org
 
-# Location, use -1 for altitude if not known.
+# Location can be set and will be used as "fake" GPS data if the GPS
+# card is not being used.
+# use -1 for altitude if not known.
 latitude: 42.55555
 longitude: -76.55555
 altitude: -1
+# Use the GPS if present.  This requires an external antenna
+# use_gps: true

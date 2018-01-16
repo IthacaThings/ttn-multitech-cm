@@ -59,3 +59,7 @@ gateway_collaborator_rights:
   - gateway:owner
   - gateway:messages
 
+# Use GPS if present
+use_gps: false
+gps_device: ttyXRUSB2
+

@@ -9,19 +9,12 @@
         /* Public description of this device, max 64 chars */
         "description": "{{ description }}",
         /* Enter VALID GPS coordinates below before enabling fake GPS */
-{% if latitude and longitude %}	   	       	   	       
-        "gps": true,
-        "fake_gps": true,
+        "gps": "{{ true if ( latitude and longitude ) or ( use_gps and have_gps ) else false }}",
+        "fake_gps": "{{ false if ( use_gps and have_gps ) or not (latitude and longitude ) else true }}",
+{% if latitude and longitude %}
         "ref_latitude": {{ latitude }},
         "ref_longitude": {{ longitude }},
-{% if altitude %}
-        "ref_altitude": {{ altitude }}
-{% else %}
-        "ref_altitude": -1
-{% endif %}
-{% else %}
-        "gps": false,
-        "fake_gps": false
+        "ref_altitude": {{ altitude if altitude else -1 }}
 {% endif %}
     }
 }
