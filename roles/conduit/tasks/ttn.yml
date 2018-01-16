@@ -78,6 +78,7 @@
   copy:
     src: "{{ forwarder_package_full }}"
     dest: "/var/config/{{ forwarder_package_full }}"
+  when: forwarder_installed != forwarder_package_version
 
 - name: Stop packet-forwarder
   service: name=ttn-pkt-forwarder state=stopped
