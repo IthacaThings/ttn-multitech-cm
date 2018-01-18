@@ -25,10 +25,6 @@
     args: "grep '{{ mlinux_upgrade_bin }}' {{ role_path}}/files/md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt | cut -d ' ' -f 1"
   register: mlinux_upgrade_expected_md5
 
-- name: DEBUG
-  debug:
-    msg: "{{ mlinux_upgrade_expected_md5 }}"
-
 - name: Check if {{ mlinux_upgrade_bin }}_{{ mlinux_version }} is downloaded
   local_action: stat
   args:
