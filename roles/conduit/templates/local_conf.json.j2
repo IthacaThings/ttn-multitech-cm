@@ -1,14 +1,9 @@
 /* Generated via Ansible */
 {
-/* Settings defined in global_conf will be overwritten by those in local_conf */
     "gateway_conf": {
-        /* gateway_ID is based on unique hardware ID, do not edit */
         "gateway_ID": "{{ ansible_local.lora.eui }}",
-        /* Email of gateway operator, max 40 chars*/
         "contact_email": "{{ contact_email }}", 
-        /* Public description of this device, max 64 chars */
         "description": "{{ description }}",
-        /* Enter VALID GPS coordinates below before enabling fake GPS */
         "gps": {{ 'true' if ( latitude and longitude ) or ( use_gps and have_gps ) else 'false' }},
         "fake_gps": {{ 'false' if ( use_gps and have_gps ) or not (latitude and longitude ) else 'true' }},
 {% if use_gps and have_gps %}
@@ -17,7 +12,18 @@
 {% if latitude and longitude %}
         "ref_latitude": {{ latitude }},
         "ref_longitude": {{ longitude }},
-        "ref_altitude": {{ altitude if altitude else -1 }}
+        "ref_altitude": {{ altitude if altitude else -1 }},
+{% endif %}
+{% if forwarder_variant == "mp" %}
+	"servers": [
+            {
+		"serv_type": "ttn",
+		"server_address": "{{ gw_router }}",
+		"serv_gw_id": "{{ lora_hostname }}",
+		"serv_gw_key": "{{ gw_key }}",
+		"serv_enabled": true
+            }
+	]
 {% endif %}
     }
 }

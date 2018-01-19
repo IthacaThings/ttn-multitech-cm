@@ -14,7 +14,8 @@ forwarder_installed: "{{ forwarder_installed_package }}_{{ forwarder_installed_v
 
 # EUI for use with non-TTN forwarders
 lora_eui: "eui-{{ ansible_local.lora.eui|lower }}"
-lora_hostname: "{{ lora_eui }}"
+lora_hostname: "{{ hostname if forwarder_variant == 'mp' else lora_eui }}"
+lora_hostname_delete: "{{ lora_eui if forwarder_variant == 'mp' else hostname }}"
 
 # Is ssh_tunnel enabled
 ssh_tunnel_enabled: "{{ ssh_tunnel_remote_port is defined and ssh_tunnel_remote_port > 0 and ssh_tunnel_remote_user is defined }}"

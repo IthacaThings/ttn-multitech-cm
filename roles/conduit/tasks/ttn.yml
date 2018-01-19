@@ -24,18 +24,48 @@
     args: "bin/ttnctl user status"
   run_once: true
 
-- name: register gateway
+- name: register gateway and delete old name if necessary
   local_action:
     module: shell
-    args: "bin/register --id {{ lora_hostname }} --region {{ region }} --latitude {{ latitude }} --longitude {{ longitude }} --router {{ router }}"
+    args: "bin/register --id {{ lora_hostname }} --region {{ region }} --latitude {{ latitude }} --longitude {{ longitude }} --router {{router }} --description '{{ description }}' --brand MultiTech --model {{ ansible_local.conduit.product_id }} --old_id {{ lora_hostname_delete }}"
   notify: register gateway
 
+  # XXX - Merge this into register
 - name: Assign gateway collaborators
   shell: "bin/ttnctl gateway collaborators add {{ lora_hostname }} {{ item.username }} {{item.rights|default(gateway_collaborator_rights)|join(' ') }}"
   with_items: "{{ gateway_collaborators }}"
   connection: local
 
-#
+  # Have register spit out access key
+- name: Get TTN fowarder Access Key
+  local_action:
+    module: shell
+    args: "bin/ttnctl gateway info {{ hostname }} | awk '/Access Key/{print $3}'"
+  register: gateway_key
+  when: forwarder_variant == 'mp'
+
+- name: Verify we have Access Key
+  fail:
+    msg: "No gateway key returned from bin/ttnctl"
+  when:
+    - forwarder_variant == 'mp'
+    - gateway_key.stdout == ""
+
+- name: Get info about the gateway
+  uri:
+    url: "https://account.thethingsnetwork.org/gateways/{{lora_hostname }}"
+    headers:
+      Key: "{{ gateway_key.stdout }}"
+    return_content: yes
+  register: gateway_info
+  when:
+    - forwarder_variant == 'mp'
+
+- name: Set Some facts
+  set_fact:
+    gw_key: "{{ gateway_key.stdout }}"
+    gw_router: "{{ gateway_info.json|json_query('router.mqtt_address')|urlsplit('hostname') }}"
+
 #	Remove Multi-Tech stuff that we don't want and install the TTN packet-forwarder
 #
 - name: Remove Multi-Tech lora-network-server
