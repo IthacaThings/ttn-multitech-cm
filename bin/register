@@ -66,7 +66,7 @@ class Gateway(object):
         try:
             cmd = [ self.options.binary, "gateway", "register", self.id, self.frequency_plan, '%f,%f' % (self.latitude, self.longitude) ]
             if self.router:
-                cmd.append("--router-id")
+                cmd.append("--router-id")	# Router for register/edit
                 cmd.append(self.router)
             if self.options.noop:
                 output = "NOOP: %s " % " ".join(cmd)
@@ -116,7 +116,9 @@ class Gateway(object):
             changes.append("--location")
             changes.append("%f,%f" % (latitude, longitude))
         if router and self.router != router:
-            changes.append("--router")
+            changes.append("--router-id")	# Router to configure
+            changes.append(router)
+            changes.append("--router")		# Router for register/edit
             changes.append(router)
         if self.options.description and self.description != self.options.description:
             changes.append("--description")
@@ -295,6 +297,7 @@ def main():
                                 "ttn-router-brazil",
                                 "ttn-router-eu",
                                 "ttn-router-us-west"],
+                       default="ttn-router-us-west",
                        help="TTN router to use")
     group.add_argument("--latitude",
                        dest="latitude", type=float, required=True,

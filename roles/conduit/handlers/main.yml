@@ -29,7 +29,9 @@
 #	Remind to
 - name: register gateway
   debug:
-    msg: "If this is a new gateway, please go to https://console.thethingsnetwork.org/gateways and update the details for this gateway. The API doesn't not allow us to set all the necessary information"
+    msg: "Please go to https://console.thethingsnetwork.org/gateways
+ and update the antenna Altitude and Placement for this gateway.  The
+ API does not allow these parameters to be set" 
 
 #
 #       Restart ntpd
