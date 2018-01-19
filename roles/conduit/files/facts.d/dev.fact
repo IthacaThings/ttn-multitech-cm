@@ -1,0 +1,13 @@
+#!/bin/bash
+
+devs=$(ls -1 /dev/ | (
+    comma=
+    while read dev; do
+	echo "${comma}\"${dev//-/_}\""
+	comma=", "
+    done
+))
+
+echo '['
+echo "	${devs}"
+echo ']'
