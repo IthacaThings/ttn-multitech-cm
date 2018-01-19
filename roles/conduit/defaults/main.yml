@@ -16,6 +16,12 @@ forwarder_baseurl_kersing: https://github.com/kersing/multitech-installer/raw/ma
 mlinux_upgrade_bin: "ttni-base-image-{{ conduit_type }}-upgrade.bin"
 mlinux_url: "https://github.com/IthacaThings/mlinux-images/raw/master/{{mlinux_version }}/{{ conduit_type }}"
 
+# For configuration of TTN Console
+gateway_brand: MultiTech
+gateway_model: "{{ ansible_local.conduit.product_id }}"
+antenna_type: "{{ 'internal' if conduit_type == 'mtcap' else '3.0dBi Rubber Duck' }}"
+antenna_model: "{{ 'internal' if conduit_type == 'mtcap' else 'MultiTech AN868-915A-1HRA' }}"
+
 # SSH tunnel
 ssh_tunnel_ssh_key: /etc/ssh/ssh_host_rsa_key
 ssh_tunnel_daemon: /usr/bin/autossh

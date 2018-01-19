@@ -54,7 +54,8 @@ class Gateway(object):
         self.description = None
         self.brand = None
         self.model = None
-        self.placement = None
+        self.antenna_type = None
+        self.antenna_model = None
 
     def __repr__(self):
         return "%s: %s %s %f, %f %s" % (self.id, self.activated, self.frequency_plan, self.latitude, self.longitude, self.router)
@@ -126,9 +127,12 @@ class Gateway(object):
         if self.options.model and self.model != self.options.model:
             changes.append("--model")
             changes.append(self.options.model)
-        if self.options.placement and self.placement != self.options.placement:
+        if self.options.antenna_type and self.antenna_type != self.options.antenna_type:
             changes.append("--antenna-type")
-            changes.append(self.options.placement)
+            changes.append(self.options.antenna_type)
+        if self.options.antenna_model and self.antenna_model != self.options.antenna_model:
+            changes.append("--antenna-model")
+            changes.append(self.options.antenna_model)
 
         if not changes:
             return [ 0, "No changes required" ]
@@ -190,8 +194,10 @@ class Gateway(object):
                 self.brand = match.group('value')
             elif match.group('key') == "Model":
                 self.model = match.group('value')
-            elif match.group('key') == "Placement":
-                self.placement = match.group('value')
+            elif match.group('key') == "AntennaType":
+                self.antenna_type = match.group('value')
+            elif match.group('key') == "AntennaModel":
+                self.antenna_model = match.group('value')
 
         
 def ttn_gateway_list(options):
@@ -268,10 +274,12 @@ def main():
     group.add_argument("--model",
                        dest="model",
                        help="Model of the Gateway")
-    group.add_argument("--placement",
-                       dest="placement",
-                       choices=[ "indoor", "outdoor" ],
-                       help="Antenna placement")
+    group.add_argument("--antenna-type",
+                       dest="antenna_type",
+                       help="Antenna Type")
+    group.add_argument("--antenna-model",
+                       dest="antenna_model",
+                       help="Antenna model")
     group.add_argument("--old_id",
                        dest="old_id",
                        help="Old ID of Gateway to remove")

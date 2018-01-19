@@ -27,7 +27,19 @@
 - name: register gateway and delete old name if necessary
   local_action:
     module: shell
-    args: "bin/register --id {{ lora_hostname }} --region {{ region }} --latitude {{ latitude }} --longitude {{ longitude }} --router {{router }} --description '{{ description }}' --brand MultiTech --model {{ ansible_local.conduit.product_id }} --old_id {{ lora_hostname_delete }}"
+    args:
+      "bin/register
+        --id {{ lora_hostname }} 
+      	--region {{ region }}
+        --latitude {{ latitude }}
+        --longitude {{ longitude }}
+        --router {{router }}
+        --description '{{ description }}'
+        --brand '{{ gateway_brand }}'
+        --model {{ gateway_model }}
+        --antenna-type '{{ antenna_type }}'
+        --antenna-model '{{ antenna_model }}'
+        --old_id {{ lora_hostname_delete }}"
   notify: register gateway
 
   # XXX - Merge this into register
