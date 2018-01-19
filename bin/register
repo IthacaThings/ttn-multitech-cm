@@ -51,6 +51,10 @@ class Gateway(object):
         self.longitude = float(longitude)
         self.router = router
         self.registered = False
+        self.description = None
+        self.brand = None
+        self.model = None
+        self.placement = None
 
     def __repr__(self):
         return "%s: %s %s %f, %f %s" % (self.id, self.activated, self.frequency_plan, self.latitude, self.longitude, self.router)
@@ -78,8 +82,31 @@ class Gateway(object):
             
         return [ rc, output ] 
 
+    def delete(self):
+        """ Delete this gateway """
+
+        rc = 0
+        try:
+            cmd = [ self.options.binary, "gateway", "delete", self.id ]
+            if self.options.noop:
+                output = "NOOP: %s " % " ".join(cmd)
+            else:
+                if self.options.debug:
+                    print("DBG: %s" % " ".join(cmd))
+                output = subprocess.check_output(cmd)
+                if self.options.debug:
+                    print("DBG: %s" % "\nDBG: ".join(output.split("\n")))
+                self.registered = True
+        except subprocess.CalledProcessError as e:
+            rc = e.returncode
+            output = e.output
+
+        return [ rc, output ] 
+
     def edit(self, frequency_plan, latitude, longitude, router):
         """ Change registration if something is different """
+
+        self.get_info()
         changes = []
         if self.frequency_plan != frequency_plan:
             changes.append("--frequency-plan")
@@ -88,8 +115,20 @@ class Gateway(object):
             changes.append("--location")
             changes.append("%f,%f" % (latitude, longitude))
         if router and self.router != router:
-            changes.append("--router-id")
+            changes.append("--router")
             changes.append(router)
+        if self.options.description and self.description != self.options.description:
+            changes.append("--description")
+            changes.append(self.options.description)
+        if self.options.brand and self.brand != self.options.brand:
+            changes.append("--brand")
+            changes.append(self.options.brand)
+        if self.options.model and self.model != self.options.model:
+            changes.append("--model")
+            changes.append(self.options.model)
+        if self.options.placement and self.placement != self.options.placement:
+            changes.append("--antenna-type")
+            changes.append(self.options.placement)
 
         if not changes:
             return [ 0, "No changes required" ]
@@ -145,6 +184,14 @@ class Gateway(object):
                 self.router = match.group('value')
             elif match.group('key') == "Access Key":
                 self.key = match.group('value')
+            elif match.group('key') == "Description":
+                self.description = match.group('value')
+            elif match.group('key') == "Brand":
+                self.brand = match.group('value')
+            elif match.group('key') == "Model":
+                self.model = match.group('value')
+            elif match.group('key') == "Placement":
+                self.placement = match.group('value')
 
         
 def ttn_gateway_list(options):
@@ -177,7 +224,6 @@ def ttn_gateway_list(options):
         gateway = Gateway(options, match.group(1), match.group(3), match.group(5), match.group(6), None)
         gateway.activated = bool(match.group(2))
         gateways[gateway.id] = gateway
-        gateway.get_info()
 
     return gateways
         
@@ -213,6 +259,22 @@ def main():
     group.add_argument("--id",
                        dest="id", required=True,
                        help="Gateway ID")
+    group.add_argument("--description",
+                       dest="description",
+                       help="Description of the Gateway")
+    group.add_argument("--brand",
+                       dest="brand",
+                       help="Brand of the Gateway")
+    group.add_argument("--model",
+                       dest="model",
+                       help="Model of the Gateway")
+    group.add_argument("--placement",
+                       dest="placement",
+                       choices=[ "indoor", "outdoor" ],
+                       help="Antenna placement")
+    group.add_argument("--old_id",
+                       dest="old_id",
+                       help="Old ID of Gateway to remove")
     group.add_argument("--region",
                        dest="region", required=True,
 		       choices=[ "AU", "EU", "US" ],
@@ -277,12 +339,21 @@ def main():
         print("Go to %s to get an access code" % register_url, file=sys.stderr)
         return (1)
 
-    try:
+    if options.old_id:
+        try:
+            rc, output = gateways[options.old_id].delete()
+            if rc != 0:
+                print("Deletion of %s failed: %s" % (options.old_id, output), file=sys.stderr)
+        except KeyError:
+            pass
+
+    rc = 0
+    if not gateways.has_key(options.id):
+        gateway = Gateway(options, options.id, frequency_plan, options.latitude, options.longitude, options.router)
+        gateways[options.id] = gateway
+        rc, output = gateway.register()
+    if rc == 0:
         rc, output = gateways[options.id].edit(frequency_plan, options.latitude, options.longitude, options.router)
-
-    except KeyError:
-        rc, output = Gateway(options, options.id, frequency_plan, options.latitude, options.longitude, options.router).register()
-
     if rc != 0:
         print("Registration failed: %s" % output, file=sys.stderr)
     elif options.verbose:
