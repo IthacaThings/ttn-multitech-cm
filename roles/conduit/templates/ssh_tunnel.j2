@@ -9,8 +9,8 @@ LOCAL_PORT={{ ssh_tunnel_local_port }}
 {% if ssh_tunnel_remote_host %}
 REMOTE_HOST={{ ssh_tunnel_remote_host }}
 {% endif %}
-{% if ssh_tunnel_remote_user %}
-REMOTE_USER={{ ssh_tunnel_remote_user }}
+{% if ssh_tunnel_gateway_user_on_jumphost %}
+REMOTE_USER={{ ssh_tunnel_gateway_user_on_jumphost }}
 {% endif %}
 {% if ssh_tunnel_remote_port %}
 REMOTE_PORT={{ ssh_tunnel_remote_port }}

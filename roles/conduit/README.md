@@ -48,8 +48,10 @@ Role Variables
 	<dd>Co-ordinates of this gateway</dd>
 	<dt>altitude</dt>
 	<dd>Altitude of this gateway in meters</dd>
-	<dt>ssh_tunnel_remote_user</dt>
-	<dd>User configured on the tunnel server</dd>
+	<dt>ssh_tunnel_gateway_user_on_jumphost</dt>
+	<dd>User configured on the tunnel server (for use by the gateway)</dd>
+	<dt>ssh_tunnel_ansible_user_on_jumphost</dt>
+	<dd>User configured on the tunnel server (for use by ansible)</dd>
 	<dt>ssh_tunnel_remote_host</dt>
 	<dd>Hostname or IP address of tunnel server</dd>
 	<dt>ssh_tunnel_ssh_key</dt>
