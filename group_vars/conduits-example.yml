@@ -17,6 +17,8 @@ ttn_user: ttn
 ssh_tunnel_remote_user: ttn
 ssh_tunnel_remote_host: jumphost.example.com
 ssh_tunnel_ssh_port: 2222
+ssh_tunnel_keepalive_base_port: 0  # must be unique per gateway, but must be specified
+ssh_tunnel_daemon_args: -f -M {{ ssh_tunnel_keepalive_base_port }} -o ServerAliveInterval=30 -o StrictHostKeyChecking=no
 
 # Which TTN packet forwarder to install
 # 'poly' for Kersing version 2.*
