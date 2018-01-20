@@ -3,7 +3,6 @@
     "gateway_conf": {
         "gateway_ID": "{{ ansible_local.lora.eui }}",
         "contact_email": "{{ contact_email }}", 
-        "description": "{{ description }}",
         "gps": {{ 'true' if ( latitude and longitude ) or ( use_gps and have_gps ) else 'false' }},
         "fake_gps": {{ 'false' if ( use_gps and have_gps ) or not (latitude and longitude ) else 'true' }},
 {% if use_gps and have_gps %}
@@ -23,7 +22,8 @@
 		"serv_gw_key": "{{ gw_key }}",
 		"serv_enabled": true
             }
-	]
+	],
 {% endif %}
+        "description": "{{ description }}"
     }
 }
