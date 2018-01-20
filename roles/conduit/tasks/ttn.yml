@@ -18,7 +18,7 @@
     - ansible_local.lora.hw_version != "MTAC-LORA-1.0"
     - forwarder_variant != "mp"
 
-- name: check if logged into TTN
+- name: check if logged into TTN and refresh key
   local_action:
     module: shell
     args: "bin/ttnctl user status"
@@ -29,56 +29,32 @@
     module: shell
     args:
       "bin/register
+        --json
         --id {{ lora_hostname }} 
       	--region {{ region }}
         --latitude {{ latitude }}
         --longitude {{ longitude }}
         --router {{ router }}
-        --description '{{ description }}'
-        --brand '{{ gateway_brand }}'
-        --model {{ gateway_model }}
-        --antenna-type '{{ antenna_type }}'
-        --antenna-model '{{ antenna_model }}'
-        --old_id {{ lora_hostname_delete }}"
+        --description {{ description | quote }}
+        --brand {{ gateway_brand | quote }}
+        --model {{ gateway_model | quote }}
+        --antenna-type {{ antenna_type | quote }}
+        --antenna-model {{ antenna_model | quote }}
+        --old_id {{ lora_hostname_delete }}
+        --collaborators '{{ gateway_collaborators | to_json }}'"
+  register: register_output
   notify: register gateway
 
-  # XXX - Merge this into register
-- name: Assign gateway collaborators
-  shell: "bin/ttnctl gateway collaborators add {{ lora_hostname }}
-           {{ item.username }} {{item.rights|default(gateway_collaborator_rights)|join(' ') }}
-           --router-id {{ router }}"
-  with_items: "{{ gateway_collaborators }}"
-  connection: local
-
-  # Have register spit out access key
-- name: Get TTN fowarder Access Key
-  local_action:
-    module: shell
-    args: "bin/ttnctl gateway info {{ hostname }} | awk '/Access Key/{print $3}'"
-  register: gateway_key
+- name: Set the gateway_info fact
+  set_fact:
+    gateway_info: "{{ register_output.stdout }}"
   when: forwarder_variant == 'mp'
-
-- name: Verify we have Access Key
-  fail:
-    msg: "No gateway key returned from bin/ttnctl"
-  when:
-    - forwarder_variant == 'mp'
-    - gateway_key.stdout == ""
-
-- name: Get info about the gateway
-  uri:
-    url: "https://account.thethingsnetwork.org/gateways/{{lora_hostname }}"
-    headers:
-      Key: "{{ gateway_key.stdout }}"
-    return_content: yes
-  register: gateway_info
-  when:
-    - forwarder_variant == 'mp'
 
 - name: Set Some facts
   set_fact:
-    gw_key: "{{ gateway_key.stdout }}"
-    gw_router: "{{ gateway_info.json|json_query('router.mqtt_address')|urlsplit('hostname') }}"
+    gw_key: "{{ gateway_info|json_query('key') }}"
+    gw_router: "{{ gateway_info|json_query('info.router.mqtt_address')|urlsplit('hostname') }}"
+  when: forwarder_variant == 'mp'
 
 #	Remove Multi-Tech stuff that we don't want and install the TTN packet-forwarder
 #

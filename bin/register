@@ -3,10 +3,12 @@
 from __future__ import print_function
 import argparse
 import fcntl
+import json
 import os
 import re
 import subprocess
 import sys
+import urllib2
 
 """
 MIT License
@@ -104,6 +106,37 @@ class Gateway(object):
 
         return [ rc, output ] 
 
+    def collaborators(self):
+        """ Set collaborators """
+
+        output = []
+        for col in json.loads(self.options.collaborators):
+            changes = []
+            changes.append(col.get('username'))
+            rights = col.get('rights')
+            if rights:
+                changes.append(rights)
+
+            try:
+                cmd = [ self.options.binary, "gateway", "collaborators", "add", self.id ] + changes
+                if self.options.noop:
+                    output.append("NOOP: %s " % " ".join(cmd))
+                else:
+                    if self.options.debug:
+                        print("DBG: %s" % " ".join(cmd))
+                    out = subprocess.check_output(cmd)
+                    output.append(out)
+                    if self.options.debug:
+                        print("DBG: %s" % "\nDBG: ".join(out.split("\n")))
+            except subprocess.CalledProcessError as e:
+                return [ e.returncode, e.outout ]
+                rc = e.returncode
+                output = e.output
+                break
+
+        return [ 0, '\n'.join(output) ] 
+
+
     def edit(self, frequency_plan, latitude, longitude, router):
         """ Change registration if something is different """
 
@@ -158,6 +191,19 @@ class Gateway(object):
             output = e.output
             
         return [ rc, output ] 
+
+    def get_json(self):
+        """ Get the JSON info """
+
+        url = "https://account.thethingsnetwork.org/gateways/%s" % self.id
+        try:
+            request = urllib2.Request(url)
+            request.add_header("Key", self.key)
+            response = urllib2.urlopen(request)
+        except urllib2.URLError as err:
+            sys.exit("Error loading %s: %s" % (url, err))
+
+        return json.loads(response.read())
 
     def get_info(self):
         """ Get additional info via 'info' subcommand """
@@ -305,14 +351,25 @@ def main():
     group.add_argument("--longitude",
                        dest="longitude", type=float, required=True,
                        help="Longitude of Conduit")
+    group.add_argument("--collaborators",
+                       dest="collaborators",
+                       help="Collaborators in JSON format")
 
     #   Other options
     group = parser.add_argument_group("Other options")
     group.add_argument("--binary",
                        dest="binary", default="bin/ttnctl",
                        help="Path to binary")
+    group.add_argument("--json",
+                       dest="json", default=False,
+                       action='store_true',
+                       help="Output gateway info as json")
 
     options = parser.parse_args()
+    if options.debug:
+        options.verbose = options.debug
+    if options.json and options.verbose:
+        parser.error("--json is mutually exclusive with --verbose and --debug")
 
     # Find ttncli binary
     if options.debug:
@@ -365,10 +422,20 @@ def main():
         rc, output = gateway.register()
     if rc == 0:
         rc, output = gateways[options.id].edit(frequency_plan, options.latitude, options.longitude, options.router)
+    if rc == 0 and options.collaborators:
+        rc, output = gateways[options.id].collaborators()
     if rc != 0:
         print("Registration failed: %s" % output, file=sys.stderr)
     elif options.verbose:
         print(output)
+
+    if options.json:
+        gw = gateways[options.id]
+        info = {
+            "key": gw.key,
+            "info": gw.get_json()
+        }
+        print(json.dumps(info, indent=4))
 
     return(rc)
 
