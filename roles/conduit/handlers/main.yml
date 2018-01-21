@@ -30,8 +30,9 @@
 - name: register gateway
   debug:
     msg: "Please go to https://console.thethingsnetwork.org/gateways
- and update the antenna Altitude and Placement for this gateway.  The
+ and update the antenna Altitude and Placement your gateways.  The
  API does not allow these parameters to be set" 
+  run_once: true
 
 #
 #       Restart ntpd
