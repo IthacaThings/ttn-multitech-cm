@@ -114,7 +114,7 @@ apply-debug: ${CATALOG}
 	ansible-playbook ${PLAYBOOK_ARGS} -vvv site.yml
 
 # Grab configs from all nodes
-harvest: ${CATALOG}
+gather: ${CATALOG}
 	ansible-playbook ${PLAYBOOK_ARGS} -t ping -C site.yml -l conduits
 
 ${CATALOG}:	true
