@@ -68,8 +68,17 @@
     group: root
   when: ansible_local.opkg.preserve is not defined
 
+- name: Copy over mlinux-firmware-upgrade script
+  copy:
+    dest: "/usr/sbin/mlinux-firmware-upgrade"
+    src: mlinux-firmware-upgrade
+    mode: "0755"
+    owner: root
+    group: root
+  when: ansible_local.mlinux.version | version_compare('3.3', '<')
+
 - name: Run flash upgrade
-  shell: "mlinux-flash-upgrade ~/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
+  shell: "mlinux-firmware-upgrade ~/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
   async: 1
   poll: 0
   ignore_errors: true
