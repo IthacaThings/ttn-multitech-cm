@@ -33,17 +33,17 @@ OPTIONS=
 
 #
 # figure out the inventory.
-#  - if ORG is given from the command line or env, set INVENTORY to
-#    ${ORG}/inventory and CATALOG to ${ORG}/catalog
+#  - if TTN_ORG is given from the command line or env, set INVENTORY to
+#    ${TTN_ORG}/inventory and CATALOG to ${TTN_ORG}/catalog
 #  - Otherwise, if INVENTORY is given from the command line or env, just use it
 #    (and use CATALOG)
 #  - Otherwise, if there's a hosts file in this directory, use it
 #  - Otherwise, if there's a directory ../inventory, use it
 #  - Otherwise complain and quit.
 #
-ifneq ($(ORG),)
- INVENTORY=${ORG}/inventory
- CATALOG=${ORG}/catalog
+ifneq ($(TTN_ORG),)
+ INVENTORY=${TTN_ORG}/inventory
+ CATALOG=${TTN_ORG}/catalog
 endif
 
 ifeq ($(INVENTORY),)
