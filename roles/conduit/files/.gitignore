@@ -4,5 +4,5 @@
 /*.pem
 /*.tgz
 /md5sums_*.txt
-/mlinux-factory-image-mtcdt-upgrade.bin_*
-/mlinux-factory-image-mtcap-upgrade.bin_*
+/mlinux-factory-image-*-upgrade.bin_*
+/ttni-base-image-*-upgrade.bin_*

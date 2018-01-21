@@ -1,0 +1,57 @@
+#!/bin/bash
+
+if [ $# != 1 ]; then
+    echo "Usage: $0 upgrade.bin"
+    exit 1
+fi
+
+set -e
+upgrade=$1
+
+mkdir -p /var/volatile
+cd /var/volatile
+
+# make sure firmware is for this device
+hw_version=$(cat /sys/devices/platform/mts-io/hw-version)
+firmware_model=$(tar -xO -f $upgrade model)
+shopt -s nocasematch
+if [[ ! "$hw_version" =~ ^$firmware_model- ]]; then
+    logger -s -t firmware_upgrade "Wrong firmware for this hardware"
+    logger -s -t firmware_upgrade "hw version: $hw_version"
+    logger -s -t firmware_upgrade "firmware model: $firmware_model"
+    exit 1
+fi
+
+files=(bstrap.bin uboot.bin uImage.bin config.jffs2 oem.jffs2 rootfs.jffs2)
+
+tobeflashed=0
+# verify all MD5 sums
+for (( i = 0; i < ${#files[@]}; i++ )); do
+    file=${files[i]}
+    # if the file is in the tar, md5sum it
+    if tar -t -f $upgrade | grep -F -q "$file"; then
+        logger -s -t firmware_upgrade "Checking MD5 for $file..."
+        if ! tar -x -f $upgrade $file.md5; then
+            logger -s -t firmware_upgrade "MD5 is not found for the $file, upgrade aborted"
+            exit 1
+        fi
+        if ! tar -xO -f $upgrade $file | md5sum -c $file.md5; then
+            logger -s -t firmware_upgrade "MD5 check failed, upgrade aborted"
+            exit 1
+        fi
+        tobeflashed=1
+    fi
+done
+
+if (( $tobeflashed )); then
+    mkdir -p /var/volatile/flash-upgrade
+    mv -f $upgrade /var/volatile/flash-upgrade/upgrade.bin
+    touch /var/volatile/do_flash_upgrade
+    logger -s -t firmware_upgrade "Rebooting"
+    sleep 1
+    reboot
+    exit 0
+else
+    logger -s -t firmware_upgrade "Nothing to be flashed!"
+    exit 1
+fi
