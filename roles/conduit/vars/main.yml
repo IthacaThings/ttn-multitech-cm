@@ -18,7 +18,7 @@ lora_hostname: "{{ hostname if forwarder_variant == 'mp' else lora_eui }}"
 lora_hostname_delete: "{{ lora_eui if forwarder_variant == 'mp' else hostname }}"
 
 # Is ssh_tunnel enabled
-ssh_tunnel_enabled: "{{ ssh_tunnel_remote_port is defined and ssh_tunnel_remote_port > 0 and ssh_tunnel_remote_user is defined }}"
+ssh_tunnel_enabled: "{{ ssh_tunnel_remote_port is defined and ssh_tunnel_remote_port > 0 and ssh_tunnel_gateway_user_on_jumphost is defined }}"
 
 # Is the GPS present?
 have_gps: "{{ gps_device in ansible_local.dev }}"
