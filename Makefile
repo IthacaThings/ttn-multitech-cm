@@ -24,17 +24,62 @@ clean::	true
 	done
 
 
-# Where we keep a catalog of conduit configuration
-CATALOG=catalog
-
 # List of tags to limit playbook
 export TAGS=
 # Target or group
 export TARGET=conduits
 TIMEOUT=60
-INVENTORY=hosts
 OPTIONS=
+
+#
+# figure out the inventory.
+#  - if ORG is given from the command line or env, set INVENTORY to
+#    ${ORG}/inventory and CATALOG to ${ORG}/catalog
+#  - Otherwise, if INVENTORY is given from the command line or env, just use it
+#    (and use CATALOG)
+#  - Otherwise, if there's a hosts file in this directory, use it
+#  - Otherwise, if there's a directory ../inventory, use it
+#  - Otherwise complain and quit.
+#
+ifneq ($(ORG),)
+ INVENTORY=${ORG}/inventory
+ CATALOG=${ORG}/catalog
+endif
+
+ifeq ($(INVENTORY),)
+ ifneq ($(wildcard hosts),)
+   INVENTORY=hosts
+   # Where we keep a catalog of conduit configuration
+   CATALOG=catalog
+ else ifneq ($(wildcard ../inventory/.),)
+   INVENTORY=../inventory
+   # Where we keep a catalog of conduit configuration
+   CATALOG=../catalog
+ else
+   $(error Can't find an inventory file)
+ endif
+else
+ ifeq ($(CATALOG),)
+   ifneq ($(wildcard $(dir $(INVENTORY))/catalog/.),)
+     CATALOG=$(dir $(INVENTORY))
+   else
+     $(error Can't infer CATALOG from INVENTORY -- please supply CATALOG)
+   endif
+ endif
+endif
+
+# santity checks.
+ifeq ($(wildcard $(INVENTORY)/.),)
+   $(error not a directory: $(INVENTORY))
+endif
+ifeq ($(wildcard $(CATALOG)/.),)
+   $(error not a directory: $(CATALOG))
+endif
+
+# now that we know the inventory, get the hosts.
 HOSTS=$(shell ansible --inventory ${INVENTORY} --list-hosts ${TARGET} | sed -e 's/^ *//' -e '/^hosts ([0-9]*):/d')
+
+# set the default playbook parameters
 PLAYBOOK_ARGS=-T ${TIMEOUT} --inventory ${INVENTORY} $${TAGS:+-t $${TAGS}} $${TARGET:+-l $${TARGET}} ${OPTIONS}
 
 all::	apply

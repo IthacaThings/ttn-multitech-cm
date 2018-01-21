@@ -4,23 +4,25 @@
 # XXX - Probably not necessary to create user
 # XXX - local_action to run script?
 #
-#	Create ssh user
+#	Create ssh user on jumphost. Note that the MCCI port-mapping
+# numbering scheme is not really handled here, so this will
+# usually be done by a separate script.
 #
-- name: "Set up {{ ssh_tunnel_remote_user }} user"
+- name: "Set up {{ ssh_tunnel_gateway_user_on_jumphost }} user"
   user:
-    name: "{{ ssh_tunnel_remote_user }}"
+    name: "{{ ssh_tunnel_gateway_user_on_jumphost }}"
     append: yes
     shell: /bin/bash
     password: "*"
   tags: users
 
-- name: Create {{ ssh_tunnel_remote_user }}  .ssh dir
+- name: Create {{ ssh_tunnel_gateway_user_on_jumphost }}  .ssh dir
   file:
-    dest: "~{{ ssh_tunnel_remote_user }}/.ssh"
+    dest: "~{{ ssh_tunnel_gateway_user_on_jumphost }}/.ssh"
     state: directory
     mode: "0700"
-    owner: "{{ ssh_tunnel_remote_user }}"
-    group: "{{ ssh_tunnel_remote_user }}"
+    owner: "{{ ssh_tunnel_gateway_user_on_jumphost }}"
+    group: "{{ ssh_tunnel_gateway_user_on_jumphost }}"
   tags: users
 
 - name: Create authorized keys
@@ -30,13 +32,13 @@
   tags: users
 
 # Using a template?
-- name: "Install {{ ssh_tunnel_remote_user }} authorized keys"
+- name: "Install {{ ssh_tunnel_gateway_user_on_jumphost }} authorized keys"
   copy:
-    dest: "~{{ ssh_tunnel_remote_user }}/.ssh/authorized_keys"
+    dest: "~{{ ssh_tunnel_gateway_user_on_jumphost }}/.ssh/authorized_keys"
     src: authorized_keys
     mode: "0600"
-    owner: "{{ ssh_tunnel_remote_user }}"
-    group: "{{ ssh_tunnel_remote_user }}"
+    owner: "{{ ssh_tunnel_gateway_user_on_jumphost }}"
+    group: "{{ ssh_tunnel_gateway_user_on_jumphost }}"
   tags: users
 
 - name: Only allow gateway ports from localhost
