@@ -8,6 +8,7 @@
     - ansible_local is defined
     - ansible_local.opkg is defined
     - ansible_local.opkg.python_distutils is not defined
+  notify: Reload facts
 
 - name: Install Ansible dependency python-pkgutil
   opkg: 
@@ -17,6 +18,7 @@
     - ansible_local is defined
     - ansible_local.opkg is defined
     - ansible_local.opkg.python_pkgutil is not defined
+  notify: Reload facts
 
 - name: /var/config/ansible
   file:
@@ -34,15 +36,14 @@
     owner: root
     group: root
     src: facts.d
-  register: ansible_facts_d
+  notify: Reload facts
 
 - name: Point /etc/ansible at /var/config/ansible
   file:
     name: /etc/ansible
     state: link
     src: /var/config/ansible
-  register: var_config_ansible
+  notify: Reload facts
 
-- name: Reload ansible_local
-  setup: filter=ansible_local
-  when: ansible_facts_d|changed or var_config_ansible|changed
+- name: Run handlers in case facts have changed
+  meta: flush_handlers

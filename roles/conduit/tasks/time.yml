@@ -16,12 +16,14 @@
     name: ntp
     state: installed
   when: ansible_local.opkg.ntp is not defined
+  notify: Reload facts
 
 - name: Install ntp-utils
   opkg:
     name: ntp-utils
     state: installed
   when: ansible_local.opkg.ntp_utils is not defined
+  notify: Reload facts
 
 - name: Create /var/config/ntp
   file:

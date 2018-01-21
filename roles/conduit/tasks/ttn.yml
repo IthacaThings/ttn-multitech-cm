@@ -63,12 +63,14 @@
     name: lora-network-server
     state: absent
   when: ansible_local.opkg.lora_network_server is defined
+  notify: Reload facts
 
 - name: Remove Multi-Tech lora-packet-forwarder
   opkg:
     name: lora-packet-forwarder
     state: absent
   when: ansible_local.opkg.lora_packet_forwarder is defined
+  notify: Reload facts
 
 #
 #	Make sure we have package for correct version
@@ -108,11 +110,14 @@
 - name: Remove all existing packet-forwarder packages
   shell: "opkg remove poly-packet-forwarder mp-packet-forwarder ttn-packet-forwarder"
   when: forwarder_installed != forwarder_package_version
+  notify: Reload facts
 
 - name: Install {{ forwarder_package_full }}
   shell: "opkg install /var/config/{{ forwarder_package_full }}"
   when: forwarder_installed != forwarder_package_version
-  notify: restart ttn-pkt-forwarder
+  notify:
+    - restart ttn-pkt-forwarder
+    - Reload facts
 
 - name: Install /var/config/ttn-pkt-forwarder
   copy:

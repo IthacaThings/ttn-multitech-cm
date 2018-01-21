@@ -60,3 +60,9 @@
 - name: interface reboot
   debug:
     msg: Interface configuration changed, remember to reboot
+
+#
+#	Reload the facts
+#
+- name: Reload facts
+  include_tasks: reload_facts.yml
