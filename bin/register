@@ -44,13 +44,13 @@ class Gateway(object):
 
     info_re = re.compile(r"^\s+(?P<key>[A-za-z ]+):\s(?P<value>.*)\s*$")
 
-    def __init__(self, options, id, frequency_plan, latitude, longitude, router):
+    def __init__(self, options, id, frequency_plan=None, latitude=None, longitude=None, router=None):
         """"""
         self.options = options
         self.id = id
         self.frequency_plan = frequency_plan
-        self.latitude = float(latitude)
-        self.longitude = float(longitude)
+        self.latitude = float(latitude) if latitude else latitude
+        self.longitude = float(longitude) if longitude else longitude
         self.router = router
         self.registered = False
         self.description = None
@@ -62,22 +62,21 @@ class Gateway(object):
     def __repr__(self):
         return "%s: %s %s %f, %f %s" % (self.id, self.activated, self.frequency_plan, self.latitude, self.longitude, self.router)
 
-    def register(self):
+    def register(self, frequency_plan, latitude, longitude, router):
         """ Register the gateway """
         rc = 0
         try:
-            cmd = [ self.options.binary, "gateway", "register", self.id, self.frequency_plan, '%f,%f' % (self.latitude, self.longitude) ]
-            if self.router:
-                cmd.append("--router-id")	# Router for register/edit
-                cmd.append(self.router)
+            cmd = [ self.options.binary, "gateway", "register", self.id, frequency_plan, '%f,%f' % (latitude, longitude) ]
+            cmd.append("--router-id")	# Router for register/edit
+            cmd.append(self.options.router)
             if self.options.noop:
                 output = "NOOP: %s " % " ".join(cmd)
             else:
                 if self.options.debug:
-                    print("DBG: %s" % " ".join(cmd))
+                    print("DBG: %s" % " ".join(cmd), file=sys.stderr)
                 output = subprocess.check_output(cmd)
                 if self.options.debug:
-                    print("DBG: %s" % "\nDBG: ".join(output.split("\n")))
+                    print("DBG: %s" % "\nDBG: ".join(output.split("\n")), file=sys.stderr)
                 self.registered = True
         except subprocess.CalledProcessError as e:
             rc = e.returncode
@@ -95,10 +94,10 @@ class Gateway(object):
                 output = "NOOP: %s " % " ".join(cmd)
             else:
                 if self.options.debug:
-                    print("DBG: %s" % " ".join(cmd))
+                    print("DBG: %s" % " ".join(cmd), file=sys.stderr)
                 output = subprocess.check_output(cmd)
                 if self.options.debug:
-                    print("DBG: %s" % "\nDBG: ".join(output.split("\n")))
+                    print("DBG: %s" % "\nDBG: ".join(output.split("\n")), file=sys.stderr)
                 self.registered = True
         except subprocess.CalledProcessError as e:
             rc = e.returncode
@@ -123,11 +122,11 @@ class Gateway(object):
                     output.append("NOOP: %s " % " ".join(cmd))
                 else:
                     if self.options.debug:
-                        print("DBG: %s" % " ".join(cmd))
+                        print("DBG: %s" % " ".join(cmd), file=sys.stderr)
                     out = subprocess.check_output(cmd)
                     output.append(out)
                     if self.options.debug:
-                        print("DBG: %s" % "\nDBG: ".join(out.split("\n")))
+                        print("DBG: %s" % "\nDBG: ".join(out.split("\n")), file=sys.stderr)
             except subprocess.CalledProcessError as e:
                 return [ e.returncode, e.outout ]
                 rc = e.returncode
@@ -178,10 +177,10 @@ class Gateway(object):
                 output = "NOOP: %s " % " ".join(cmd)
             else:
                 if self.options.debug:
-                    print("DBG: %s" % " ".join(cmd))
+                    print("DBG: %s" % " ".join(cmd), file=sys.stderr)
                 output = subprocess.check_output(cmd)
                 if self.options.debug:
-                    print("DBG: %s" % "\nDBG: ".join(output.split("\n")))
+                    print("DBG: %s" % "\nDBG: ".join(output.split("\n")), file=sys.stderr)
                 self.frequency_plan = frequency_plan
                 self.latitude = latitude
                 self.longitude = longitude
@@ -211,7 +210,7 @@ class Gateway(object):
         try:
             cmd = [ self.options.binary, "gateway", "info", self.id ]
             if self.options.debug:
-                print("DBG: %s" % " ".join(cmd))
+                print("DBG: %s" % " ".join(cmd), file=sys.stderr)
             lines = subprocess.check_output(cmd)
         except subprocess.CalledProcessError as e:
             print(e.output, file=sys.stderr, end="")
@@ -262,7 +261,7 @@ def ttn_gateway_list(options):
     try:
         cmd = [ options.binary, "gateway", "list" ]
         if options.debug:
-            print("DBG: %s" % " ".join(cmd))
+            print("DBG: %s" % " ".join(cmd), file=sys.stderr)
         lines = subprocess.check_output(cmd)
     except subprocess.CalledProcessError as e:
         rc = e.returncode
@@ -373,7 +372,7 @@ def main():
 
     # Find ttncli binary
     if options.debug:
-        print("DBG: binary: %s" % options.binary)
+        print("DBG: binary: %s" % options.binary, file=sys.stderr)
 
     # Translate region into frequency plan
     # EU_863_870, US_902_928, AU_915_928, AS_920_923, AS_923_925, KR_920_923, IN_865_867
@@ -393,33 +392,37 @@ def main():
         frequency_plan = "US_902_928"
 
     if options.debug:
-        print("DBG: ID: %s Frequency Plan: %s Location: %f, %f Router: %s" % (options.id, frequency_plan, options.latitude, options.longitude, options.router))
+        print("DBG: ID: %s Frequency Plan: %s Location: %f, %f Router: %s" % (options.id,
+                                                                              frequency_plan,
+                                                                              options.latitude,
+                                                                              options.longitude,
+                                                                              options.router),
+              file=sys.stderr)
 
     try:
         fd = open(options.binary)
         fcntl.flock(fd, fcntl.LOCK_EX)
     except IOError:
-        print("Unable to open or lock %s" % options.binary, file=sys.stderr)
-        return (1)
+        sys.exit("Unable to open or lock %s" % options.binary)
 
     gateways = ttn_gateway_list(options)
     if gateways == None:
-        print("Go to %s to get an access code" % register_url, file=sys.stderr)
-        return (1)
+        sys.exit("Go to %s to get an access code" % register_url)
 
     if options.old_id:
         try:
             rc, output = gateways[options.old_id].delete()
             if rc != 0:
-                print("Deletion of %s failed: %s" % (options.old_id, output), file=sys.stderr)
+                if output.find("Gateway with ID %s does not exist" % options.old_id) != -1:
+                    print("Deletion of %s failed: %s" % (options.old_id, output), file=sys.stderr)
         except KeyError:
             pass
 
     rc = 0
     if not gateways.has_key(options.id):
-        gateway = Gateway(options, options.id, frequency_plan, options.latitude, options.longitude, options.router)
+        gateway = Gateway(options, options.id)
         gateways[options.id] = gateway
-        rc, output = gateway.register()
+        rc, output = gateway.register(frequency_plan, options.latitude, options.longitude, options.router)
     if rc == 0:
         rc, output = gateways[options.id].edit(frequency_plan, options.latitude, options.longitude, options.router)
     if rc == 0 and options.collaborators:
@@ -427,7 +430,7 @@ def main():
     if rc != 0:
         print("Registration failed: %s" % output, file=sys.stderr)
     elif options.verbose:
-        print(output)
+        print(output, file=sys.stderr)
 
     if options.json:
         gw = gateways[options.id]
