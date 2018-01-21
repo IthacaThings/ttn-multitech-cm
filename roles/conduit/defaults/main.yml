@@ -25,8 +25,8 @@ antenna_model: "{{ 'internal' if conduit_type == 'mtcap' else 'MultiTech AN868-9
 # SSH tunnel
 ssh_tunnel_ssh_key: /etc/ssh/ssh_host_rsa_key
 ssh_tunnel_daemon: /usr/bin/autossh
-ssh_tunnel_daemon_args: -f -M 10084 -o ServerAliveInterval=30
 ssh_tunnel_ssh_port: 22
+ssh_tunnel_base_port: 0
 
 # Static Nameserver defaults
 resolv_conf_static: /var/config/network/resolv.conf-static
