@@ -1,0 +1,8 @@
+/var/log/lora-pkt-fwd.log {
+	rotate 7
+        sharedscripts
+        postrotate
+		{{ forwarder_logrotate_command }}
+	endscript
+	compress
+}

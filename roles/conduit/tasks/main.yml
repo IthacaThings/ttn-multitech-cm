@@ -30,7 +30,16 @@
   tags:
     - setup
     - mlinux
-  
+
+#
+#	Set up logrotate
+#
+- name: Set up logrotate
+  import_tasks: logrotate.yml
+  tags:
+    - logrotate
+    - setup
+
 #
 #	Set up networking
 #

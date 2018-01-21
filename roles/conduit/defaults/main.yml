@@ -8,6 +8,8 @@ authorized_keys: "{{ lookup('file', 'files/authorized_keys') }}"
 
 # Where to fetch the kersing packages
 forwarder_baseurl_kersing: https://github.com/kersing/multitech-installer/raw/master
+# Command to run when rotating logs
+forwarder_logrotate_command: /etc/init.d/ttn-pkt-forwarder restart
 
 # Multi-tech version of mLinux images
 #mlinux_upgrade_bin: "mlinux-{{ 'factory' if conduit_type == 'mtcdt' else conduit_type }}-image-{{ conduit_type }}-upgrade.bin"
