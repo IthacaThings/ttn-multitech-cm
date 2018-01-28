@@ -8,6 +8,8 @@
 # Description:       Run the installed TTN packet forwarder
 ### END INIT INFO
 
+PATH=/bin:/sbin:/usr/bin:/usr/sbin
+
 NAME="ttn-packet-forwarder"
 ENABLED="yes"
 

@@ -1,5 +1,6 @@
 /var/log/lora-pkt-fwd.log {
 	rotate 7
+	daily
         sharedscripts
         postrotate
 		{{ forwarder_logrotate_command }}
