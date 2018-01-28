@@ -35,6 +35,29 @@ SOFTWARE.
 """
 
 register_url = "https://account.thethingsnetwork.org/users/authorize?client_id=ttnctl&redirect_uri=/oauth/callback/ttnctl&response_type=code"
+regions = {
+    "AS1": {
+        "plan": "AS_920_923"
+    },
+    "AS2": {
+        "plan": "AS_923_925"
+    },
+    "AU": {
+        "plan": "AU_915_928"
+    },
+    "EU": {
+        "plan": "EU_863_870"
+    },
+    "IN": {
+        "plan": "IN_865_867"
+    },
+    "KR": {
+        "plan": "KR_920_923"
+    },
+    "US": {
+        "plan": "US_902_928"
+    },
+}
 
 #
 #	Gateway list
@@ -332,8 +355,8 @@ def main():
                        help="Old ID of Gateway to remove")
     group.add_argument("--region",
                        dest="region", required=True,
-		       choices=[ "AU", "EU", "US" ],
-                       help="Frequency region, one of AU, EU, US")
+		       choices=regions.keys(),
+                       help="Frequency region, one of %s" % ",".join(regions.keys()))
     group.add_argument("--router", "--router-id",
                        dest="router",
                        choices=["",
@@ -375,21 +398,7 @@ def main():
         print("DBG: binary: %s" % options.binary, file=sys.stderr)
 
     # Translate region into frequency plan
-    # EU_863_870, US_902_928, AU_915_928, AS_920_923, AS_923_925, KR_920_923, IN_865_867
-    if options.region == "AS1":
-        frequency_plan = "AS_920_923"
-    elif options.region == "AS2":
-        frequency_plan = "AS_923_925"
-    elif options.region == "AU":
-        frequency_plan = "AU_915_928"
-    elif options.region == "EU":
-        frequency_plan = "EU_863_870"
-    elif options.region == "KR":
-        frequency_plan = "KR_920_923"
-    elif options.region == "IN":
-        frequency_plan = "IN_865_867"
-    elif options.region == "US":
-        frequency_plan = "US_902_928"
+    frequency_plan = regions[options.region].get('plan')
 
     if options.debug:
         print("DBG: ID: %s Frequency Plan: %s Location: %f, %f Router: %s" % (options.id,
