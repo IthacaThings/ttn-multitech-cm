@@ -13,9 +13,9 @@ The following setup must be set up performed on the Contduit:
 + Install a few packages for Ansible to run:
     + python-pkgutils
     + python-distutils
-+ Install a root key
++ Install authorized keys
     + This is required to allow secure login to the gateway
-    + Maintain this file as *files/authorized_keys*
+    + These are maintained in `authorized_keys` or `authorized_keys_GROUP`
 + Configure ssh tunnel
     + If accessing the Conduit remotely and it is not availble on the
       public Internet (and it should not be), an ssh tunnel needs to

@@ -1,7 +1,7 @@
 ---
 
 #
-#	Set root authorized keys
+#	Setup users
 #
 
 - name: Create non-volatile home dirs
@@ -28,18 +28,22 @@
     owner: root
     group: root
 
-- name: Install root authorized keys
-  template:
-    dest: /var/config/home/root/.ssh/authorized_keys
-    src: authorized_keys.j2
-    mode: "0600"
-    owner: root
-    group: root
-
 - name: Get info about ~root/.ssh
   stat:
     path: ~root/.ssh
   register: root_ssh
+
+- name: Copy ~root/.ssh content to /var/config/
+  shell: "rsync -av ~root/.ssh /var/config/home/root"
+  when: root_ssh.stat.isdir is defined and root_ssh.stat.isdir
+
+- name: Install root authorized keys
+  authorized_key:
+    manage_dir: no
+    path: /var/config/home/root/.ssh/authorized_keys
+    user: root
+    key: "{{ item }}"
+  with_flattened: "{{ authorized_keys_list }}"
 
 - name: Remove ~root/.ssh if it is a dir
   file:
@@ -82,18 +86,22 @@
     owner: "{{ ttn_user }}"
     group: "{{ ttn_user }}"
 
-- name: "Install {{ ttn_user }} authorized keys"
-  template:
-    dest: "/var/config/home/{{ ttn_user }}/.ssh/authorized_keys"
-    src: authorized_keys.j2
-    mode: "0600"
-    owner: "{{ ttn_user }}"
-    group: "{{ ttn_user }}"
-
 - name: "Get info about ~{{ ttn_user }}/.ssh"
   stat:
     path: "~{{ ttn_user }}/.ssh"
   register: ttn_ssh
+
+- name: Copy ~{{ ttn_user }}/.ssh content to /var/config/
+  shell: "rsync -av ~{{ ttn_user }}/.ssh /var/config/home/{{ ttn_user }}"
+  when: ttn_ssh.stat.isdir is defined and ttn_ssh.stat.isdir
+
+- name: "Install {{ ttn_user }} authorized keys"
+  authorized_key:
+    manage_dir: no
+    path: /var/config/home/{{ ttn_user }}/.ssh/authorized_keys
+    user: root
+    key: "{{ item }}"
+  with_flattened: "{{ authorized_keys_list }}"
 
 - name: "Remove ~{{ ttn_user }}/.ssh"
   file:

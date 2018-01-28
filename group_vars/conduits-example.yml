@@ -7,8 +7,17 @@ ansible_user: root
 # User to log in and poke around on a Conduit
 ttn_user: ttn
 
-# Authorized keys for login to those users
+# Authorized keys for login to the above users.
+# Use this to define authorized keys that are overridden by host
+# specific configuration
 #authorized_keys:
+#  - KEY1
+#  - KEY2
+#  - ...
+# Use this to define authorized keys that are supplemented by host
+# authorized keys.  GROUP is the name of this file
+# (i.e. authorized_keys_conduits).
+#authorized_keys_GROUP:
 #  - KEY1
 #  - KEY2
 #  - ...
