@@ -25,20 +25,14 @@
     group: "{{ ssh_tunnel_gateway_user_on_jumphost }}"
   tags: users
 
-- name: Create authorized keys
-  local_action:
-    module: shell
-    args: "( cat roles/conduit/files/authorized_keys; bin/gen_authorized_keys ) > {{ role_path }}/files/authorized_keys"
-  tags: users
-
-# Using a template?
 - name: "Install {{ ssh_tunnel_gateway_user_on_jumphost }} authorized keys"
-  copy:
-    dest: "~{{ ssh_tunnel_gateway_user_on_jumphost }}/.ssh/authorized_keys"
-    src: authorized_keys
-    mode: "0600"
-    owner: "{{ ssh_tunnel_gateway_user_on_jumphost }}"
-    group: "{{ ssh_tunnel_gateway_user_on_jumphost }}"
+  authorized_key:
+    user: "{{ ssh_tunnel_gateway_user_on_jumphost }}"
+    state: present
+    key: '{{ item }}'
+  with_items:
+    - "{{ authorized_keys }}"
+    - "{% for lora_gw in groups['conduits'] %}{% if 'ansible_ssh_host_key_rsa_public' in hostvars[lora_gw] %}ssh-rsa {{ hostvars[lora_gw]['ansible_ssh_host_key_rsa_public'] }} {{ hostvars[lora_gw]['ansible_hostname'] }}{% endif %}{% endfor %}"
   tags: users
 
 - name: Only allow gateway ports from localhost
@@ -48,5 +42,5 @@
     state=present
   notify: Restart ssh
   tags: sshd
-  
+
 # tasks file for sshhost
