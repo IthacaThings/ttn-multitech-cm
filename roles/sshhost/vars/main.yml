@@ -1,2 +1,6 @@
 ---
-# vars file for sshhost
+# Accumulate list of authorized keys + all lora gw public keys
+authorized_keys_list:
+  - "{{ authorized_keys }}"
+  # public rsa of each lora gw
+  - "{% for lora_gw in groups['conduits'] %}{% if 'ansible_ssh_host_key_rsa_public' in hostvars[lora_gw] %}ssh-rsa {{ hostvars[lora_gw]['ansible_ssh_host_key_rsa_public'] }} {{ hostvars[lora_gw]['ansible_hostname'] }}{% endif %}{% endfor %}"
