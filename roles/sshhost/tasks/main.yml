@@ -28,6 +28,14 @@
     key: '{{ item }}'
   with_flattened: "{{ authorized_keys_list }}"
   tags: users
+  
+- name: "Install {{ ansible_user }} authorized keys"
+  authorized_key:
+    user: "{{ ssh_tunnel_gateway_user_on_jumphost }}"
+    state: present
+    key: '{{ item }}'
+  with_flattened: "{{ authorized_keys }}"
+  tags: users
 
 - name: Only allow gateway ports from localhost
   lineinfile: dest=/etc/ssh/sshd_config
