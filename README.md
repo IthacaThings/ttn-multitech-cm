@@ -7,7 +7,7 @@ This repo contains Ansible playbooks and configuration used to manage
 a group of Multi-Tech Conduits
 as [Things Network gateways](http://www.thethingsnetwork.org) in an a
 Things Network
-organization.
+
 The [MultiConnect® Conduit™](http://www.multitech.com/brands/multiconnect-conduit) is
 one of the more popular [LoRa®](http://lora.multitech.com/) Gateways
 is use.
@@ -35,7 +35,7 @@ private keys on cloud hosts.
 This configuration relies on a *jump host* or ssh tunnel host. For
 various reasons, including security and the complexity of traversing
 firewalls, each conduit will set up a reverse SSH tunnel to a jump
-host. 
+host.
 
 It is recommended that these ports only be accessible from that jump
 host. That will mean you need to be logged into the jump host to run
@@ -52,7 +52,12 @@ If you do not want to use a jump host, comment out
 *ssh_tunnel_remote_port* or set it to *0* in your conduit's config
 file in *host_vars*.
 
-## Branches 
+The ssh_host playbook will add the SSH RSA public keys of each device to `ssh_tunnel_gateway_user_on_jumphost` authorized_keys, in order to do this it relays on ansible fact caching, so make sure to run the conduits playbook first or increase your `fact_caching_timeout` in ansible.cfg
+
+*NOTICE* that the jumphost playbook works only on a Ubuntu host.
+
+
+## Branches
 
 This repo has a few main branches:
 
@@ -99,7 +104,7 @@ Instructions for installing Ansible
 ## Fetch the upstream files
 
 There is *Makefile* in the root of this repo that can be used to fetch
-files from upstream.  
+files from upstream.
 
 ### make all
 This command will fetch files that are required to run ansible on the
@@ -139,7 +144,7 @@ forward keys from your laptop or desktop.
 1. Edit *hosts* and change *jumphost.example.com* to the FQDN of your
 ssh tunnel server, aka jumphost.
 2. Copy *group_vars/jumphost.example.com* to
-*group_vars/FQDN_OF_YOUR_JUMPHOST.yam* and edit it as necessary.
+*group_vars/FQDN_OF_YOUR_JUMPHOST.yml* and edit it as necessary.
 
 ## Add each of your gateways to *hosts*
 Normally you would put them in the *production* group.  There is also
@@ -186,7 +191,7 @@ local network.  DHCP should also supply one or more nameservers.
 
 You can override this in *host_vars/**HOST**.yml* by uncommenting and
 setting the appropriate variable definitions.  See the examples in
-*host_vars/ttn-org-example.yml*. 
+*host_vars/ttn-org-example.yml*.
 
 Note that if you make a mistake you may render your Conduit
 unreachable except via the USB serial console.  So double check the
@@ -216,13 +221,13 @@ configuration, or turning your Conduit into a BotNet node.
 On the Conduit:
 ```
 mtctd login: root
-passwd: 
+passwd:
 root@mtcdt:~# passwd
 Enter new UNIX password:
 Retype new UNIX password:
 root@mtcdt:~#
 ```
-Remember the password you supplied above.  
+Remember the password you supplied above.
 
 ## Provide initial authorizied keys in .root/.ssh/authorized_keys
 The easy way to do this is to open *authorized_keys* with `gedit` on your host, then copy/paste
@@ -256,7 +261,7 @@ $ make apply TAGS=loraconfig TARGET=*HOSTNAME*
 ```
 Specify the name of your Conduit with *HOSTNAME*.  If you leave that
 off, all Conduit's will be registered, or their registration will be
-updated. 
+updated.
 
 # Upgrading mLinux
 It is possible to remotely upgrade to a specific version of mLinux
@@ -333,7 +338,7 @@ The available variables are defined in the [conduit role README](roles/conduit/R
 
 ---
 
-# Development 
+# Development
 
 This is a temporary section to track development on this repo.
 
@@ -430,4 +435,3 @@ restricting root access.
 
 ### Bugs
 + [ ] Not owner of gateway
-
