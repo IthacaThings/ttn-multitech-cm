@@ -15,7 +15,7 @@ The following setup must be set up performed on the Contduit:
     + python-distutils
 + Install authorized keys
     + This is required to allow secure login to the gateway
-    + These are maintained in `authorized_keys` or `authorized_keys_GROUP`
+    + These are maintained in `authorized_keys`
 + Configure ssh tunnel
     + If accessing the Conduit remotely and it is not availble on the
       public Internet (and it should not be), an ssh tunnel needs to
@@ -104,7 +104,7 @@ The following tags can be used to run a subset of the playbook.
 	<dd>Registers gateway and sets up <i>/var/config/lora</i> and the necessary config files</dd>
 	<dt>ca-certificates</dt>
 	<dd>Installs additional certificate authoritiy certificates for validating secure connections</dt>
-	<tt>ssh_tunnel</dt>
+	<dt>ssh_tunnel</dt>
 	<dd>Sets up an ssh tunnel back to a control host<dd>
 </dl>
 
@@ -117,4 +117,3 @@ Author Information
 ------------------
 
 Jeffrey Honig <jch@honig.net>
-
