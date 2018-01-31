@@ -99,7 +99,7 @@
   authorized_key:
     manage_dir: no
     path: /var/config/home/{{ ttn_user }}/.ssh/authorized_keys
-    user: root
+    user: "{{ ttn_user }}"
     key: "{{ item }}"
   with_flattened: "{{ authorized_keys }}"
 
