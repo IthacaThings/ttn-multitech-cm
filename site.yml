@@ -3,7 +3,6 @@
   roles:
     - conduit
 
-- hosts: jumphost.example.com
+- hosts: ssh_host
   roles:
     - sshhost
-

@@ -1,9 +1,5 @@
 ---
 #
-# XXX - Need to do this as said user
-# XXX - Probably not necessary to create user
-# XXX - local_action to run script?
-#
 #	Create ssh user on jumphost. Note that the MCCI port-mapping
 # numbering scheme is not really handled here, so this will
 # usually be done by a separate script.
@@ -16,7 +12,7 @@
     password: "*"
   tags: users
 
-- name: Create {{ ssh_tunnel_gateway_user_on_jumphost }}  .ssh dir
+- name: Create {{ ssh_tunnel_gateway_user_on_jumphost }} .ssh dir
   file:
     dest: "~{{ ssh_tunnel_gateway_user_on_jumphost }}/.ssh"
     state: directory
@@ -25,20 +21,20 @@
     group: "{{ ssh_tunnel_gateway_user_on_jumphost }}"
   tags: users
 
-- name: Create authorized keys
-  local_action:
-    module: shell
-    args: "( cat roles/conduit/files/authorized_keys; bin/gen_authorized_keys ) > {{ role_path }}/files/authorized_keys"
-  tags: users
-
-# Using a template?
 - name: "Install {{ ssh_tunnel_gateway_user_on_jumphost }} authorized keys"
-  copy:
-    dest: "~{{ ssh_tunnel_gateway_user_on_jumphost }}/.ssh/authorized_keys"
-    src: authorized_keys
-    mode: "0600"
-    owner: "{{ ssh_tunnel_gateway_user_on_jumphost }}"
-    group: "{{ ssh_tunnel_gateway_user_on_jumphost }}"
+  authorized_key:
+    user: "{{ ssh_tunnel_gateway_user_on_jumphost }}"
+    state: present
+    key: '{{ item }}'
+  with_flattened: "{{ authorized_keys_list }}"
+  tags: users
+  
+- name: "Install {{ ansible_user }} authorized keys"
+  authorized_key:
+    user: "{{ ssh_tunnel_gateway_user_on_jumphost }}"
+    state: present
+    key: '{{ item }}'
+  with_flattened: "{{ authorized_keys }}"
   tags: users
 
 - name: Only allow gateway ports from localhost
@@ -48,5 +44,5 @@
     state=present
   notify: Restart ssh
   tags: sshd
-  
+
 # tasks file for sshhost

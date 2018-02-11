@@ -43,7 +43,7 @@
     path: /var/config/home/root/.ssh/authorized_keys
     user: root
     key: "{{ item }}"
-  with_flattened: "{{ authorized_keys_list }}"
+  with_flattened: "{{ authorized_keys }}"
 
 - name: Remove ~root/.ssh if it is a dir
   file:
@@ -58,7 +58,7 @@
     state: link
     src: /var/config/home/root/.ssh
     force: yes
-    
+
 #
 #	Create ttn user
 #
@@ -99,9 +99,9 @@
   authorized_key:
     manage_dir: no
     path: /var/config/home/{{ ttn_user }}/.ssh/authorized_keys
-    user: root
+    user: "{{ ttn_user }}"
     key: "{{ item }}"
-  with_flattened: "{{ authorized_keys_list }}"
+  with_flattened: "{{ authorized_keys }}"
 
 - name: "Remove ~{{ ttn_user }}/.ssh"
   file:
