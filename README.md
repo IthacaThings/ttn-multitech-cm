@@ -59,15 +59,6 @@ for installing mLinux.
 not perserved when doing an mLinux firmware, so make sure you have
 configured Ansible with any configuration.
 
-## Key based authentication
-
-Using passwords over the Internet is not secure. This control repo is
-set up to rely on ssh keys. It is assumed that you know how to
-generate an ssh key and how to provide your key for remote
-authentication. It is also recommended that you use ssh-agent to
-forward keys from your local system to the jump host and not keep
-private keys on cloud hosts.
-
 ### Preserving configuration during an mlinux upgrade
 
 The TTNI custom build of mLinux includes a tool to preserve
@@ -86,6 +77,15 @@ boot after a firmware upgrade.
 Packages installed in /opt (such as the Kersing packet forwarder) are
 not preserved and are re-installed by Ansible after a firmware
 upgrade. 
+
+## Key based authentication
+
+Using passwords over the Internet is not secure. This control repo is
+set up to rely on ssh keys. It is assumed that you know how to
+generate an ssh key and how to provide your key for remote
+authentication. It is also recommended that you use ssh-agent to
+forward keys from your local system to the jump host and not keep
+private keys on cloud hosts.
 
 ## Jump Host
 
