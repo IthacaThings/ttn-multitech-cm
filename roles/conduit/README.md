@@ -1,7 +1,7 @@
 CONDUIT
 =========
 
-TTN setup for a Multi-Tech Conduit
+TTN setup for a Multi-Tech MultiConnect® Conduit™
 
 Requirements
 ------------
@@ -10,9 +10,7 @@ The following setup must be set up performed on the Contduit:
 
 + Install mLinux (this has not been tested on AEP)
 + Configure Network
-+ Install a few packages for Ansible to run:
-    + python-pkgutils
-    + python-distutils
++ Install a few packages for Ansible to run
 + Install authorized keys
     + This is required to allow secure login to the gateway
     + These are maintained in `authorized_keys` or `authorized_keys_GROUP`
