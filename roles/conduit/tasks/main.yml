@@ -59,6 +59,7 @@
     mode: "0644"
     owner: root
     group: root
+  when: hostname is defined
   tags:
     - hostname
     - setup
