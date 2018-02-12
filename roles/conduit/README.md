@@ -104,7 +104,7 @@ The following tags can be used to run a subset of the playbook.
 	<dd>Registers gateway and sets up <i>/var/config/lora</i> and the necessary config files</dd>
 	<dt>ca-certificates</dt>
 	<dd>Installs additional certificate authoritiy certificates for validating secure connections</dt>
-	<tt>ssh_tunnel</dt>
+	<dt>ssh_tunnel</dt>
 	<dd>Sets up an ssh tunnel back to a control host<dd>
 </dl>
 
