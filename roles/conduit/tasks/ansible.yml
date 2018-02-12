@@ -1,23 +1,36 @@
 ---  
 
-- name: Install Ansible dependency python-distutils
+#
+#	Install dependencies.  This is mostly to ensure everything is
+#	in place as Ansible will not run without many of these
+#
+- name: Install Ansible dependencies
   opkg: 
     state: installed
-    pkg: "python-distutils"
-  when:
-    - ansible_local is defined
-    - ansible_local.opkg is defined
-    - ansible_local.opkg.python_distutils is not defined
-  notify: Reload facts
-
-- name: Install Ansible dependency python-pkgutil
-  opkg: 
-    state: installed
-    pkg: "python-pkgutil"
-  when:
-    - ansible_local is defined
-    - ansible_local.opkg is defined
-    - ansible_local.opkg.python_pkgutil is not defined
+    pkg: "{{ item }}"
+  when: ansible_local is not defined or ansible_local.opkg is not defined or item|regex_replace('-','_') not in ansible_local.opkg.keys()
+  with_items:
+    - python-core
+    - python-argparse
+    - python-async
+    - python-compression
+    - python-dateutil
+    - python-distutils
+    - python-html
+    - python-json
+    - python-pkgutil
+    - python-psutil
+    - python-pycurl
+    - python-pyopenssl
+    - python-pyserial
+    - python-pyudev
+    - python-pyusb
+    - python-shell
+    - python-simplejson
+    - python-syslog
+    - python-textutils
+    - python-unixadmin
+    - python-xml
   notify: Reload facts
 
 - name: /var/config/ansible

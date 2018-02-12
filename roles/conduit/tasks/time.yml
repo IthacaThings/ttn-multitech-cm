@@ -11,18 +11,14 @@
   shell: "ntpdate -bu {{ ntp_servers[0] }} && hwclock -wu"
   ignore_errors: yes
 
-- name: Install ntpd
+- name: Install ntp packages
   opkg:
     name: ntp
     state: installed
-  when: ansible_local.opkg.ntp is not defined
-  notify: Reload facts
-
-- name: Install ntp-utils
-  opkg:
-    name: ntp-utils
-    state: installed
-  when: ansible_local.opkg.ntp_utils is not defined
+  when: ansible_local is not defined or ansible_local.opkg is not defined or item|regex_replace('-','_') not in ansible_local.opkg.keys()
+  with_items:
+    - ntp
+    - ntp-utils
   notify: Reload facts
 
 - name: Create /var/config/ntp

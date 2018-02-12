@@ -56,6 +56,7 @@
     gw_router: "{{ gateway_info|json_query('info.router.mqtt_address')|urlsplit('hostname') }}"
   when: forwarder_variant == 'mp'
 
+#
 #	Remove Multi-Tech stuff that we don't want and install the TTN packet-forwarder
 #
 - name: Remove Multi-Tech lora-network-server
@@ -70,6 +71,19 @@
     name: lora-packet-forwarder
     state: absent
   when: ansible_local.opkg.lora_packet_forwarder is defined
+  notify: Reload facts
+
+#
+#	Install dependencies
+#
+- name: Install depedencies for packet forwarder
+  opkg: 
+    state: installed
+    pkg: "{{ item }}"
+  when: (ansible_local is not defined) or (ansible_local.opkg is not defined) or (item not in ansible_local.opkg.keys())
+  with_items:
+    - nodejs
+    - libmpsse
   notify: Reload facts
 
 #

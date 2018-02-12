@@ -1,5 +1,14 @@
 ---
 
+- name: Install autossh
+  opkg:
+    state: installed
+    pkg: "{{ item }}"
+  when: ansible_local is not defined or ansible_local.opkg is not defined or item|regex_replace('-','_') not in ansible_local.opkg.keys()
+  with_items:
+    - autossh
+  notify: Reload facts
+
 - name: /var/config/ssh_tunnel.default
   template:
     src: ssh_tunnel.j2
