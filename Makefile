@@ -93,10 +93,10 @@ ping: true
 	ansible --inventory ${INVENTORY} -o -m ping ${OPTIONS} ${TARGET}
 
 test:	${CATALOG}
-	ansible-playbook ${PLAYBOOK_ARGS} -C site.yml
+	CATALOG=${CATALOG} ansible-playbook ${PLAYBOOK_ARGS} -C site.yml
 
 test-debug:	${CATALOG}
-	ansible-playbook ${PLAYBOOK_ARGS} -C site.yml
+	CATALOG=${CATALOG} ansible-playbook ${PLAYBOOK_ARGS} -C site.yml
 
 list-hosts: true
 	@echo "${HOSTS}"
@@ -105,17 +105,17 @@ syntax-check: true
 	ansible-playbook ${PLAYBOOK_ARGS} --syntax-check site.yml
 
 apply: ${CATALOG}
-	ansible-playbook ${PLAYBOOK_ARGS} site.yml
+	CATALOG=${CATALOG} ansible-playbook ${PLAYBOOK_ARGS} site.yml
 
 retry: site.retry ${CATALOG}
-	ansible-playbook ${PLAYBOOK_ARGS} -l @site.retry site.yml
+	CATALOG=${CATALOG} ansible-playbook ${PLAYBOOK_ARGS} -l @site.retry site.yml
 
 apply-debug: ${CATALOG}
-	ansible-playbook ${PLAYBOOK_ARGS} -vvv site.yml
+	CATALOG=${CATALOG} ansible-playbook ${PLAYBOOK_ARGS} -vvv site.yml
 
 # Grab configs from all nodes
 gather: ${CATALOG}
-	ansible-playbook ${PLAYBOOK_ARGS} -t ping -C site.yml -l conduits
+	CATALOG=${CATALOG} ansible-playbook ${PLAYBOOK_ARGS} -t ping -C site.yml -l conduits
 
 ${CATALOG}:	true
 	@mkdir -p ${CATALOG} 2>/dev/null || exit 0
