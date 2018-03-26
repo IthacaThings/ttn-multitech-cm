@@ -23,10 +23,18 @@
 #	Update mLinux if required
 #
 - name: Upgrade mlinux
-  import_tasks: mlinux.yml
+  import_tasks: mlinux-upgrade.yml
   when:
     - mlinux_version is defined
     - mlinux_version != ansible_local.mlinux.version
+  tags:
+    - setup
+    - mlinux
+
+- name: Configure mlinux
+  import_tasks: mlinux.yml
+  when:
+    - mlinux_version is defined
   tags:
     - setup
     - mlinux

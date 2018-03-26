@@ -1,0 +1,19 @@
+---
+
+#
+#	mlinux setup
+#
+
+- name: /etc/opkg/mlinux-feed.conf
+  template:
+    src: mlinux-feed.conf.j2
+    dest: "/etc/opkg/mlinux-feed.conf"
+    mode: "0644"
+    owner: root
+    group: root
+  register: mlinux_feed
+
+- name: Update opkg cache
+  shell: "opkg update"
+  when: mlinux_feed | changed
+  notify: Reload facts
