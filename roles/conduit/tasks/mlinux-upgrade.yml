@@ -78,7 +78,7 @@
   when: ansible_local.mlinux.version | version_compare('3.3', '<')
 
 - name: Run flash upgrade
-  shell: "mlinux-firmware-upgrade ~/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
+  shell: "/usr/sbin/mlinux-firmware-upgrade ~/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
   async: 1
   poll: 0
   ignore_errors: true
