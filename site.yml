@@ -6,4 +6,3 @@
 - hosts: jumphost.example.com
   roles:
     - sshhost
-
