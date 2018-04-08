@@ -3,5 +3,5 @@
 /galaxy-roles/
 /*.retry
 /catalog/
-
+/.ttn_org
 /hosts

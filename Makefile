@@ -36,11 +36,19 @@ OPTIONS=
 #  - if TTN_ORG is given from the command line or env
 #	set INVENTORY to ${TTN_ORG}/hosts, if it exists, else ${TTN_ORG}/inventory
 #       set CATALOG to ${TTN_ORG}/catalog
+# - if .ttn_org exists
+#	set INVENTORY to .ttn_org//hosts, if it exists, else .ttn_org//inventory
+#       set CATALOG to .ttn_org//catalog
 #  - Otherwise, if INVENTORY is given from the command line or env, just use it and CATALOG
 #  - Otherwise, if there's a hosts file in this directory, use it
 #  - Otherwise, if there's a directory ../inventory, use it
 #  - Otherwise complain and quit.
 #
+ifeq ($(TTN_ORG),)
+ ifneq ($(wildcard .ttn_org),)
+  TTN_ORG=$(realpath .ttn_org)
+  endif
+endif
 ifneq ($(TTN_ORG),)
  ifneq ($(wildcard $(TTN_ORG)/hosts),)
     INVENTORY=$(TTN_ORG)/hosts
