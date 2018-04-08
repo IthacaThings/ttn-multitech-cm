@@ -101,6 +101,9 @@ test-debug:	${CATALOG}
 list-hosts: true
 	@echo "${HOSTS}"
 
+list-tags:
+	ansible-playbook ${PLAYBOOK_ARGS} --list-tags site.yml
+
 syntax-check: true
 	ansible-playbook ${PLAYBOOK_ARGS} --syntax-check site.yml
 
