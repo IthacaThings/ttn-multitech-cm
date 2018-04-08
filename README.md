@@ -368,6 +368,76 @@ If you were working on another branch, push your changes to *master*
 
 # Reference
 
+## Makefile reference
+
+The configuration files/directories can be located outside if this
+repo if you create a link named *.ttn_org* or set the TTN_ORG Makefile
+or environment variable.
+
+### Makefile command line variables
+
+#### TAGS
+
+A comma separated list of tags.  Used to limit what parts of the
+configuration are applied
+
+#### TARGET
+
+A comma separated list of targets, could be *conduit* for all
+conduits, or individual hostnames.
+
+#### OPTIONS
+
+Additional *ansible-playbook* arguments
+
+#### TTN_ORG
+
+If this is defined it points to a directory from which to obtain the
+*hosts* (or *inventory*) and *catalog* directories.  This allows this
+repo to be used with an external configuration.
+
+### Makefile targets
+
+#### apply
+
+Apply the configuration to the specified targets
+
+#### apply-debug
+
+Apply the configuration with full debugging
+
+#### test
+
+Run the rules in test mode. Some rules may fail due to dependencies.
+
+#### test-debug
+
+Test the config with full debugging
+
+#### syntax-check
+
+Run a syntax-check on the configuration
+
+#### ping
+
+Check reachability of all the targets
+
+#### list-hosts
+
+Output a list of all the hosts defiled in *hosts* or *inventory*
+
+#### list-tags
+
+List the tags available
+
+#### retry
+
+Retry the hosts that failed as specified in @site.retry
+
+#### gather
+
+Run a *ping* on all hosts/targets to gather all their facts
+
 ## Ansible directory tree
 + ansible.cfg - General ansible config
 + hosts - lists of ansible hosts in groups
