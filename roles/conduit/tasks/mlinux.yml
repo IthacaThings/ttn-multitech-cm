@@ -15,5 +15,5 @@
 
 - name: Update opkg cache
   shell: "opkg update"
-  when: mlinux_feed | changed
+  when: mlinux_feed is changed
   notify: Reload facts

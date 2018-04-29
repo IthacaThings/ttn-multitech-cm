@@ -8,7 +8,7 @@
   fail:
     msg: "Lora card {{ ansible_local.lora.product_id }} and region {{region }} mismatch"
   when: 
-    - ( ansible_local.lora.product_id|match("MTAC-LORA-(H-)?915") and region|match("EU|IN") ) or ( ansible_local.lora.product_id|match("MTAC-LORA-(H-)?868") and region|match("US|AU|AS1|AS2|KR") )
+    - ( ansible_local.lora.product_id is match("MTAC-LORA-(H-)?915") and region is match("EU|IN") ) or ( ansible_local.lora.product_id is match("MTAC-LORA-(H-)?868") and region is match("US|AU|AS1|AS2|KR") )
     - radio_mismatch is not defined
 
 - name: Check if using correct packet forwarder
