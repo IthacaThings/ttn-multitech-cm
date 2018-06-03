@@ -104,7 +104,7 @@ test:	${CATALOG}
 	CATALOG=${CATALOG} ansible-playbook ${PLAYBOOK_ARGS} -C site.yml
 
 test-debug:	${CATALOG}
-	CATALOG=${CATALOG} ansible-playbook ${PLAYBOOK_ARGS} -C site.yml
+	CATALOG=${CATALOG} ansible-playbook ${PLAYBOOK_ARGS} -vvv -C site.yml
 
 list-hosts: true
 	@echo "${HOSTS}"
