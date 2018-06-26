@@ -97,36 +97,39 @@ PLAYBOOK_ARGS=-T ${TIMEOUT} --inventory ${INVENTORY} $${TAGS:+-t $${TAGS}} $${TA
 
 all::	apply
 
-ping: true
-	ansible --inventory ${INVENTORY} -o -m ping ${OPTIONS} ${TARGET}
+ping: ${CATALOG}
+	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} ansible --inventory ${INVENTORY} -o -m ping ${OPTIONS} ${TARGET}
 
 test:	${CATALOG}
-	CATALOG=${CATALOG} ansible-playbook ${PLAYBOOK_ARGS} -C site.yml
+	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} ansible-playbook ${PLAYBOOK_ARGS} -C site.yml
 
 test-debug:	${CATALOG}
-	CATALOG=${CATALOG} ansible-playbook ${PLAYBOOK_ARGS} -vvv -C site.yml
+	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} ansible-playbook ${PLAYBOOK_ARGS} -vvv -C site.yml
 
 list-hosts: true
 	@echo "${HOSTS}"
 
-list-tags:
-	ansible-playbook ${PLAYBOOK_ARGS} --list-tags site.yml
+list-tags: ${CATALOG}
+	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} ansible-playbook ${PLAYBOOK_ARGS} --list-tags site.yml
 
-syntax-check: true
-	ansible-playbook ${PLAYBOOK_ARGS} --syntax-check site.yml
+syntax-check: ${CATALOG}
+	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} ansible-playbook ${PLAYBOOK_ARGS} --syntax-check site.yml
 
 apply: ${CATALOG}
-	CATALOG=${CATALOG} ansible-playbook ${PLAYBOOK_ARGS} site.yml
+	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} ansible-playbook ${PLAYBOOK_ARGS} site.yml
 
 retry: site.retry ${CATALOG}
-	CATALOG=${CATALOG} ansible-playbook ${PLAYBOOK_ARGS} -l @site.retry site.yml
+	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} ansible-playbook ${PLAYBOOK_ARGS} -l @site.retry site.yml
 
 apply-debug: ${CATALOG}
-	CATALOG=${CATALOG} ansible-playbook ${PLAYBOOK_ARGS} -vvv site.yml
+	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} ansible-playbook ${PLAYBOOK_ARGS} -vvv site.yml
+
+dump-config: ${CATALOG}
+	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} ansible-config dump --only-changed
 
 # Grab configs from all nodes
 gather: ${CATALOG}
-	CATALOG=${CATALOG} ansible-playbook ${PLAYBOOK_ARGS} -t ping -C site.yml -l conduits
+	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} ansible-playbook ${PLAYBOOK_ARGS} -t ping -C site.yml -l conduits
 
 ${CATALOG}:	true
 	@mkdir -p ${CATALOG} 2>/dev/null || exit 0
