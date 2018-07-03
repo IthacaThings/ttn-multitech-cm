@@ -1,24 +1,91 @@
 #!/bin/bash
 
+progname=$(basename $0)
+just_checking=0
+reboot=1
+hw_version=
+
+TMPDIR=$(mktemp -d ${progname}.XXXXXXXXX)
+trap "rm -f ${TMPDIR}" 0 1 2 3 13 15
+
+while getopts :h:nN opt; do
+    case ${opt} in
+	h)
+	    # Fake HW version for running on a non-conduit system
+	    case $OPTARG in
+		mtcap|mtcdt)
+		    hw_version=$OPTARG-0
+		    ;;
+		*)
+		    echo "Invalid arg to -h: $OPTARG" >&2
+		    exit 1
+		    ;;
+	    esac
+	    ;;
+	n)
+	    # Just check the validity of the package
+	    just_checking=1
+	    ;;
+	N)
+	    # Do not reboot
+	    reboot=0
+	    ;;
+        \?)
+            echo "Invalid option: -$OPTARG" >&2
+            exit 1
+            ;;
+        :)
+            echo "Option -$OPTARG requires an argument." >&2
+            exit 1
+            ;;
+    esac
+done
+
+shift $(expr ${OPTIND} - 1)
 if [ $# != 1 ]; then
-    echo "Usage: $0 upgrade.bin"
+    echo "Usage: [-nN] [-h mtcdt|mtcap] ${progname} upgrade.bin"
     exit 1
 fi
 
 set -e
-upgrade=$1
 
-mkdir -p /var/volatile
-cd /var/volatile
+# Ensure we have a full path to the file
+upgrade=$1
+case ${upgrade} in
+    /*)  ;;
+    *)
+	upgrade="${PWD}/${upgrade}"
+	;;
+esac
+cd ${TMPDIR}
+
+# Set some defaults
+case $(uname -s) in
+    Darwin)
+	MD5SUM=gmd5sum
+	;;
+    *)
+	MD5SUM=md5sum
+	;;
+esac
+
+# Set the logging program to use
+if [ -f /etc/mlinux-version ]; then
+    LOGGER='logger -s -t firmware_upgrade'
+else
+    LOGGER='echo'
+fi
 
 # make sure firmware is for this device
-hw_version=$(cat /sys/devices/platform/mts-io/hw-version)
+if [ -z "${hw_version}" ]; then
+    hw_version=$(cat /sys/devices/platform/mts-io/hw-version)
+fi
 firmware_model=$(tar -xO -f $upgrade model)
 shopt -s nocasematch
 if [[ ! "$hw_version" =~ ^$firmware_model- ]]; then
-    logger -s -t firmware_upgrade "Wrong firmware for this hardware"
-    logger -s -t firmware_upgrade "hw version: $hw_version"
-    logger -s -t firmware_upgrade "firmware model: $firmware_model"
+    ${LOGGER} "Wrong firmware for this hardware"
+    ${LOGGER} "hw version: $hw_version"
+    ${LOGGER} "firmware model: $firmware_model"
     exit 1
 fi
 
@@ -30,28 +97,39 @@ for (( i = 0; i < ${#files[@]}; i++ )); do
     file=${files[i]}
     # if the file is in the tar, md5sum it
     if tar -t -f $upgrade | grep -F -q "$file"; then
-        logger -s -t firmware_upgrade "Checking MD5 for $file..."
+        ${LOGGER} "Checking MD5 for $file..."
         if ! tar -x -f $upgrade $file.md5; then
-            logger -s -t firmware_upgrade "MD5 is not found for the $file, upgrade aborted"
+            ${LOGGER} "MD5 is not found for the $file, upgrade aborted"
             exit 1
         fi
-        if ! tar -xO -f $upgrade $file | md5sum -c $file.md5; then
-            logger -s -t firmware_upgrade "MD5 check failed, upgrade aborted"
+        if ! tar -xO -f $upgrade $file | ${MD5SUM} -c $file.md5; then
+            ${LOGGER} "MD5 check failed, upgrade aborted"
             exit 1
         fi
         tobeflashed=1
     fi
 done
 
+if (( $just_checking )); then
+    ${LOGGER} "${upgrade} checks out OK"
+    exit 0
+fi
+
 if (( $tobeflashed )); then
+    mkdir -p /var/volatile
+    cd /var/volatile
     mkdir -p /var/volatile/flash-upgrade
     mv -f $upgrade /var/volatile/flash-upgrade/upgrade.bin
     touch /var/volatile/do_flash_upgrade
-    logger -s -t firmware_upgrade "Rebooting"
-    sleep 1
-    reboot
+    if (( $reboot )); then
+	${LOGGER} "Rebooting"
+	sleep 1
+	reboot
+	${LOGGER} "Reboot failed"
+	exit 1
+    fi
     exit 0
 else
-    logger -s -t firmware_upgrade "Nothing to be flashed!"
+    ${LOGGER} "Nothing to be flashed!"
     exit 1
 fi
