@@ -95,22 +95,18 @@ class Gateway(object):
     def register(self, frequency_plan, latitude, longitude, router):
         """ Register the gateway """
         rc = 0
-        try:
-            cmd = [ self.options.binary, "gateway", "register", self.id, frequency_plan, '%f,%f' % (latitude, longitude) ]
-            cmd.append("--router-id")	# Router for register/edit
-            cmd.append(self.options.router)
-            if self.options.noop:
-                output = "NOOP: %s " % " ".join(cmd)
-            else:
-                if self.options.debug:
-                    print("DBG: %s" % " ".join(cmd), file=sys.stderr)
-                output = subprocess.check_output(cmd, text=True)
-                if self.options.debug:
-                    print("DBG: %s" % "\nDBG: ".join(output.split("\n")), file=sys.stderr)
+        cmd = [ "gateway", "register", self.id, frequency_plan, '%f,%f' % (latitude, longitude) ]
+        cmd.append("--router-id")	# Router for register/edit
+        cmd.append(self.options.router)
+        if self.options.noop:
+            output = "NOOP: %s " % " ".join(cmd)
+        else:
+            try:
+                output = check_output(self.options, cmd)
                 self.registered = True
-        except subprocess.CalledProcessError as e:
-            rc = e.returncode
-            output = e.output
+            except subprocess.CalledProcessError as e:
+                rc = e.returncode
+                output = e.output
             
         return [ rc, output ] 
 
@@ -118,20 +114,16 @@ class Gateway(object):
         """ Delete this gateway """
 
         rc = 0
-        try:
-            cmd = [ self.options.binary, "gateway", "delete", self.id ]
-            if self.options.noop:
-                output = "NOOP: %s " % " ".join(cmd)
-            else:
-                if self.options.debug:
-                    print("DBG: %s" % " ".join(cmd), file=sys.stderr)
-                output = subprocess.check_output(cmd, text=True)
-                if self.options.debug:
-                    print("DBG: %s" % "\nDBG: ".join(output.split("\n")), file=sys.stderr)
+        cmd = [ "gateway", "delete", self.id ]
+        if self.options.noop:
+            output = "NOOP: %s " % " ".join(cmd)
+        else:
+            try:
+                output = check_output(self.options, cmd)
                 self.registered = True
-        except subprocess.CalledProcessError as e:
-            rc = e.returncode
-            output = e.output
+            except subprocess.CalledProcessError as e:
+                rc = e.returncode
+                output = e.output
 
         return [ rc, output ] 
 
@@ -146,22 +138,15 @@ class Gateway(object):
             if rights:
                 changes.append(rights)
 
-            try:
-                cmd = [ self.options.binary, "gateway", "collaborators", "add", self.id ] + changes
-                if self.options.noop:
-                    output.append("NOOP: %s " % " ".join(cmd))
-                else:
-                    if self.options.debug:
-                        print("DBG: %s" % " ".join(cmd), file=sys.stderr)
-                    out = subprocess.check_output(cmd, text=True)
+            cmd = [ "gateway", "collaborators", "add", self.id ] + changes
+            if self.options.noop:
+                output.append("NOOP: %s " % " ".join(cmd))
+            else:
+                try:
+                    out = check_output(self.options, cmd)
                     output.append(out)
-                    if self.options.debug:
-                        print("DBG: %s" % "\nDBG: ".join(out.split("\n")), file=sys.stderr)
-            except subprocess.CalledProcessError as e:
-                return [ e.returncode, e.outout ]
-                rc = e.returncode
-                output = e.output
-                break
+                except subprocess.CalledProcessError as e:
+                    return [ e.returncode, e.outout ]
 
         return [ 0, '\n'.join(output) ] 
 
@@ -201,23 +186,19 @@ class Gateway(object):
         if not changes:
             return [ 0, "No changes required" ]
                 
-        try:
-            cmd = [ self.options.binary, "gateway", "edit", self.id ] + changes
-            if self.options.noop:
-                output = "NOOP: %s " % " ".join(cmd)
-            else:
-                if self.options.debug:
-                    print("DBG: %s" % " ".join(cmd), file=sys.stderr)
-                output = subprocess.check_output(cmd, text=True)
-                if self.options.debug:
-                    print("DBG: %s" % "\nDBG: ".join(output.split("\n")), file=sys.stderr)
+        cmd = [ "gateway", "edit", self.id ] + changes
+        if self.options.noop:
+            output = "NOOP: %s " % " ".join(cmd)
+        else:
+            try:
+                output = check_output(self.options, cmd)
                 self.frequency_plan = frequency_plan
                 self.latitude = latitude
                 self.longitude = longitude
-            rc = 0
-        except subprocess.CalledProcessError as e:
-            rc = e.returncode
-            output = e.output
+                rc = 0
+            except subprocess.CalledProcessError as e:
+                rc = e.returncode
+                output = e.output
             
         return [ rc, output ] 
 
@@ -237,11 +218,9 @@ class Gateway(object):
     def get_info(self):
         """ Get additional info via 'info' subcommand """
 
+        cmd = [ "gateway", "info", self.id ]
         try:
-            cmd = [ self.options.binary, "gateway", "info", self.id ]
-            if self.options.debug:
-                print("DBG: %s" % " ".join(cmd), file=sys.stderr)
-            lines = subprocess.check_output(cmd, text=True)
+            lines = check_output(self.options, cmd)
         except subprocess.CalledProcessError as e:
             print(e.output, file=sys.stderr, end="")
 
@@ -288,11 +267,9 @@ def ttn_gateway_list(options):
     gateways = dict()
     
     rc = 0
+    cmd = [ "gateway", "list" ]
     try:
-        cmd = [ options.binary, "gateway", "list" ]
-        if options.debug:
-            print("DBG: %s" % " ".join(cmd), file=sys.stderr)
-        lines = subprocess.check_output(cmd, text=True)
+        lines = check_output(options, cmd)
     except subprocess.CalledProcessError as e:
         rc = e.returncode
         print(e.output, file=sys.stderr, end="")
@@ -309,7 +286,27 @@ def ttn_gateway_list(options):
         gateways[gateway.id] = gateway
 
     return gateways
-        
+
+def check_output(options, command):
+    """ Python version independent version of subprocess.check_output """
+
+    cmd = list()
+    cmd.append(options.binary)
+    cmd.extend(command)
+
+    if options.debug:
+        print("DBG: %s" % " ".join(cmd), file=sys.stderr)
+
+    if sys.version_info[0] < 3:
+        output = subprocess.check_output(cmd)
+
+    output = subprocess.check_output(cmd, text=True)
+
+    if options.debug:
+        print("DBG: %s" % "\nDBG: ".join(output.split("\n")), file=sys.stderr)
+
+    return output
+
 #
 #
 #
