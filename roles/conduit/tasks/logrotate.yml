@@ -27,10 +27,22 @@
   with_filetree: "../templates/logrotate.d"
   when: item.src|regex_search('\.j2$')
 
+- name: Get stat info about /etc/logrotate.d
+  stat:
+    path: /etc/logrotate.d
+  register: logrotate_d
+
+- name: Remove /etc/logrotate.d
+  file:
+    name: /etc/logrotate.d
+    state: absent
+  when: logrotate_d.stat.isdir is defined and logrotate_d.stat.isdir == True
+  
 - name: Point /etc/logrotate.d at /var/config/logrotate.d
   file:
     name: /etc/logrotate.d
     state: link
     force: yes
     src: /var/config/logrotate.d
+  when: logrotate_d.stat.isdir is defined and logrotate_d.stat.isdir == True
 
