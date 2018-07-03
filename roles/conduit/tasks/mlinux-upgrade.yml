@@ -22,12 +22,13 @@
 - name: Get expected md5 of {{ mlinux_upgrade_bin }}_{{ mlinux_version }}
   local_action:
     module: shell
-    args: "grep '{{ mlinux_upgrade_bin }}' {{ role_path}}/files/md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt | cut -d ' ' -f 1"
+    args: "grep '{{ mlinux_upgrade_bin }}' {{ role_path }}/files/md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt | cut -d ' ' -f 1"
   register: mlinux_upgrade_expected_md5
 
 - name: Check if {{ mlinux_upgrade_bin }}_{{ mlinux_version }} is downloaded
   local_action: stat
   args:
+    checksum_algorithm: md5
     path: "{{ role_path }}/files/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
   register: mlinux_upgrade_stat
   
@@ -37,7 +38,7 @@
     name: "{{ role_path }}/files/{{ mlinux_upgrade }}_{{ mlinux_version }}"
     state: absent
   when:
-    - mlinux_upgrade_stat.stat.exists and mlinux_upgrade_stat.stat.md5 != mlinux_upgrade_expected_md5.stdout
+    - mlinux_upgrade_stat.stat.exists and mlinux_upgrade_stat.stat.checksum != mlinux_upgrade_expected_md5.stdout
 
 - name: Download {{ mlinux_upgrade_bin }}_{{ mlinux_version }}
   local_action: get_url
@@ -48,6 +49,11 @@
     checksum: "md5:{{ mlinux_upgrade_expected_md5.stdout }}"
   when:
     - mlinux_upgrade_stat.stat.exists == False
+
+- name: Validate {{ mlinux_upgrade_bin }}_{{ mlinux_version }}
+  local_action:
+    module: shell
+    args: "{{ role_path }}/files/mlinux-firmware-upgrade -h {{conduit_type }} -n {{ role_path }}/files/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
 
 - name: Copy {{ mlinux_upgrade_bin }}_{{ mlinux_version }} to {{ hostname }}
   copy:
@@ -75,13 +81,16 @@
     mode: "0755"
     owner: root
     group: root
-  when: ansible_local.mlinux.version | version_compare('3.3', '<')
 
-- name: Run flash upgrade
-  shell: "/usr/sbin/mlinux-firmware-upgrade ~/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
+- name: Prep flash upgrade
+  shell: "/usr/sbin/mlinux-firmware-upgrade -N {{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
+  register: flash_upgrade
+
+- name: Reboot
+  shell: "reboot"
   async: 1
   poll: 0
-  ignore_errors: true
+  when: flash_upgrade is changed
 
 - name: Wait for reboot
   wait_for:
@@ -93,14 +102,14 @@
     connect_timeout: 15
   ignore_errors: true
   connection: local
+  when: flash_upgrade is changed
 
 #
 #	Recover state
 #
 - name: Run mlinux_setup script
-  local_action:
-    module: shell
-    args: "sshpass -proot ssh root@{{ ansible_host }} /var/config/mlinux_setup"
+  local_action: shell
+  args: "sshpass -proot ssh root@{{ ansible_host }} /var/config/mlinux_setup"
   when: ansible_local.opkg.preserve is not defined
 
 # XXX - Change root password
