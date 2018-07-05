@@ -19,6 +19,7 @@ gateways are one of the more popular
 1. [Initial Setup](#initial-setup)
 1. [Deploying a Conduit](#deploying-a-conduit)
 1. [Syncing with Upstream](#syncing-with-upstream)
+1. [Support](#support)
 1. [Reference](#reference)
 
 # About this Repo
@@ -365,6 +366,15 @@ Commit your changes to your git repo.
 Deploy your changes to all your Conduits, verify.
 ## Commit again
 If you were working on another branch, push your changes to *master*
+
+# Support
+
+This repo is a volunteer effort and as such there is no support.  It
+is primarily developed in support of TTN Ithaca and TTN NYC.  We are
+happy to see it used by other TTN communities.
+
+There is a channel for discussion of this repo at [The Things Network
+Community SLACK](https://thethingsnetwork.slack.com/messages/CBKCZP09J).
 
 # Reference
 
