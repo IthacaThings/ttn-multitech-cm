@@ -6,7 +6,7 @@ reboot=1
 hw_version=
 
 TMPDIR=$(mktemp -d ${progname}.XXXXXXXXX)
-trap "rm -f ${TMPDIR}" 0 1 2 3 13 15
+trap "rm -rf ${TMPDIR}" 0 1 2 3 13 15
 
 while getopts :h:nN opt; do
     case ${opt} in
