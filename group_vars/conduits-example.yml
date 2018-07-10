@@ -37,16 +37,33 @@ forwarder_version: 3.0.0-r14
 timezone: "US/Eastern"
 
 # Pick the correct region:
-# AS1	AS_920_923	Asia 1
-# AS2	AS_923_925	Asia 2
-# AU	AU_915_928	Australia
-# EU	EU_863_870	Europe
-# KR	KR_920_923	Korea
-# IN	IN_865_867	India
-# US	US_902_928	US
+# BN: "Brunei Darussalam"
+# EU: "Europe, Middle East, Russia and Africa"
+# HK: "Hong Kong"
+# ID: "Indonesia"
+# IN: "India"
+# JP: "Japan"
+# KH: "Cambodia"
+# LA: "Lao People's Democratic Republic"
+# MY: "Malaysia"
+# SG: "Signapore"
+# TH: "Thailand"
+# TW: "Taiwan, Province of China"
+# US: "North and South America"
+# VN: "Vietnam"
+# See regions in roles/conduit/defaults/main.yml for more info
 region: US
 
-# Pick a router ( switch-router ttn-router-asia-se ttn-router-brazil # ttn-router-eu ttn-router-us-west )
+# Select a router.  A default one is chosen for the region, but there
+# may be one that is more optimal for you gateways
+# digitalcatapult-uk-router
+# meshed-router
+# switch-router
+# ttn-router-asia-se
+# ttn-router-brazil
+# ttn-router-eu
+# ttn-router-jp
+# ttn-router-us-west
 router: ttn-router-us-west
 
 # Whom to contact about issues with this gateway

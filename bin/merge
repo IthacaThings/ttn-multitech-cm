@@ -1,0 +1,155 @@
+#!/usr/bin/env python
+
+from __future__ import print_function
+import argparse
+import json
+import sys
+
+try:
+    import itertools.izip_longest as zip_longest
+except ImportError:
+    pass
+
+"""
+MIT License
+
+Copyright (c) 2018 Jeffrey C Honig
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
+
+def merge(a, b):
+    ''' https://stackoverflow.com/questions/19378143/python-merging-two-arbitrary-data-structures '''
+    if isinstance(a, dict) and isinstance(b, dict):
+        d = dict(a)
+        d.update({k: merge(a.get(k, None), b[k]) for k in b})
+        return d
+
+    if isinstance(a, list) and isinstance(b, list):
+        return [merge(x, y) for x, y in zip_longest(a, b)]
+
+    return a if b is None else b
+
+#
+#
+#
+def main():
+    """ Figure out what we should do """
+
+    parser = argparse.ArgumentParser(description="Merge JSON configuration files")
+
+    #	Debugging
+    group = parser.add_argument_group("Debugging options")
+    group.add_argument("-d", "--debug",
+                       dest="debug", default=False,
+                       action='store_true',
+                       help="print debugging messages")
+    group.add_argument("--nodebug",
+                       dest="debug",
+                       action='store_false',
+                       help="print debugging messages")
+    group.add_argument("-v", "--verbose",
+                       dest="verbose", default=False,
+                       action='store_true',
+                       help="print verbose messages")
+    group.add_argument("-n", "--noop",
+                       dest="noop", default=False,
+                       action='store_true',
+                       help="Don't make changes, just list what we are going to do")
+
+    group = parser.add_argument_group("Config options")
+    group.add_argument("-O", "--output",
+                       dest="output", default="-",
+                       help="Output file (defaults to stdout)")
+
+    group.add_argument("--include",
+                       dest="configs", nargs='+', action='append',
+                       help="A file name containing JSON followed by a list of first level keys to select")
+    group.add_argument("--file",
+                       dest="configs", action='append',
+                       help="The name of a file containing JSON")
+    group.add_argument("--json",
+                       dest="configs", action='append',
+                       help="JSON strings")
+
+    options = parser.parse_args()
+    if options.debug:
+        options.verbose = options.debug
+
+    result = dict()
+    for config in options.configs:
+        if options.debug:
+            print("PARSING: %s" % config)
+        if isinstance(config, list):
+            path = config[0]
+            sections = config[1:]
+        elif config.startswith('{'):
+            try:
+                data = json.loads(config)
+            except TypeError as error:
+                sys.exit("Error parsing %s: %s" % (data, error))
+            path = None
+            sections = None
+        else:
+            sections = None
+            path = config
+
+        if path is not None:
+            try:
+                fp = open(path)
+                data = json.load(fp)
+                fp.close()
+            except IOError as error:
+                sys.exit("Unable to open %s: %s" % (path, error))
+            except TypeError as error:
+                sys.exit("Error parsing %s: %s" % (path, error))
+
+        if sections is not None:
+            new_data = {}
+            for section in sections:
+                try:
+                    new_data[section] = data[section]
+                except KeyError:
+                    sys.exit("%s not found in %s" % (section, path))
+            data = new_data
+
+        result = merge(result, data)
+
+    if options.debug:
+        print("DBG: %s" % json.dumps(result, indent=4))
+
+    try:
+        if options.output == '-':
+            fp = sys.stdout
+        else:
+            fp = open(options.output, "w")
+        json.dump(result, fp, indent=4, sort_keys=True)
+    except IOError as error:
+        sys.exit("Unable to write %s: %s" % (options.output, error))
+
+    return 0
+
+if __name__ == "__main__":
+    try:
+        main()
+        sys.exit(0)
+    except KeyboardInterrupt:
+        print()
+        sys.exit(1)
+

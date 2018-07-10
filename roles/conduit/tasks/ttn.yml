@@ -4,11 +4,20 @@
 #	Register gateway
 #
 
-- name: Check if using correct card for the region
+- name: Validate region
   fail:
-    msg: "Lora card {{ ansible_local.lora.product_id }} and region {{region }} mismatch"
-  when: 
-    - ( ansible_local.lora.product_id is match("MTAC-LORA-(H-)?915") and region is match("EU|IN") ) or ( ansible_local.lora.product_id is match("MTAC-LORA-(H-)?868") and region is match("US|AU|AS1|AS2|KR") )
+    msg: "Unknown or invalid region: {{ region }}"
+  when: region not in regions
+
+- name: Look up frequency plan
+  set_fact:
+    frequency_plan: "{{ regions[region]['frequency_plan'] }}"
+
+- name: Validate product ID for region
+  fail:
+    msg: "{{ ansible_local.lora.product_id }} is not supported for region: {{ region }}"
+  when:
+    - ansible_local.lora.product_id not in frequency_plans[frequency_plan]['product_ids']
     - radio_mismatch is not defined
 
 - name: Check if using correct packet forwarder
@@ -30,11 +39,11 @@
     args:
       "bin/register
         --json
-        --id {{ lora_hostname }} 
-      	--region {{ region }}
+        --id {{ lora_hostname }}
+      	--frequency_plan {{ frequency_plan }}
         --latitude {{ latitude }}
         --longitude {{ longitude }}
-        --router {{ router }}
+        --router {{ router if router is defined else regions[region]['router'] }}
         --description {{ description | quote }}
         --brand {{ gateway_brand | quote }}
         --model {{ gateway_model | quote }}
@@ -77,7 +86,7 @@
 #	Install dependencies
 #
 - name: Install depedencies for packet forwarder
-  opkg: 
+  opkg:
     state: installed
     pkg: "{{ item }}"
   when: (ansible_local is not defined) or (ansible_local.opkg is not defined) or (item not in ansible_local.opkg.keys())
@@ -154,10 +163,39 @@
     - update rc
     - restart ttn-pkt-forwarder
 
-- name: Clean up packet-forwarder crud
-  file:
-    name: /var/config/lora/local_conf.json-opkg
-    state: absent
+- name: Grab mLinux meta-mlinux layer
+  local_action: git
+  args:
+    update: true
+    repo: "{{ meta_mlinux_git }}"
+    dest: "{{ meta_mlinux_root }}"
+    version: "{{ meta_mlinux_version }}"
+  run_once: true
+
+- name: Pick a MultiTech specific global configuration
+  set_fact:
+    multitech_global_conf: --include {{ meta_mlinux_confdir }}/{{frequency_plans[frequency_plan][ansible_local.lora.hw_version] }} SX1301_conf
+  when: ansible_local.lora.hw_version in frequency_plans[frequency_plan]
+
+- name: Pick a TTN region specific global configuration
+  set_fact:
+    ttn_global_conf: "{{ frequency_plans[frequency_plan]['global_conf'] }}"
+
+- name: Make sure we have the TTN region specific global configuration
+  local_action: get_url
+  args:
+    url: "{{ ttn_global_conf_root }}/{{ ttn_global_conf }}"
+    dest: "{{ role_path }}/files"
+  run_once: true
+
+- name: Generate target specific global_conf.json
+  local_action:
+    module: shell
+    args:
+      "bin/merge
+       -O {{ role_path }}/files/global_conf-{{ hostname }}.json
+       --include {{ role_path }}/files/{{ ttn_global_conf }} gateway_conf
+       {{ multitech_global_conf if multitech_global_conf is defined else multitech_global_overrides }}"
 
 #
 #	Install the TTN config files
@@ -169,28 +207,35 @@
     owner: root
     group: root
 
-- block:
-    - template:
-        src: local_conf.json.j2
-        dest: /var/config/lora/local_conf.json
-        mode: "0644"
-        owner: root
-        group: root
+- name: Install /var/config/lora/local_conf.json
+  template:
+    src: local_conf.json.j2
+    dest: /var/config/lora/local_conf.json
+    mode: "0644"
+    owner: root
+    group: root
+  notify:
+    - restart ttn-pkt-forwarder
 
-    - local_action: get_url
-      args:
-        url: "https://raw.githubusercontent.com/TheThingsNetwork/gateway-conf/master/{{ region }}-global_conf.json"
-        dest: "{{ role_path }}/files"
+- name: Install /var/config/loral/global_conf.json
+  copy:
+    src: "{{ role_path }}/files/global_conf-{{ hostname }}.json"
+    dest: /var/config/lora/global_conf.json
+    mode: "0644"
+    owner: root
+    group: root
+  notify:
+    - restart ttn-pkt-forwarder
 
-    - copy:
-        src: "{{ region }}-global_conf.json"
-        dest: /var/config/lora/ttn_global_conf.json
-        mode: "0644"
-        owner: root
-        group: root
-
-    - shell: node /opt/lora/merge.js /var/config/lora/ttn_global_conf.json /var/config/lora/multitech_overrides.json /var/config/lora/global_conf.json
-      notify: restart ttn-pkt-forwarder
+- name: Remove outdated config files
+  file:
+    name: "/var/config/lora/{{ item }}"
+    state: absent
+  loop:
+    - local_conf.json-opkg
+    - multitech_overrides.json
+    - samples
+    - ttn_global_conf.json
 
 - name: Remove TTN packet forwarder config
   file:

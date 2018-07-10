@@ -13,6 +13,17 @@
         "ref_longitude": {{ longitude }},
         "ref_altitude": {{ altitude if altitude else -1 }},
 {% endif %}
+{# The following have been merged in from the multitech-overrides.json
+    provided with the mp-package-forwarder #}
+	"upstream": true,
+	"downstream": true,
+	"radiostream": true,
+	"statusstream": true,
+	"keepalive_interval": 10,
+	"stat_interval": 30,
+	"push_timeout_ms": 100,
+	"platform": "*"'
+{# end of merged #}
 {% if forwarder_variant == "mp" %}
 	"servers": [
             {

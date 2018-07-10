@@ -71,3 +71,153 @@ gateway_collaborator_rights:
 use_gps: false
 gps_device: ttyXRUSB2
 
+# The following were taken from multitech_overrides.json in the
+#   mp-packet-forwarder package and are used if no multitech
+#   region-specific configuration is provided
+multitech_global_overrides: '--json {
+    "SX1301_conf": {
+        "clksrc_desc": "radio_0 provides clock to concentrator by default"
+        "clksrc": 0,
+    }
+}'
+
+# Source of the config files referenced below
+meta_mlinux_git: git://git.multitech.net/meta-mlinux
+meta_mlinux_version: 3.3.24
+meta_mlinux_root: "{{ role_path }}/files/meta-mlinux"
+meta_mlinux_confdir: "{{ meta_mlinux_root }}/recipes-connectivity/lora/lora-packet-forwarder"
+ttn_global_conf_root: "https://raw.githubusercontent.com/TheThingsNetwork/gateway-conf/master/"
+
+# See https://www.thethingsnetwork.org/docs/lorawan/frequencies-by-country.html
+regions:
+  AU:
+    desc: "Australia"
+    frequency_plan: AU_915_928
+    router: meshed_router
+  BN:
+    desc: "Brunei Darussalam"
+    frequency_plan: AS_923_925
+    router: ttn-router-asia-se
+  EU:
+    desc: "Europe, Middle East, Russia and Africa"
+    frequency_plan: EU_863_870
+    router: ttn-router-eu
+  HK:
+    desc: "Hong Kong"
+    frequency_plan: AS_923_925
+    router: ttn-router-asia-se
+  ID:
+    desc: "Indonesia"
+    frequency_plan: AS_923_925
+    router: ttn-router-asia-se
+  IN:
+    desc: "India"
+    frequency_plan: IN_865_867
+    router: ttn-router-asia-se
+  JP:
+    desc: "Japan"
+    frequency_plan: AS_920_923
+    router: ttn-router-jp
+  KH:
+    desc: "Cambodia"
+    frequency_plan: AS_923_925
+    router: ttn-router-asia-se
+  LA:
+    desc: "Lao People's Democratic Republic"
+    frequency_plan: AS_923_925
+    router: ttn-router-asia-se
+  MY:
+    desc: "Malaysia"
+    frequency_plan: AS_920_923
+    router: ttn-router-asia-se
+  SG:
+    desc: "Signapore"
+    frequency_plan: AS_920_923
+    router: ttn-router-asia-se
+  TH:
+    desc: "Thailand"
+    frequency_plan: AS_923_925
+    router: ttn-router-asia-se
+  TW:
+    desc: "Taiwan, Province of China"
+    frequency_plan: AS_923_925
+    router: ttn-router-asia-se
+  UK:
+    desc: "United Kingdom"
+    frequency_plan: EU_863_870
+    router: digitalcatapult-uk-router
+  US:
+    desc: "North and South America"
+    frequency_plan: US_902_928
+    router: ttn-router-us-west
+  VN:
+    desc: "Vietnam"
+    frequency_plan: AS_923_925
+    router: ttn-router-asia-se
+
+frequency_plans:
+  AS_920_923:
+    product_ids:
+      - MTAC-LORA-915
+      - MTCAP-LORA-915
+      - MTAC-LORA-H-915
+    global_conf: AS1-global_conf.json
+    "MTAC-LORA-1.5": global_conf.json.3.0.0.MTAC_LORA_1_5.AS923-LBT.basic.clksrc0
+    "MTCAP-LORA-1.5": global_conf.json.3.1.0.MTCAP-LORA-1-5.AS923-LBT.basic
+  AS_923_925:
+    product_ids:
+      - MTAC-LORA-915
+      - MTCAP-LORA-915
+      - MTAC-LORA-H-915
+    router: ttn-router-asia-se
+    global_conf: AS2-global_conf.json
+    "MTAC-LORA-1.5": global_conf.json.3.0.0.MTAC_LORA_1_5.AS923.basic.clksrc0
+    "MTCAP-LORA-1.5": global_conf.json.3.1.0.MTCAP-LORA-1-5.AS923.basic
+  AU_915_928:
+    product_ids:
+      - MTAC-LORA-915
+      - MTCAP-LORA-915
+      - MTAC-LORA-H-915
+    router: ttn-router-asia-se
+    global_conf: AU-global_conf.json
+    "MTAC-LORA-1.5": global_conf.json.3.0.0.MTAC_LORA_1_5.AU915.basic.clksrc0
+    "MTCAP-LORA-1.5": global_conf.json.3.1.0.MTCAP-LORA-1-5.AU915.basic
+  EU_863_870:
+    product_ids:
+      - MTAC-LORA-868
+      - MTCAP-LORA-868
+      - MTAC-LORA-H-868
+    router: ttn-router-eu
+    global_conf: EU-global_conf.json
+    "MTAC-LORA-1.0": global_conf.json.3.0.0.MTAC_LORA_1_0.EU868.basic.clksrc0
+    "MTAC-LORA-1.5": global_conf.json.3.0.0.MTAC_LORA_1_5.EU868.basic.clksrc0
+    "MTCAP-LORA-1.5": global_conf.json.3.1.0.MTCAP-LORA-1-5.EU868.basic
+  IN_865_867:
+    product_ids:
+      - MTAC-LORA-868
+      - MTCAP-LORA-868
+      - MTAC-LORA-H-868
+    router: ttn-router-asia-se
+    global_conf: IN-global_conf.json
+    "MTAC-LORA-1.5": global_conf.json.3.0.0.MTAC_LORA_1_5.IN865.basic.clksrc0
+    "MTCAP-LORA-1.5": global_conf.json.3.1.0.MTCAP-LORA-1-5.IN865.basic
+  KR_920_923:
+    product_ids:
+      - MTAC-LORA-915
+      - MTCAP-LORA-915
+      - MTAC-LORA-H-915
+    router: ttn-router-asia-se
+    global_conf: KR-global_conf.json
+    "MTAC-LORA-1.5": global_conf.json.3.0.0.MTAC_LORA_1_5.KR920-LBT.basic.clksrc0
+    "MTCAP-LORA-1.5": global_conf.json.3.1.0.MTCAP-LORA-1-5.KR920-LBT.basic
+  US_902_928:
+    product_ids:
+      - MTAC-LORA-915
+      - MTCAP-LORA-915
+      - MTAC-LORA-H-915
+    router: ttn-router-us-west
+    global_conf: US-global_conf.json
+    "MTAC-LORA-1.0": global_conf.json.3.0.0.MTAC_LORA_1_0.US915.basic.clksrc0
+    "MTAC-LORA-1.5": global_conf.json.3.0.0.MTAC_LORA_1_5.US915.basic.clksrc0
+    "MTCAP-LORA-1.5": global_conf.json.3.1.0.MTCAP-LORA-1-5.US915.basic
+
