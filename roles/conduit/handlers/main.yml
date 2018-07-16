@@ -66,3 +66,11 @@
 #
 - name: Reload facts
   include_tasks: reload_facts.yml
+
+#
+#	Restart monit
+#
+- name: Restart monit
+  service: name=monit state=restarted
+
+  

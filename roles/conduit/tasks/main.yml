@@ -156,3 +156,11 @@
     - ssh_tunnel
     - setup
 
+#
+#	Set up monit
+#
+- name: Set up moniit
+  import_tasks: monit.yml
+  tags:
+    - monit
+    - setup

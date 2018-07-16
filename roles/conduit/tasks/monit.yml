@@ -1,0 +1,40 @@
+---
+
+- name: Install Monit and dependencies
+  opkg: 
+    state: installed
+    pkg: "{{ item }}"
+  when: ansible_local is not defined or ansible_local.opkg is not defined or item|regex_replace('-','_') not in ansible_local.opkg.keys()
+  with_items:
+    - monit
+  notify: Reload facts
+
+- name: /var/config/monitrc
+  template:
+    src: monitrc.j2
+    dest: /var/config/monitrc
+    mode: "700"
+    owner: root
+    group: root
+  notify:
+    - Restart monit
+
+- name: Point /etc/monitrc at /var/config/monitrc
+  file:
+    name: /etc/monitrc
+    state: link
+    force: true
+    src: /var/config/monitrc
+  notify:
+    - Reload facts
+    - Restart monit
+
+- name: Enable monit
+  lineinfile: dest=/etc/default/monit
+    regexp="^ENABLED="
+    line="ENABLED="yes""
+    state=present
+  notify:
+    - Restart monit
+
+  
