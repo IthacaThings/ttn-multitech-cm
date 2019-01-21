@@ -18,7 +18,7 @@ lora_hostname: "{{ hostname if forwarder_variant == 'mp' else lora_eui }}"
 lora_hostname_delete: "{{ lora_eui if forwarder_variant == 'mp' else hostname }}"
 
 # Is ssh_tunnel enabled
-ssh_tunnel_enabled: "{{ ssh_tunnel_remote_port is defined and ssh_tunnel_remote_port > 0 and ssh_tunnel_remote_user is defined }}"
+ssh_tunnel_enabled: "{{ ssh_tunnel_remote_port is defined and ssh_tunnel_remote_port > 0 and ssh_tunnel_gateway_user_on_jumphost is defined }}"
 ssh_tunnel_daemon_args: "-f -M {{ ssh_tunnel_keepalive_base_port }} -o ServerAliveInterval=30 -o StrictHostKeyChecking=no"
 
 # Is the GPS present?
@@ -26,5 +26,5 @@ have_gps: "{{ gps_device in ansible_local.dev }}"
 
 # Accumulate list of authorized keys
 authorized_keys_list:
-  - "{{ authorized_keys }}"
+  - "{{ authorized_keys }}"	# XXX - What if this is empty?
   - "{% for group in group_names %}{% if 'authorized_keys_' ~ group in vars %}{{ vars['authorized_keys_' ~ group] }}{% endif %}{% endfor %}"
