@@ -299,8 +299,8 @@ def check_output(options, command):
 
     if sys.version_info[0] < 3:
         output = subprocess.check_output(cmd)
-
-    output = subprocess.check_output(cmd, text=True)
+    else:
+        output = subprocess.check_output(cmd, text=True)
 
     if options.debug:
         print("DBG: %s" % "\nDBG: ".join(output.split("\n")), file=sys.stderr)

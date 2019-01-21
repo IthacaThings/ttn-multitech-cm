@@ -107,8 +107,10 @@
 - name: Stop mosquitto
   service: name=mosquitto state=stopped
   when: ansible_local.opkg.mosquitto is defined
-
   ignore_errors: true
+  tags:
+    - services
+    - setup
 
 - name: Disable mosquitto
   lineinfile: dest=/etc/default/mosquitto
