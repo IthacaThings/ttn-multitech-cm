@@ -8,7 +8,7 @@ set daemon 5
 
 # Use a Unix socket for monitoring
 set httpd unixsocket /var/run/monit.sock
-      allow monit:monit
+    allow monit:monit
 
 # Monitor the system
 check system ${HOST}
@@ -26,7 +26,7 @@ check process ttn-pkt-forwader PIDFILE /var/run/lora-pkt-fwd.pid
 # Monitor autossh
 check process ssh_tunnel PIDFILE /var/run/ssh_tunnel.pid
     start program = "/etc/init.d/ssh_tunnel start" with timeout 15 seconds
-  stop program = "/etc/init.d/ssh_tunnel stop"
+    stop program = "/etc/init.d/ssh_tunnel stop"
 {% endif %}
 
 # Monitor sshd
