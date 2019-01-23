@@ -130,6 +130,7 @@ case "$1" in
         ## Stop the service and regardless of whether it was
         ## running or not, start it again.
         do_stop
+	sleep 5
         do_start
         ;;
     *)
