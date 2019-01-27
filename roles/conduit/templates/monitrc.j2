@@ -11,7 +11,7 @@ set httpd unixsocket /var/run/monit.sock
     allow monit:monit
 
 # Monitor the system
-check system ${HOST}
+check system $HOST
 
 #
 #	Monitor networking
@@ -19,16 +19,15 @@ check system ${HOST}
 
 # Monitor a host for network reachability
 {% if monit_ping_host is defined %}
-ping host monit_ping_host address {% monit_ping_host %}
-  if failed ping
+check host monit_ping_host address {{ monit_ping_host }}
+    if failed ping
 {% if monit_ping_count is defined %}
-      count {% monit_ping_count %}
+        count {{ monit_ping_count }}
 {% endif %}
 {% if monit_ping_timeout is defined %}
-      timeout {% monit_ping_timeout %}
+        timeout {{ monit_ping_timeout }}
 {% endif %}
-  then
-    exec "/sbin/reboot"
+    then {{ monit_ping_action }}
 {% endif %}
 
 # XXX - Monitor /var/config and /etc for changes?
@@ -38,29 +37,38 @@ ping host monit_ping_host address {% monit_ping_host %}
 #
 #	Monitor services
 #
+#	We wait for {{ monit_process_cycles }} cycles in case the
+#       processes are being reestarted, for example by logrotate or
+#       Ansible reconfiguration.
+#
 
+#
 # Monitor ttn-pkt-forwarder
-check process ttn-pkt-forwader PIDFILE /var/run/lora-pkt-fwd.pid
-   start program = "/etc/init.d/ttn-pkt-forwarder start" with timeout 15 seconds
-   stop program = "/etc/init.d/ttn-pkt-forwarder stop"
+check process ttn-pkt-forwader PIDFILE {{ monit_pktfwd_pidfile }}
+    if does not exist for {{ monit_process_cycles }} cycles then restart
+    start program = {{ monit_pktfwd_start }}
+    stop program = {{ monit_pktfwd_stop }}
 
 # Check for error conditions in packet forwarder log
 check file lora-pkt-fwd.log with path /var/log/lora-pkt-fwd.log
-   if content = "XXXX" then exec "/etc/init.d/ttn-pkg/forwarder restart"
+    if match "^XXXX" then exec {{ monit_pktfwd_restart }}
 
 {% if ssh_tunnel_enabled %}
 # Monitor autossh
 check process ssh_tunnel PIDFILE /var/run/ssh_tunnel.pid
+    if does not exist for {{ monit_process_cycles }} cycles then restart
     start program = "/etc/init.d/ssh_tunnel start" with timeout 15 seconds
     stop program = "/etc/init.d/ssh_tunnel stop"
 {% endif %}
 
 # Monitor sshd
 check process sshd PIDFILE /var/run/sshd.pid
+    if does not exist for {{ monit_process_cycles }} cycles then restart
     start program = "/etc/init.d/sshd start" with timeout 15 seconds
     stop program = "/etc/init.d/sshd stop"
 
 # Monitor ntpd
 check process ntpd PIDFILE /var/run/ntp.pid
+    if does not exist for {{ monit_process_cycles }} cycles then restart
     start program = "/etc/init.d/ntpd start" with timeout 15 seconds
     stop program = "/etc/init.d/ntpd stop"
