@@ -71,3 +71,7 @@ gateway_collaborator_rights:
 use_gps: false
 gps_device: ttyXRUSB2
 
+# Monitoring
+monit_ping_host: 8.8.8.8
+monit_ping_timeout: 1800
+

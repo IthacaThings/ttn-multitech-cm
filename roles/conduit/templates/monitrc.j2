@@ -13,14 +13,40 @@ set httpd unixsocket /var/run/monit.sock
 # Monitor the system
 check system ${HOST}
 
-# XXX - monitor network
+#
+#	Monitor networking
+#
+
+# Monitor a host for network reachability
+{% if monit_ping_host is defined %}
+ping host monit_ping_host address {% monit_ping_host %}
+  if failed ping
+{% if monit_ping_count is defined %}
+      count {% monit_ping_count %}
+{% endif %}
+{% if monit_ping_timeout is defined %}
+      timeout {% monit_ping_timeout %}
+{% endif %}
+  then
+    exec "/sbin/reboot"
+{% endif %}
 
 # XXX - Monitor /var/config and /etc for changes?
+
+# XXX - Monitor space on flash F/S from Terry's scripts
+
+#
+#	Monitor services
+#
 
 # Monitor ttn-pkt-forwarder
 check process ttn-pkt-forwader PIDFILE /var/run/lora-pkt-fwd.pid
    start program = "/etc/init.d/ttn-pkt-forwarder start" with timeout 15 seconds
    stop program = "/etc/init.d/ttn-pkt-forwarder stop"
+
+# Check for error conditions in packet forwarder log
+check file lora-pkt-fwd.log with path /var/log/lora-pkt-fwd.log
+   if content = "XXXX" then exec "/etc/init.d/ttn-pkg/forwarder restart"
 
 {% if ssh_tunnel_enabled %}
 # Monitor autossh
