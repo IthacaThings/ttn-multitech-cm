@@ -62,6 +62,9 @@ case "$1" in
 	stop
 	;;
     restart|reload)
+	nohup ${0} do_restart
+	;;
+    do_restart)
 	stop
 	start
 	;;
