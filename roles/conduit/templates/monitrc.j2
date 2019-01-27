@@ -32,12 +32,16 @@ check host monit_ping_host address {{ monit_ping_host }}
 
 # XXX - Monitor /var/config and /etc for changes?
 
-# XXX - Monitor space on flash F/S from Terry's scripts
+#
+#	Monitor volatile Filesystem
+#
+check filesystem volatile with path {{ monit_space_filesystem }}
+    if space {{ monit_space_test }} for {{ monit_space_period }} then {{ monit_space_action }}
 
 #
 #	Monitor services
 #
-#	We wait for {{ monit_process_cycles }} cycles in case the
+#	We wait for {{ monit_pktfwd_period }} in case the
 #       processes are being reestarted, for example by logrotate or
 #       Ansible reconfiguration.
 #
@@ -45,30 +49,32 @@ check host monit_ping_host address {{ monit_ping_host }}
 #
 # Monitor ttn-pkt-forwarder
 check process ttn-pkt-forwader PIDFILE {{ monit_pktfwd_pidfile }}
-    if does not exist for {{ monit_process_cycles }} cycles then restart
+    if does not exist for {{ monit_pktfwd_period }} then restart
     start program = {{ monit_pktfwd_start }}
     stop program = {{ monit_pktfwd_stop }}
 
 # Check for error conditions in packet forwarder log
+# XXX - Needs to match last line
 check file lora-pkt-fwd.log with path /var/log/lora-pkt-fwd.log
-    if match "^XXXX" then exec {{ monit_pktfwd_restart }}
+    if timestamp is older than 10 minutes then exec {{ monit_pktfwd_restart }}
+    if match "^ERROR: [main] failed to start the concentrator" then exec {{ monit_pktfwd_restart }}
 
 {% if ssh_tunnel_enabled %}
 # Monitor autossh
 check process ssh_tunnel PIDFILE /var/run/ssh_tunnel.pid
-    if does not exist for {{ monit_process_cycles }} cycles then restart
+    if does not exist for {{ monit_process_period }} then restart
     start program = "/etc/init.d/ssh_tunnel start" with timeout 15 seconds
     stop program = "/etc/init.d/ssh_tunnel stop"
 {% endif %}
 
 # Monitor sshd
 check process sshd PIDFILE /var/run/sshd.pid
-    if does not exist for {{ monit_process_cycles }} cycles then restart
+    if does not exist for {{ monit_process_period }} then restart
     start program = "/etc/init.d/sshd start" with timeout 15 seconds
     stop program = "/etc/init.d/sshd stop"
 
 # Monitor ntpd
 check process ntpd PIDFILE /var/run/ntp.pid
-    if does not exist for {{ monit_process_cycles }} cycles then restart
+    if does not exist for {{ monit_process_period }} then restart
     start program = "/etc/init.d/ntpd start" with timeout 15 seconds
     stop program = "/etc/init.d/ntpd stop"

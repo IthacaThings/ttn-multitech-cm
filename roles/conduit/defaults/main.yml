@@ -71,12 +71,27 @@ gateway_collaborator_rights:
 use_gps: false
 gps_device: ttyXRUSB2
 
+#
 # Monitoring - Configuration of monit
+#
+
+# Ping a host and reboot if it is not reacable for a period of time
 monit_ping_host: 8.8.8.8
 monit_ping_timeout: 1800 seconds
 monit_ping_action: 'exec "/sbin/reboot"'
-monit_process_cycles: 4
+
+# How long a process can be offline before we restart
+monit_process_period: "30 seconds"
+
+# Monitor the packet fowrarding process
+monit_pktfwd_period: "60 seconds"
 monit_pktfwd_pidfile: /var/run/lora-pkt-fwd.pid
 monit_pktfwd_start: '"/etc/init.d/ttn-pkt-forwarder start" with timeout 15 seconds'
 monit_pktfwd_stop: '"/etc/init.d/ttn-pkt-forwarder stop"'
 monit_pktfwd_restart: '"/etc/init.d/ttn-pkg-fowarder restart"'
+
+# Monitor space on /var/volatile
+monit_space_filesystem: "/var/volatile"
+monit_space_test: "usage > 75%"
+monit_space_action: 'exec "/sbin/reboot"'
+monit_space_period: "120 cycles"
