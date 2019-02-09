@@ -9,6 +9,16 @@
     - monit
   notify: Reload facts
 
+- name: Install monit test scripts
+  copy:
+    src: "{{ role_path }}/files/{{ item }}"
+    dest: /usr/local/lib/{{ item }}
+    mode: "755"
+    owner: root
+    group: root
+  loop:
+    - check_pktfwdlog
+
 - name: /var/config/monitrc
   template:
     src: monitrc.j2

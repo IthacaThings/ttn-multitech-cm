@@ -1,0 +1,31 @@
+#!/bin/sh
+
+LOGFILE=/var/log/lora-pkt-fwd.log
+
+
+log() {
+    logger -t $(basename $0) ${*}
+}
+
+fail() {
+    echo "${*}"
+    log "${*}"
+    exit 1
+}
+
+log Checking ${LOGFILE}
+
+test -f ${LOGFILE} || fail "${LOGFILE} does not exist"
+
+test -z "$(find /var/log/lora-pkt-fwd.log -mmin +10)" || fail "${LOGFILE} not being updated"
+
+tail -2 ${LOGFILE} | grep -q -E "^INFO: Exiting packet forwarder program" && fail "Last message was quit"
+
+tail -10 ${LOGFILE} | grep -1 -E "^ERROR: \[main\] failed to start the concentrator" && fail "Packet fowarder failed to start"
+
+tail -20 ${LOGFILE} | grep -q -E "(PULL_ACK received in)|(INFO: \[TTN\] send status success for)" || fail "No downlink messages"
+
+exit 0
+
+
+

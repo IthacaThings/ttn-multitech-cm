@@ -3,8 +3,8 @@
 # Log to syslog
 set logfile syslog facility log_daemon
 
-# Poll every 5 seconds
-set daemon 5
+# Poll every {{ monit_poll }} seconds
+set daemon {{ monit_poll }}
 
 # Use a Unix socket for monitoring
 set httpd unixsocket /var/run/monit.sock
@@ -46,7 +46,6 @@ check filesystem volatile with path {{ monit_space_filesystem }}
 #       Ansible reconfiguration.
 #
 
-#
 # Monitor ttn-pkt-forwarder
 check process ttn-pkt-forwader PIDFILE {{ monit_pktfwd_pidfile }}
     if does not exist for {{ monit_pktfwd_period }} then restart
@@ -54,10 +53,9 @@ check process ttn-pkt-forwader PIDFILE {{ monit_pktfwd_pidfile }}
     stop program = {{ monit_pktfwd_stop }}
 
 # Check for error conditions in packet forwarder log
-# XXX - Needs to match last line
-check file lora-pkt-fwd.log with path /var/log/lora-pkt-fwd.log
-    if timestamp is older than 10 minutes then exec {{ monit_pktfwd_restart }}
-    if match "^ERROR: [main] failed to start the concentrator" then exec {{ monit_pktfwd_restart }}
+check program check_pktfwdlog with path /usr/local/lib/check_pktfwdlog
+    every 7 cycles
+    if status != 0 for 2 cycles then exec {{ monit_pktfwd_restart }}
 
 {% if ssh_tunnel_enabled %}
 # Monitor autossh
