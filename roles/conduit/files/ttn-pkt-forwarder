@@ -63,7 +63,7 @@ card_found() {
     fi
 }
 
-do_start() {
+find_binary() {
     read_card_info
 
     if ! card_found; then
@@ -89,6 +89,9 @@ do_start() {
 	    exit 1
 	fi
     fi
+}
+
+do_start() {
 
     case ${pkt_fwd} in
 	/opt/lora/*)
@@ -109,15 +112,19 @@ do_start() {
 
 do_stop() {
     echo -n "Stopping $NAME: "
-    start-stop-daemon --stop --quiet --oknodo --pidfile $pkt_fwd_pidfile --retry 5
+    start-stop-daemon --stop --verbose --oknodo \
+	-x $pkt_fwd --retry=TERM/20/KILL/5 && \
+	echo "OK" || echo "FAIL"
     rm -f $pkt_fwd_pidfile
-    echo "OK"
 }
 
 if [ "$ENABLED" != "yes" ]; then
     echo "$NAME: disabled in /etc/default"
     exit
 fi
+
+# Find which executable we use
+find_binary
 
 case "$1" in
     "start")
@@ -130,8 +137,8 @@ case "$1" in
         ## Stop the service and regardless of whether it was
         ## running or not, start it again.
         do_stop
-	# Sleep to allow the process time to finish
-	sleep 15
+	# Ensure the interface has time to reset
+	sleep 10
         do_start
         ;;
     *)
