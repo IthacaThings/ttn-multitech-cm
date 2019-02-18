@@ -76,9 +76,12 @@ gps_device: ttyXRUSB2
 #
 
 monit_poll: 10
+monit_eventqueue: /var/monit
+monit_email: monit@ttni.tech
 
 # Ping a host and reboot if it is not reacable for a period of time
 monit_ping_host: 8.8.8.8
+monit_ping_alert: 600 seconds
 monit_ping_timeout: 1800 seconds
 monit_ping_action: 'exec "/sbin/reboot"'
 

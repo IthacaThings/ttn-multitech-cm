@@ -13,13 +13,25 @@ set httpd unixsocket /var/run/monit.sock
 # Monitor the system
 check system $HOST
 
+# Event Queue
+set eventqueue basedir {{ monit_eventqueue }}
+set mmonit https://monit:monit@172.25.29.130:443/collector
+
 #
 #	Monitor networking
 #
 
 # Monitor a host for network reachability
 {% if monit_ping_host is defined %}
-check host monit_ping_host address {{ monit_ping_host }}
+check host {{ monit_ping_host }} address {{ monit_ping_host }}
+    if failed ping
+{% if monit_ping_count is defined %}
+        count {{ monit_ping_count }}
+{% endif %}
+{% if monit_ping_timeout is defined %}
+        timeout {{ monit_ping_alert }}
+{% endif %}
+    then alert
     if failed ping
 {% if monit_ping_count is defined %}
         count {{ monit_ping_count }}
