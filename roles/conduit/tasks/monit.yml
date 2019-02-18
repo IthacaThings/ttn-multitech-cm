@@ -9,6 +9,17 @@
     - monit
   notify: Reload facts
 
+- name: Create monit event queue
+  file:
+    name: /var/monit
+    state: directory
+    mode: "0700"
+    owner: root
+    group: root
+  when: monit_eventqueue is defined
+  notify:
+    - Restart monit
+
 - name: Install monit test scripts
   copy:
     src: "{{ role_path }}/files/{{ item }}"
