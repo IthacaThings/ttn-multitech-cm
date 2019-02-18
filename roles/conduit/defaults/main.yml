@@ -96,7 +96,7 @@ monit_pktfwd_stop: '"/etc/init.d/ttn-pkt-forwarder stop"'
 monit_pktfwd_restart: '"/etc/init.d/ttn-pkt-forwarder restart"'
 
 # Monitor space on /var/volatile
-monit_space_filesystem: "/var/volatile"
+monit_space_filesystem: /var/volatile
 monit_space_test: "usage > 75%"
 monit_space_action: 'exec "/sbin/reboot"'
 monit_space_period: "60 cycles"
