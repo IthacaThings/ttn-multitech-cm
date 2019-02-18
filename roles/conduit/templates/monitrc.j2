@@ -66,8 +66,8 @@ check process ttn-pkt-forwader PIDFILE {{ monit_pktfwd_pidfile }}
 
 # Check for error conditions in packet forwarder log
 check program check_pktfwdlog with path /usr/local/lib/check_pktfwdlog
-    every 7 cycles
-    if status != 0 for 2 cycles then exec {{ monit_pktfwd_restart }}
+    every 6 cycles
+    if status != 0 then exec {{ monit_pktfwd_restart }}
 
 {% if ssh_tunnel_enabled %}
 # Monitor autossh
