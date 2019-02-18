@@ -1,16 +1,25 @@
 #!/bin/sh
 
+PROGNAME=$(basename $0)
 LOGFILE=/var/log/lora-pkt-fwd.log
-
+COOKIE=/var/run/${PROGNAME}
 
 log() {
-    logger -t $(basename $0) ${*}
+    logger -t ${PROGNAME} ${*}
 }
 
 fail() {
     echo "${*}"
     log "${*}"
-    exit 1
+
+    if [ -f ${COOKIE} ]; then
+	rm -f ${COOKIE}
+	exit 1
+    fi
+
+    touch ${COOKIE}
+
+    exit 0
 }
 
 log Checking ${LOGFILE}
@@ -21,9 +30,11 @@ test -z "$(find /var/log/lora-pkt-fwd.log -mmin +10)" || fail "${LOGFILE} not be
 
 tail -2 ${LOGFILE} | grep -q -E "^INFO: Exiting packet forwarder program" && fail "Last message was quit"
 
-tail -10 ${LOGFILE} | grep -1 -E "^ERROR: \[main\] failed to start the concentrator" && fail "Packet fowarder failed to start"
+tail -10 ${LOGFILE} | grep -q -E "^ERROR: \[main\] failed to start the concentrator" && fail "Packet fowarder failed to start"
 
 tail -20 ${LOGFILE} | grep -q -E "(PULL_ACK received in)|(INFO: \[TTN\] send status success for)" || fail "No downlink messages"
+
+rm -f ${COOKIE}
 
 exit 0
 
