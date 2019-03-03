@@ -15,7 +15,11 @@ check system $HOST
 
 # Event Queue
 set eventqueue basedir {{ monit_eventqueue }}
-set mmonit https://monit:monit@172.25.29.130:443/collector
+
+{% if monit_mmonit_url %}
+# M/Monit URL
+set mmonit {{ monit_mmonit_url }}
+{% endif %}
 
 #
 #	Monitor networking
