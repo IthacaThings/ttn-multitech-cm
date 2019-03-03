@@ -52,7 +52,7 @@ check host {{ monit_ping_host }} address {{ monit_ping_host }}
 #	Monitor volatile Filesystem
 #
 check filesystem {{ monit_space_filesystem | basename }} with path {{ monit_space_filesystem }}
-    if space {{ monit_space_test }} then {{ monit_space_action }}
+    if space {{ monit_space_test }} then alert
     if space {{ monit_space_test }} for {{ monit_space_period }} then {{ monit_space_action }}
 
 #
