@@ -12,6 +12,9 @@ set httpd unixsocket /var/run/monit.sock
 
 # Monitor the system
 check system $HOST
+    if loadavg (1min) > 1 then alert
+    if loadavg (5min) > 2 then alert
+    if memory usage > 25% then alert
 
 # Event Queue
 set eventqueue basedir {{ monit_eventqueue }}
@@ -32,28 +35,34 @@ check host {{ monit_ping_host }} address {{ monit_ping_host }}
 {% if monit_ping_count is defined %}
         count {{ monit_ping_count }}
 {% endif %}
-{% if monit_ping_timeout is defined %}
-        timeout {{ monit_ping_alert }}
-{% endif %}
-    then alert
+        for {{ monit_ping_alert_cycles }} cycles
+        then alert
     if failed ping
 {% if monit_ping_count is defined %}
         count {{ monit_ping_count }}
 {% endif %}
-{% if monit_ping_timeout is defined %}
-        timeout {{ monit_ping_timeout }}
-{% endif %}
-    then {{ monit_ping_action }}
+        for {{ monit_ping_reboot_cycles }} cycles
+        then {{ monit_ping_action }}
 {% endif %}
 
-# XXX - Monitor /var/config and /etc for changes?
+#
+#	Monitor root filesystem
+#
+check filesystem root with path /
+    if space {{ monit_root_test }} then alert
+
+#
+#	Monitor config filesystem
+#
+check filesystem config with path /var/config
+  if space {{ monit_config_test }} then alert
 
 #
 #	Monitor volatile Filesystem
 #
-check filesystem {{ monit_space_filesystem | basename }} with path {{ monit_space_filesystem }}
-    if space {{ monit_space_test }} then alert
-    if space {{ monit_space_test }} for {{ monit_space_period }} then {{ monit_space_action }}
+check filesystem volatile with path /var/volatile
+    if space {{ monit_volatile_test }} then alert
+    if space {{ monit_volatile_test }} for {{ monit_volatile_period }} then {{ monit_volatile_action }}
 
 #
 #	Monitor services
@@ -71,7 +80,6 @@ check process ttn-pkt-forwader PIDFILE {{ monit_pktfwd_pidfile }}
 
 # Check for error conditions in packet forwarder log
 check program check_pktfwdlog with path /usr/local/lib/check_pktfwdlog
-    every 6 cycles
     if status != 0 then exec {{ monit_pktfwd_restart }}
 
 {% if ssh_tunnel_enabled %}

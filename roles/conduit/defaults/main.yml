@@ -75,28 +75,33 @@ gps_device: ttyXRUSB2
 # Monitoring - Configuration of monit
 #
 
-monit_poll: 10
+monit_poll: 60
 monit_eventqueue: /var/monit
 monit_email: monit@ttni.tech
 
 # Ping a host and reboot if it is not reacable for a period of time
 monit_ping_host: 8.8.8.8
-monit_ping_alert: 600 seconds
-monit_ping_timeout: 1800 seconds
+monit_ping_alert_cycles: 2
+monit_ping_reboot_cycles: 30
 monit_ping_action: 'exec "/sbin/reboot"'
 
 # How long a process can be offline before we restart
-monit_process_period: "3 cycles"
+monit_process_period: "1 cycles"
 
 # Monitor the packet fowrarding process
-monit_pktfwd_period: "6 cycles"
+monit_pktfwd_period: "2 cycles"
 monit_pktfwd_pidfile: /var/run/lora-pkt-fwd.pid
 monit_pktfwd_start: '"/etc/init.d/ttn-pkt-forwarder start" with timeout 15 seconds'
 monit_pktfwd_stop: '"/etc/init.d/ttn-pkt-forwarder stop"'
 monit_pktfwd_restart: '"/etc/init.d/ttn-pkt-forwarder restart"'
 
+# Monitor space on /
+monit_root_test: "usage > 40%"
+
+# Monitor space on /var/config
+monit_config_test: "usage > 10%"
+
 # Monitor space on /var/volatile
-monit_space_filesystem: /var/volatile
-monit_space_test: "usage > 75%"
-monit_space_action: 'exec "/sbin/reboot"'
-monit_space_period: "60 cycles"
+monit_volatile_test: "usage > 75%"
+monit_volatile_action: 'exec "/sbin/reboot"'
+monit_volatile_period: "60 cycles"
