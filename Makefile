@@ -174,9 +174,9 @@ dump-config: ${CATALOG}
 
 # Grab configs from all nodes
 gather: ${CATALOG}
-	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} ansible-\
+	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
 	ANSIBLE_SSH_ARGS="${SSH_ARGS}" \
-		playbook ${PLAYBOOK_ARGS} -t ping -C site.yml -l conduits
+		ansible-playbook ${PLAYBOOK_ARGS} -t ping -C site.yml -l conduits
 
 # Ensure all ansible dependiences are installed
 ansible-setup:
