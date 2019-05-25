@@ -10,29 +10,7 @@
     pkg: "{{ item }}"
     update_cache: yes
   when: ansible_local is not defined or ansible_local.opkg is not defined or item|regex_replace('-','_') not in ansible_local.opkg.keys()
-  with_items:
-    - python-core
-    - python-argparse
-    - python-async
-    - python-compression
-    - python-dateutil
-    - python-distutils
-    - python-html
-    - python-json
-    - python-pkgutil
-    - python-psutil
-    - python-pycurl
-    - python-pyopenssl
-    - python-pyserial
-    - python-pyudev
-    - python-pyusb
-    - python-shell
-    - python-simplejson
-    - python-syslog
-    - python-terminal
-    - python-textutils
-    - python-unixadmin
-    - python-xml
+  with_items: "{{ ansible_depends }}"
   notify: Reload facts
 
 - name: /var/config/ansible

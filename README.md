@@ -444,6 +444,16 @@ List the tags available
 
 Retry the hosts that failed as specified in @site.retry
 
+#### ansible-setup
+
+Ensure all packages that Ansible requires to run are installed.
+
+Ensure that ANSIBLE_DEPENDS in the Makfile matches
+roles/conduit/defaults:ansible_depends
+
+This can be required when Ansible is updated to require more python
+modules on the target.
+
 #### gather
 
 Run a *ping* on all hosts/targets to gather all their facts
