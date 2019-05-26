@@ -114,8 +114,6 @@ ANSIBLE_DEPENDS = python-core \
 	python-unixadmin \
 	python-xml
 
-SSH_ARGS = -o ControlMaster=auto -o ControlPersist=60s -o ForwardX11=no
-
 # now that we know the inventory, get the hosts.
 HOSTS=$(shell ansible --inventory ${INVENTORY} --list-hosts ${TARGET} | sed -e 's/^ *//' -e '/^hosts ([0-9]*):/d')
 
@@ -126,17 +124,14 @@ all::	apply
 
 ping: ${CATALOG}
 	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
-	ANSIBLE_SSH_ARGS="${SSH_ARGS}" \
 		ansible --inventory ${INVENTORY} -o -m ping ${OPTIONS} ${TARGET}
 
 test:	${CATALOG}
 	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
-	ANSIBLE_SSH_ARGS="${SSH_ARGS}" \
 		ansible-playbook ${PLAYBOOK_ARGS} -C site.yml
 
 test-debug:	${CATALOG}
 	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
-	ANSIBLE_SSH_ARGS="${SSH_ARGS}" \
 		ansible-playbook ${PLAYBOOK_ARGS} -vvv -C site.yml
 
 list-hosts: true
@@ -144,45 +139,38 @@ list-hosts: true
 
 list-tags: ${CATALOG}
 	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
-	ANSIBLE_SSH_ARGS="${SSH_ARGS}" \
 		ansible-playbook ${PLAYBOOK_ARGS} --list-tags site.yml
 
 syntax-check: ${CATALOG}
 	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
-	ANSIBLE_SSH_ARGS="${SSH_ARGS}" \
 		ansible-playbook ${PLAYBOOK_ARGS} --syntax-check site.yml
 
 apply: ${CATALOG}
 	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
-	ANSIBLE_SSH_ARGS="${SSH_ARGS}" \
 		ansible-playbook ${PLAYBOOK_ARGS} site.yml
 
 retry: site.retry ${CATALOG}
 	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
-	ANSIBLE_SSH_ARGS="${SSH_ARGS}" \
 		ansible-playbook ${PLAYBOOK_ARGS} -l @site.retry site.yml
 
 apply-debug: ${CATALOG}
 	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
-	ANSIBLE_SSH_ARGS="${SSH_ARGS}" \
 		ansible-playbook ${PLAYBOOK_ARGS} -vvv site.yml
 
 dump-config: ${CATALOG}
 	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
-	ANSIBLE_SSH_ARGS="${SSH_ARGS}" \
 		ansible-config dump --only-changed
 
 # Grab configs from all nodes
 gather: ${CATALOG}
 	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
-	ANSIBLE_SSH_ARGS="${SSH_ARGS}" \
 		ansible-playbook ${PLAYBOOK_ARGS} -t ping -C site.yml -l conduits
 
-# Ensure all ansible dependiences are installed
+# Ensure all ansible dependiences are installed (useful if the list gets updated)
 ansible-setup:
-	@for host in ${HOSTS}; do \
-	  ssh ${SSH_ARGS} $${host} sudo opkg update\; sudo opkg install ${ANSIBLE_DEPENDS}; \
-	done
+	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
+		ansible --inventory ${INVENTORY} -o ${OPTIONS} ${TARGET} -b -a "sudo opkg update"; \
+		ansible --inventory ${INVENTORY} -o ${OPTIONS} ${TARGET} -b -a "sudo opkg install ${ANSIBLE_DEPENDS}"
 
 ${CATALOG}:	true
 	@mkdir -p ${CATALOG} 2>/dev/null || exit 0
