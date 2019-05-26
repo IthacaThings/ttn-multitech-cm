@@ -103,13 +103,23 @@
   when:
     - forwarder_package_stat.stat.exists == false
 
-- name: Remove old .ipk files
-  file:
-    path={{ item }}
-    state=absent
-  with_fileglob: /var/config/*-packet-forwarder_*.ipk
+- name: Find old .ipk files
+  find:
+    paths:
+      /var/config
+    patterns:
+      - "*-packet-forwarder_*.ipk"
+  register: old_ipk
   when:
     - forwarder_installed != forwarder_package_version
+
+- name: Delete old .ipk files
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  with_items: "{{ old_ipk.files }}"
+  when:
+    - old_ipk.files is defined
 
 - name: Copy over packet-forwarder
   copy:
