@@ -1,5 +1,9 @@
 ---
 
+- name: Is SSH tunnel enabled
+  set_fact:
+    ssh_tunnel_enabled: "{{ ssh_tunnel_remote_port is defined and ssh_tunnel_remote_port > 0 and ssh_tunnel_gateway_user_on_jumphost is defined }}"
+
 - name: Install autossh
   opkg:
     state: installed
