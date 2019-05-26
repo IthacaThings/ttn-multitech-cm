@@ -18,7 +18,6 @@ lora_hostname: "{{ hostname if forwarder_variant == 'mp' else lora_eui }}"
 lora_hostname_delete: "{{ lora_eui if forwarder_variant == 'mp' else hostname }}"
 
 # Is ssh_tunnel enabled
-ssh_tunnel_enabled: "{{ ssh_tunnel_remote_port is defined and ssh_tunnel_remote_port > 0 and ssh_tunnel_gateway_user_on_jumphost is defined }}"
 ssh_tunnel_daemon_args: "-f -M {{ ssh_tunnel_keepalive_base_port }} -o ServerAliveInterval=30 -o StrictHostKeyChecking=no"
 
 # Is the GPS present?

@@ -1,5 +1,7 @@
 ---
 
+ansible_python_interpreter: /usr/bin/python
+
 # Ansible package dependencies
 ansible_depends:
     - python-core
