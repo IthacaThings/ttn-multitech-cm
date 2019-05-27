@@ -23,7 +23,10 @@
 #	Restart the packet forwarder
 #
 - name: restart ttn-pkt-forwarder
-  service: name=ttn-pkt-forwarder state=restarted
+  service:
+    name: ttn-pkt-forwarder
+    state: restarted
+    sleep: "{{ forwarder_restart_delay }}"
 
 #
 #	Remind to

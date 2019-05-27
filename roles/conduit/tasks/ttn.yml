@@ -147,12 +147,14 @@
     - Reload facts
 
 - name: Install /var/config/ttn-pkt-forwarder
-  copy:
-    src: ttn-pkt-forwarder
-    dest: /var/config
+  template:
+    src: ttn-pkt-forwarder.j2
+    dest: /var/config/lora/ttn-pkt-forwarder
     mode: "0755"
     owner: root
     group: root
+  notify:
+    - restart ttn-pkt-forwarder
 
 - name: Link /etc/init.d/ttn-pkt-forwarder to /var/config/ttn-pkt-forwarder
   file:
