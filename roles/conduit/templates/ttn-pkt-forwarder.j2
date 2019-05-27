@@ -122,7 +122,7 @@ do_start() {
 do_stop() {
     echo -n "Stopping $NAME: "
     start-stop-daemon --stop --verbose --oknodo \
-	-x $pkt_fwd --retry=QUIT/x20/KILL/5 && \
+	-x $pkt_fwd --retry=QUIT/20/KILL/5 && \
 	echo "OK" || echo "FAIL"
     rm -f $pkt_fwd_pidfile
 }
