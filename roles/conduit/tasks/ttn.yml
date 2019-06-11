@@ -146,6 +146,11 @@
     - restart ttn-pkt-forwarder
     - Reload facts
 
+- name: Delete the ipk file
+  file:
+    path: "/var/config/{{ forwarder_package_full }}"
+    state: absent
+
 - name: Install /var/config/ttn-pkt-forwarder
   template:
     src: ttn-pkt-forwarder.j2
