@@ -156,6 +156,7 @@
   import_tasks: ssh_tunnel.yml
   tags:
     - ssh_tunnel
+    - monit
     - setup
 
 #
