@@ -166,6 +166,7 @@
     dest: /etc/init.d/ttn-pkt-forwarder
     state: link
     src: /var/config/ttn-pkt-forwarder
+    follow: false
     force: yes
   notify:
     - update rc
