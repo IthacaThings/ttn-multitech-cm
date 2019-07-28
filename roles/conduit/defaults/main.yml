@@ -40,6 +40,8 @@ forwarder_baseurl_kersing: https://github.com/kersing/multitech-installer/raw/ma
 forwarder_logrotate_command: /etc/init.d/ttn-pkt-forwarder restart
 # How long to wait between stop and start
 forwarder_restart_delay: 20
+# https://www.thethingsnetwork.org/forum/t/multitech-ttn-connection-lost-after-bad-connectivity/12355
+autoquit_threshold: 5
 
 # Multi-tech version of mLinux images
 #mlinux_upgrade_bin: "mlinux-{{ 'factory' if conduit_type == 'mtcdt' else conduit_type }}-image-{{ conduit_type }}-upgrade.bin"
@@ -47,6 +49,7 @@ forwarder_restart_delay: 20
 # TTNI version of mLinux images
 mlinux_upgrade_bin: "ttni-base-image-{{ conduit_type }}-upgrade.bin"
 mlinux_url: "https://github.com/IthacaThings/mlinux-images/raw/master/{{mlinux_version }}/{{ conduit_type }}"
+
 
 # For configuration of TTN Console
 gateway_brand: MultiTech
