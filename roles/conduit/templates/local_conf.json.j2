@@ -1,6 +1,7 @@
 {
     "_comment": "GENERATED VIA ANSIBLE, DO NOT EDIT!",
     "gateway_conf": {
+        "autoquit_threshold": {{ autoquit_threshold }},
         "gateway_ID": "{{ ansible_local.lora.eui }}",
         "contact_email": "{{ contact_email }}", 
         "gps": {{ 'true' if ( latitude and longitude ) or ( use_gps and have_gps ) else 'false' }},
