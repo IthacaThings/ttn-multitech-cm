@@ -100,6 +100,9 @@ gateway_collaborator_rights:
   - gateway:owner
   - gateway:messages
 
+# Use Fake GPS
+# (discouraged https://www.thethingsnetwork.org/forum/t/gateway-gps-configuration-in-local-conf-json/6176)
+use_fake_gps: false
 # Use GPS if present
 use_gps: false
 gps_device: ttyXRUSB2
