@@ -4,12 +4,12 @@
         "autoquit_threshold": {{ autoquit_threshold }},
         "gateway_ID": "{{ ansible_local.lora.eui }}",
         "contact_email": "{{ contact_email }}", 
-        "gps": {{ 'true' if ( latitude and longitude ) or ( use_gps and have_gps ) else 'false' }},
-        "fake_gps": {{ 'false' if ( use_gps and have_gps ) or not (latitude and longitude ) else 'true' }},
+        "gps": "{{ set_gps }}",
+        "fake_gps": "{{ set_fake_gps }}",
 {% if use_gps and have_gps %}
         "gps_tty_path": "/dev/{{ gps_device }}",
 {% endif %}
-{% if latitude and longitude %}
+{% if set_fake_gps %}
         "ref_latitude": {{ latitude }},
         "ref_longitude": {{ longitude }},
         "ref_altitude": {{ altitude if altitude else -1 }},

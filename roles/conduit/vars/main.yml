@@ -22,6 +22,8 @@ ssh_tunnel_daemon_args: "-f -M {{ ssh_tunnel_keepalive_base_port }} -o ServerAli
 
 # Is the GPS present?
 have_gps: "{{ gps_device in ansible_local.dev }}"
+set_gps: "{{ 'true' if (use_gps and have_gps) or (use_fake_gps and latitude and longitude) else 'false' }}"
+set_fake_gps: "{{ 'true' if (use_fake_gps and latitude and longitude) and not (use_gps and have_gps) else 'false' }}"
 
 # Accumulate list of authorized keys
 authorized_keys_list:
