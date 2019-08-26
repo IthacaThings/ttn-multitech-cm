@@ -167,6 +167,7 @@
     state: link
     src: /var/config/lora/ttn-pkt-forwarder
     follow: false
+    force: yes
   notify:
     - update rc
     - restart ttn-pkt-forwarder
