@@ -42,29 +42,15 @@ SOFTWARE.
 """
 
 register_url = "https://account.thethingsnetwork.org/users/authorize?client_id=ttnctl&redirect_uri=/oauth/callback/ttnctl&response_type=code"
-regions = {
-    "AS1": {
-        "plan": "AS_920_923"
-    },
-    "AS2": {
-        "plan": "AS_923_925"
-    },
-    "AU": {
-        "plan": "AU_915_928"
-    },
-    "EU": {
-        "plan": "EU_863_870"
-    },
-    "IN": {
-        "plan": "IN_865_867"
-    },
-    "KR": {
-        "plan": "KR_920_923"
-    },
-    "US": {
-        "plan": "US_902_928"
-    },
-}
+frequency_plans = [
+    "AS_920_923",
+    "AS_923_925",
+    "AU_915_928",
+    "EU_863_870",
+    "IN_865_867",
+    "KR_920_923",
+    "US_902_928",
+]
 
 #
 #	Gateway list
@@ -357,10 +343,10 @@ def main():
     group.add_argument("--old_id",
                        dest="old_id",
                        help="Old ID of Gateway to remove")
-    group.add_argument("--region",
-                       dest="region", required=True,
-		       choices=list(regions.keys()),
-                       help="Frequency region, one of %s" % ",".join(list(regions.keys())))
+    group.add_argument("--frequency_plan",
+                       dest="frequency_plan", required=True,
+		       choices=frequency_plans,
+                       help="Frequency plan")
     group.add_argument("--router", "--router-id",
                        dest="router",
                        choices=["",
@@ -401,12 +387,9 @@ def main():
     if options.debug:
         print("DBG: binary: %s" % options.binary, file=sys.stderr)
 
-    # Translate region into frequency plan
-    frequency_plan = regions[options.region].get('plan')
-
     if options.debug:
         print("DBG: ID: %s Frequency Plan: %s Location: %f, %f Router: %s" % (options.id,
-                                                                              frequency_plan,
+                                                                              options.frequency_plan,
                                                                               options.latitude,
                                                                               options.longitude,
                                                                               options.router),
@@ -435,9 +418,9 @@ def main():
     if options.id not in gateways:
         gateway = Gateway(options, options.id)
         gateways[options.id] = gateway
-        rc, output = gateway.register(frequency_plan, options.latitude, options.longitude, options.router)
+        rc, output = gateway.register(options.frequency_plan, options.latitude, options.longitude, options.router)
     if rc == 0:
-        rc, output = gateways[options.id].edit(frequency_plan, options.latitude, options.longitude, options.router)
+        rc, output = gateways[options.id].edit(options.frequency_plan, options.latitude, options.longitude, options.router)
     if rc == 0 and options.collaborators:
         rc, output = gateways[options.id].collaborators()
     if rc != 0:

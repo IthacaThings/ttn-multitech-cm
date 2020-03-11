@@ -3,6 +3,12 @@
 
 # Configuration Management of MultiTech Conduits as The Things Network Gateways
 
+**This branch is for testing changes to global configuration files and
+is not currently functional**
+
+**Some of the parameters obtained from Multitech configuration files
+do not work with the Kersing packet forwarder**
+
 This repo contains Ansible playbooks and configuration used to manage
 a group of [MultiTech MultiConnect®
 Conduit™](http://www.multitech.com/brands/multiconnect-conduit) and
