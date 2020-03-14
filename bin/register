@@ -378,7 +378,7 @@ def main():
                        dest="longitude", type=float, required=True,
                        help="Longitude of Conduit")
     group.add_argument("--collaborators",
-                       dest="collaborators",
+                       dest="collaborators", type=json.loads,
                        help="Collaborators in JSON format")
 
     #   Other options
