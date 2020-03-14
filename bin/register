@@ -146,7 +146,7 @@ class Gateway(object):
                     out = check_output(self.options, cmd)
                     output.append(out)
                 except subprocess.CalledProcessError as e:
-                    return [ e.returncode, e.outout ]
+                    return [ e.returncode, e.output ]
 
         return [ 0, '\n'.join(output) ] 
 
