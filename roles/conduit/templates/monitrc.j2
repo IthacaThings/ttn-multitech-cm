@@ -19,7 +19,7 @@ check system $HOST
 # Event Queue
 set eventqueue basedir {{ monit_eventqueue }}
 
-{% if monit_mmonit_url %}
+{% if monit_mmonit_url is defined %}
 # M/Monit URL
 set mmonit {{ monit_mmonit_url }}
 {% endif %}
