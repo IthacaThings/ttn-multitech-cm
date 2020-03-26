@@ -1,0 +1,30 @@
+#!/bin/sh
+
+CHECKSUM_FILE=/var/lib/system.md5sum
+
+O=`getopt -l reset -- R "$@"` || exit 1
+eval set -- "$O"
+while true; do
+    case "$1" in
+	-R|--reset)
+	    rm -f ${CHECKSUM_FILE};
+	    shift;;
+	--)
+	    shift;
+	    break;;
+	*)
+	    echo Error;
+	    exit 1;;
+    esac
+done
+
+if [ ! -e ${CHECKSUM_FILE} ]; then
+   find /bin /boot /etc /lib /opt /sbin /usr /var/config -type f -exec md5sum {} \; > ${CHECKSUM_FILE}
+   echo "Generated system checksum file ${CHECKSUM_FILE}"
+   exit 0
+fi
+
+md5sum -c ${CHECKSUM_FILE} | grep -vE ': OK$' && exit 1
+
+exit 0
+

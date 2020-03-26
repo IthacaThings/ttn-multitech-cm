@@ -101,3 +101,9 @@ check process ntpd PIDFILE /var/run/ntp.pid
     if does not exist for {{ monit_process_period }} then restart
     start program = "/etc/init.d/ntpd start" with timeout 15 seconds
     stop program = "/etc/init.d/ntpd stop"
+
+# Monitor system directory checksums
+check program check_system_md5  with path /usr/local/lib/check_system_md5
+    every 1440 cycles
+    if status == 1 then alert
+

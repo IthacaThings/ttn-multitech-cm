@@ -29,6 +29,7 @@
     group: root
   loop:
     - check_pktfwdlog
+    - check_system_md5
 
 - name: /var/config/monitrc
   template:
@@ -57,5 +58,3 @@
     state=present
   notify:
     - Restart monit
-
-  

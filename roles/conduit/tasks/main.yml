@@ -167,3 +167,12 @@
   tags:
     - monit
     - setup
+
+#
+#
+#
+- name: Update system checksum file
+  shell: /usr/local/lib/check_system_md5 || /usr/local/lib/check_system_md5 --reset
+  become: true
+  tags:
+    - always
