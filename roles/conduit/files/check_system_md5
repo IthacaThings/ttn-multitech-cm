@@ -1,6 +1,7 @@
 #!/bin/sh
 
 CHECKSUM_FILE=/var/lib/system.md5sum
+EXCLUDE_FILE=/var/config/system.md5sum.exclude
 
 O=`getopt -l reset -- R "$@"` || exit 1
 eval set -- "$O"
@@ -19,7 +20,7 @@ while true; do
 done
 
 if [ ! -e ${CHECKSUM_FILE} ]; then
-   find /bin /boot /etc /lib /opt /sbin /usr /var/config -type f -exec md5sum {} \; > ${CHECKSUM_FILE}
+   find /bin /boot /etc /lib /opt /sbin /usr /var/config -type f | grep -vf ${EXCLUDE_FILE} | xargs md5sum > ${CHECKSUM_FILE}
    echo "Generated system checksum file ${CHECKSUM_FILE}"
    exit 0
 fi
