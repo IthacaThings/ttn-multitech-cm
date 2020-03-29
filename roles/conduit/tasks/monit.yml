@@ -31,6 +31,16 @@
     - check_pktfwdlog
     - check_system_md5
 
+- name: Install config files
+  copy:
+    src: "{{ role_path }}/files/{{ item | basename }}"
+    dest: "{{ item }}"
+    mode: "644"
+    owner: root
+    group: root
+  loop:
+    - /var/config/system.md5sum.exclude
+
 - name: /var/config/monitrc
   template:
     src: monitrc.j2
