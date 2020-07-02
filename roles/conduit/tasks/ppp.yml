@@ -1,0 +1,70 @@
+---
+
+- name: Get stat info about /etc/ppp/ppp_on_boot
+  stat:
+    path: /etc/ppp/ppp_on_boot
+  register: ppp_on_boot
+  when: use_cellular == False
+
+- name: Copy /etc/ppp/ppp_on_boot to /var/config/ppp/ppp_on_boot
+  copy:
+    remote_src: true
+    src: /etc/ppp/ppp_on_boot
+    dest: /var/config/ppp/ppp_on_boot
+  when: ppp_on_boot.stat.isdir is defined and ppp_on_boot.stat_isdir == True
+
+- name: Make /etc/ppp/ppp_on_boot a link to /var/config/ppp/ppp_on_boot
+  file:
+    dest: /etc/ppp/ppp_on_boot
+    state: link
+    src: /var/config/ppp/ppp_on_boot
+    force: true
+  when: ppp_on_boot.stat.isdir is defined and ppp_on_boot.stat_isdir == True
+
+- name: Reset APN
+  shell: mlinux-set-apn -c
+  when:
+    - cellular_apn is not defined
+
+- name: Set APN
+  shell: "mlinux-set_apn {{ cellular_apn }}"
+  when:
+    - cellular_apn is defined
+
+- name: Set provider
+  lineinfile:
+    path: /etc/ppp/ppp_on_boot
+    regexp: '^\$PPPD call '
+    line: '$PPPD call {{ cellular_provider }}'
+  notify: Start ppp
+  when:
+    - cellular_provider is defined
+
+- name: Ensure the connection stays up
+  lineinfile:
+    path: /etc/ppp/options
+    regexp: '^#?persist'
+    line: 'persist'
+  notify: Start ppp
+  when:
+    - use_cellular == True
+    - cellular_provider is defined
+
+- name: Reset PPP persist option
+  lineinfile:
+    path: /etc/ppp/options
+    regexp: '^#?persist'
+    line: '#persist'
+  notify: Stop ppp
+  when: use_cellular == False or cellular_provider is not defined
+
+- name: Set ppp MTU
+  lineinfo:
+    path: /etc/ppp/options
+    regexp: '^#?mtu'
+    line: "mtu {{ ppp0_mtu }}"
+    insertafter: '^#?persist'
+  notify: Start ppp
+  when:
+    - cellular_provider is defined
+    - ppp0_mtu is defined

@@ -58,6 +58,16 @@
     - setup
 
 #
+#	Set up PPP
+#
+- name: Setup ppp
+  import_tasks: ppp.yml
+  tags:
+    - networking
+    - ppp
+    - setup
+
+#
 #	Set hostname
 #
 - name: Set /etc/hostname

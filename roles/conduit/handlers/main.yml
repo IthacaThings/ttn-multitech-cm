@@ -69,3 +69,18 @@
 #
 - name: Reload facts
   include_tasks: reload_facts.yml
+
+#
+#	ppp
+#
+- name: Start ppp
+  service:
+    name: ppp
+    enabled: yes
+    state: restarted
+
+- name: Stop ppp
+  service:
+    name: pppd
+    enabled: no
+    state: stopped

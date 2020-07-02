@@ -74,6 +74,7 @@ static_nameservers:
 # See http://changelog.complete.org/archives/9335-ssh-suddenly-stops-communicating-with-some-hosts
 eth0_mtu: 1100
 wlan0_mtu: 1100
+ppp0_mtu: 1100
 
 # By default the DHCP client sends three packets over three seconds
 # and then gives up.  Change this so it will keep going forever (90
@@ -106,4 +107,15 @@ use_fake_gps: false
 # Use GPS if present
 use_gps: false
 gps_device: ttyXRUSB2
+
+# Cellular modem
+
+# True to enable a cellular modem
+use_cellular: false
+# This gets set with the APN to connect to.  Sometimes needs to be "broadband"
+cellular_apn: internet
+# Default value for cellular_provider
+# 'gsm' for GSM network, others not tested
+cellular_provider: none
+
 
