@@ -206,9 +206,19 @@
         mode: "0644"
         owner: root
         group: root
+      when: forwarder_variant != "mp" and forwarder_version is version('3.0.25', '<')
 
     - shell: node /opt/lora/merge.js /var/config/lora/ttn_global_conf.json /var/config/lora/multitech_overrides.json /var/config/lora/global_conf.json
       notify: restart ttn-pkt-forwarder
+      when: forwarder_variant != "mp" and forwarder_version is version('3.0.25', '<')
+
+    - copy:
+        src: "{{ region }}-global_conf.json"
+        dest: /var/config/lora/global_conf.json
+        mode: "0644"
+        owner: root
+        group: root
+      when: forwarder_variant == "mp" and forwarder_version is version('3.0.25', '>=')
 
 - name: Remove TTN packet forwarder config
   file:
