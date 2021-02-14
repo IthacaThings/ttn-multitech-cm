@@ -77,3 +77,5 @@
   service: name=monit state=restarted
 
   
+- name: monit monitor check_pktfwdlog
+  shell: "monit monitor check_pktfwdlog"
