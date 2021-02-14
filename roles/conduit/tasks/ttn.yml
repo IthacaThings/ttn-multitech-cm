@@ -187,41 +187,56 @@
     owner: root
     group: root
 
-- block:
-    - template:
-        src: local_conf.json.j2
-        dest: /var/config/lora/local_conf.json
-        mode: "0644"
-        owner: root
-        group: root
+- name: Local packet forwarder configuration file
+  template:
+    src: local_conf.json.j2
+    dest: /var/config/lora/local_conf.json
+    mode: "0644"
+    owner: root
+    group: root
 
-    - local_action: get_url
-      args:
-        url: "https://raw.githubusercontent.com/TheThingsNetwork/gateway-conf/master/{{ region }}-global_conf.json"
-        dest: "{{ role_path }}/files"
+- name: Global packet forwarder configuration file
+  local_action: get_url
+  args:
+    url: "https://raw.githubusercontent.com/TheThingsNetwork/gateway-conf/master/{{ region }}-global_conf.json"
+    dest: "{{ role_path }}/files"
 
+- name: Packet Forwarder configuration (before 3.0.25)
+  block:
     - copy:
         src: "{{ region }}-global_conf.json"
         dest: /var/config/lora/ttn_global_conf.json
         mode: "0644"
         owner: root
         group: root
-      when: forwarder_variant != "mp" and forwarder_version is version('3.0.25', '<')
-
     - shell: node /opt/lora/merge.js /var/config/lora/ttn_global_conf.json /var/config/lora/multitech_overrides.json /var/config/lora/global_conf.json
       notify: restart ttn-pkt-forwarder
-      when: forwarder_variant != "mp" and forwarder_version is version('3.0.25', '<')
-
     - copy:
         src: "{{ region }}-global_conf.json"
         dest: /var/config/lora/global_conf.json
         mode: "0644"
         owner: root
         group: root
-      when: forwarder_variant == "mp" and forwarder_version is version('3.0.25', '>=')
+  when: forwarder_variant != "mp" or forwarder_version is version('3.0.25', '<')
 
-- name: Remove TTN packet forwarder config
+- name: Packet Forwarder configuration (3.0.25 and later)
+  block:
+    - copy:
+        src: "{{ region }}-global_conf.json"
+        dest: /var/config/lora/global_conf.json
+        mode: "0644"
+        owner: root
+        group: root
+      notify: restart ttn-pkt-forwarder
+    - file:
+        dest: /var/config/lora/ttn_global_conf.json
+        state: absent
+  when: forwarder_variant == "mp" and forwarder_version is version('3.0.25', '>=')
+
+- name: Remove some files
   file:
-    name: /var/config/lora/config.yml
+    name: "{{ item }}"
     state: absent
-  when: forwarder_variant != 'ttn'
+  loop:
+    - /var/config/lora/config.yml
+    - /var/config/lora/samples

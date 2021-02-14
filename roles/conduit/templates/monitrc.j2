@@ -7,7 +7,9 @@ set logfile syslog facility log_daemon
 set daemon {{ monit_poll }}
 
 # Use a Unix socket for monitoring
-set httpd unixsocket /var/run/monit.sock
+set httpd
+    port 2812
+    use address 127.0.0.1
     allow monit:monit
 
 # Monitor the system
