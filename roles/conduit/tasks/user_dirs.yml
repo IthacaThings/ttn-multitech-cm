@@ -37,6 +37,21 @@
     - ttn_sshdir_stat.stat.exists
     - ttn_sshdir_stat.stat.lnk_target is not defined
 
+- name: Remove existing .ssh dir
+  file:
+    dest: "/home/{{ target_user }}/.ssh"
+    state: absent
+  when:
+    - ttn_sshdir_stat.stat.exists
+    - ttn_sshdir_stat.stat.lnk_target is not defined
+
+- name: Replace /home/{{ target_user }}/.ssh with a symlink to {{ ttn_newsshdir }}
+  command: "ln -fTs {{ ttn_newsshdir }} /home/{{ target_user }}/.ssh"
+  args:
+    warn: false
+  when:
+    - ttn_sshdir_stat.stat.lnk_target is not defined or ttn_sshdir_stat.stat.lnk_target != ttn_newsshdir
+
 - name: "Install {{ target_user }} authorized keys"
   authorized_key:
     manage_dir: no
@@ -45,10 +60,4 @@
     key: "{{ item }}"
   with_flattened: "{{ authorized_keys_list }}"
 
-- name: /home/{{ target_user }}/.ssh with a symlink to {{ ttn_newsshdir }}
-  command: "ln -fTs {{ ttn_newsshdir }} /home/{{ target_user }}/.ssh"
-  args:
-    warn: false
-  when:
-    - ttn_sshdir_stat.stat.lnk_target is not defined or ttn_sshdir_stat.stat.lnk_target != ttn_newsshdir
     
