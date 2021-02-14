@@ -60,18 +60,11 @@
 #
 #	Set hostname
 #
-- name: Set /etc/hostname
-  copy:
-    dest: /etc/hostname
-    content: "{{ hostname }}"
-    mode: "0644"
-    owner: root
-    group: root
-  when: hostname is defined
+- name: Set hostname
+  import_tasks: hostname.yml
   tags:
     - hostname
     - setup
-  notify: Set hostname
 
 #
 #	Set timezone and time
