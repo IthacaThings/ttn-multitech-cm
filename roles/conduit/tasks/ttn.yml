@@ -131,6 +131,7 @@
 - name: Unmonitor packet forwarder if changes are being made
   shell: "monit unmonitor check_pktfwdlog"
   notify: monit monitor check_pktfwdlog
+  ignore_errors: yes
   when:
     - forwarder_installed != forwarder_package_version
 
