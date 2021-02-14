@@ -12,7 +12,7 @@
 - name: Download md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt
   local_action: get_url
   args:
-    url: "{{ mlinux_url }}/md5sums.txt"
+    url: "{{ mlinux_url }}/md5sum.txt"
     dest: "{{ role_path }}/files/md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt"
     timeout: 14400
   when:
