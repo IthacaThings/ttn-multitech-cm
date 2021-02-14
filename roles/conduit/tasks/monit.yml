@@ -1,0 +1,70 @@
+---
+
+- name: Install Monit and dependencies
+  opkg:
+    state: installed
+    pkg: "{{ item }}"
+  when: ansible_local is not defined or ansible_local.opkg is not defined or item|regex_replace('-','_') not in ansible_local.opkg.keys()
+  with_items:
+    - monit
+  notify: Reload facts
+
+- name: Create monit event queue
+  file:
+    name: /var/monit
+    state: directory
+    mode: "0700"
+    owner: root
+    group: root
+  when: monit_eventqueue is defined
+  notify:
+    - Restart monit
+
+- name: Install monit test scripts
+  copy:
+    src: "{{ role_path }}/files/{{ item }}"
+    dest: /usr/local/lib/{{ item }}
+    mode: "755"
+    owner: root
+    group: root
+  loop:
+    - check_pktfwdlog
+    - check_system_md5
+
+- name: Install config files
+  copy:
+    src: "{{ role_path }}/files/{{ item | basename }}"
+    dest: "{{ item }}"
+    mode: "644"
+    owner: root
+    group: root
+  loop:
+    - /var/config/system.md5sum.exclude
+
+- name: /var/config/monitrc
+  template:
+    src: monitrc.j2
+    dest: /var/config/monitrc
+    mode: "700"
+    owner: root
+    group: root
+  notify:
+    - Restart monit
+
+- name: Point /etc/monitrc at /var/config/monitrc
+  file:
+    name: /etc/monitrc
+    state: link
+    force: true
+    src: /var/config/monitrc
+  notify:
+    - Reload facts
+    - Restart monit
+
+- name: Enable monit
+  lineinfile: dest=/etc/default/monit
+    regexp="^ENABLED="
+    line="ENABLED="yes""
+    state=present
+  notify:
+    - Restart monit

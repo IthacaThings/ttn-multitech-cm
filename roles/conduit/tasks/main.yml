@@ -156,5 +156,23 @@
   import_tasks: ssh_tunnel.yml
   tags:
     - ssh_tunnel
+    - monit
     - setup
 
+#
+#	Set up monit
+#
+- name: Set up moniit
+  import_tasks: monit.yml
+  tags:
+    - monit
+    - setup
+
+#
+#
+#
+- name: Update system checksum file
+  shell: /usr/local/lib/check_system_md5 || /usr/local/lib/check_system_md5 --reset
+  become: true
+  tags:
+    - always

@@ -10,6 +10,7 @@ ansible_depends:
     - python-compression
     - python-dateutil
     - python-distutils
+    - python-email
     - python-html
     - python-json
     - python-multiprocessing
@@ -44,11 +45,11 @@ forwarder_restart_delay: 20
 autoquit_threshold: 5
 
 # Multi-tech version of mLinux images
-#mlinux_upgrade_bin: "mlinux-{{ 'factory' if conduit_type == 'mtcdt' else conduit_type }}-image-{{ conduit_type }}-upgrade.bin"
-#mlinux_url: "http://www.multitech.net/mlinux/images/{{ conduit_type }}/{{ mlinux_version }}"
+mlinux_upgrade_bin: "mlinux-{{ 'factory' if conduit_type == 'mtcdt' else conduit_type }}-image-{{ conduit_type }}-upgrade.bin"
+mlinux_url: "http://www.multitech.net/mlinux/images/{{ conduit_type }}/{{ mlinux_version }}"
 # TTNI version of mLinux images
-mlinux_upgrade_bin: "ttni-base-image-{{ conduit_type }}-upgrade.bin"
-mlinux_url: "https://github.com/IthacaThings/mlinux-images/raw/master/{{mlinux_version }}/{{ conduit_type }}"
+#JCH mlinux_upgrade_bin: "ttni-base-image-{{ conduit_type }}-upgrade.bin"
+#JCH mlinux_url: "https://github.com/IthacaThings/mlinux-images/raw/master/{{mlinux_version }}/{{ conduit_type }}"
 
 
 # For configuration of TTN Console
@@ -107,3 +108,39 @@ use_fake_gps: false
 use_gps: false
 gps_device: ttyXRUSB2
 
+#
+# Monitoring - Configuration of monit
+#
+
+monit_poll: 60
+monit_eventqueue: /var/monit
+monit_email: monit@ttni.tech
+
+# Ping a host and reboot if it is not reacable for a period of time
+monit_ping_host: 8.8.8.8
+monit_ping_alert_cycles: 2
+monit_ping_reboot_cycles: 30
+monit_ping_action: 'exec "/sbin/reboot"'
+
+# How long a process can be offline before we restart
+monit_process_period: "1 cycles"
+
+# Monitor the packet fowrarding process
+monit_pktfwd_period: "2 cycles"
+monit_pktfwd_pidfile: /var/run/lora-pkt-fwd.pid
+monit_pktfwd_logfile: /var/log/lora-pkt-fwd.log
+monit_pktfwd_start: '"/etc/init.d/ttn-pkt-forwarder start" with timeout 15 seconds'
+monit_pktfwd_stop: '"/etc/init.d/ttn-pkt-forwarder stop"'
+monit_pktfwd_restart: '"/etc/init.d/ttn-pkt-forwarder restart"'
+monit_pktfwd_reboot: 'exec "/sbin/reboot"'
+
+# Monitor space on /
+monit_root_test: "usage > 40%"
+
+# Monitor space on /var/config
+monit_config_test: "usage > 10%"
+
+# Monitor space on /var/volatile
+monit_volatile_test: "usage > 75%"
+monit_volatile_action: 'exec "/sbin/reboot"'
+monit_volatile_period: "60 cycles"
