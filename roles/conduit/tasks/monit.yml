@@ -1,7 +1,7 @@
 ---
 
 - name: Install Monit and dependencies
-  opkg: 
+  opkg:
     state: installed
     pkg: "{{ item }}"
   when: ansible_local is not defined or ansible_local.opkg is not defined or item|regex_replace('-','_') not in ansible_local.opkg.keys()
