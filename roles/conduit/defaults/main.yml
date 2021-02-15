@@ -51,6 +51,10 @@ mlinux_url: "http://www.multitech.net/mlinux/images/{{ conduit_type }}/{{ mlinux
 #JCH mlinux_upgrade_bin: "ttni-base-image-{{ conduit_type }}-upgrade.bin"
 #JCH mlinux_url: "https://github.com/IthacaThings/mlinux-images/raw/master/{{mlinux_version }}/{{ conduit_type }}"
 
+# Tag used by our support repos for this version of mlinux
+mlinux_ttni_preserve_root:
+  "3": https://raw.githubusercontent.com/IthacaThings/meta-ttni/mlinux-3/recipes-core/preserve/preserve-1.0
+  "5": https://raw.githubusercontent.com/IthacaThings/meta-ttni/mlinux-5/recipes-core/preserve/preserve-1.0
 
 # For configuration of TTN Console
 gateway_brand: MultiTech

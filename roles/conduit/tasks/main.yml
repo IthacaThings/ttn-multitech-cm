@@ -14,7 +14,6 @@
 #
 - name: Preserve config setup
   import_tasks: preserve.yml
-  when: ansible_local.opkg.preserve is defined
   tags:
     - setup
     - preserve
