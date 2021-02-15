@@ -12,9 +12,25 @@
 - name: Download md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt
   local_action: get_url
   args:
-    url: "{{ mlinux_url }}/md5sum.txt"
+    url: "{{ mlinux_url }}/{{ item }}"
     dest: "{{ role_path }}/files/md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt"
     timeout: 14400
+  ignore_errors: true
+  loop:
+    - md5sum.txt
+    - md5sums.txt
+  when:
+    - mlinux_md5sums_stat.stat.exists == False
+
+- name: Get status of md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt
+  local_action: stat
+  args:
+    path: "{{ role_path }}/files/md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt"
+  register: mlinux_md5sums_stat
+
+- name: Exit if md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt was not downloaded
+  file:
+    msg: "Unable to find checksum file"
   when:
     - mlinux_md5sums_stat.stat.exists == False
 
