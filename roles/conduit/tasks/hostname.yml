@@ -19,7 +19,7 @@
 - name: Set hostname
   copy:
     dest: /var/config/hostname
-    content: "{{ hostname }}"
+    content: "{{ hostname }}\n"
     mode: "0644"
     owner: root
     group: root
