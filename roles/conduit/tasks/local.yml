@@ -37,12 +37,11 @@
   file:
     name: /usr/local
     state: absent
-  when: not usr_local.stat.islnk
+  when: usr_local.stat.exists and not usr_local.stat.islnk
 
 - name: Point /usr/local at /var/config/local
   file:
     name: /usr/local
     state: link
     src: /var/config/local
-  when: not usr_local.stat.islnk or usr_local.stat.lnk_target != "/var/config/local"
 
