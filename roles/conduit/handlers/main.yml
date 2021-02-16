@@ -2,12 +2,6 @@
 # handlers file for setup
 
 #
-#	Set hostname when /etc/hostsname is updated
-#
-- name: Set hostname
-  shell: "hostname -F /etc/hostname"
-
-#
 #	Run update-ca-certificates
 #
 - name: update-ca-certificates
