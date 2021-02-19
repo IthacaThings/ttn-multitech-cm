@@ -133,9 +133,11 @@
 #
 #	Recover state
 #
+
 - name: Run mlinux_setup script
-  local_action: shell
-  args: "sshpass -proot ssh root@{{ ansible_host }} /var/config/mlinux_setup"
+  shell:
+    cmd: "sshpass -proot ssh root@{{ ansible_host }} /var/config/mlinux_setup"
+  delegate_to: localhost
   when: ansible_local.opkg.preserve is not defined
 
 # XXX - Change root password
