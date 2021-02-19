@@ -7,25 +7,31 @@ if [ ! -e /etc/mlinux-version ]; then
    exit 1
 fi
 
-mlinux_version=$(cat /etc/mlinux-version | sed -n -e '/^mLinux/s/mLinux //p')
+if [ -f /var/config/restore_config ]; then
+    /var/config/restore_config
+    /var/config/restore.init
+else
 
-if [ ! -e "${HOME}/.ssh" ]; then
-   mkdir -p "${HOME}/.ssh"
-   chmod 700 "${HOME}/.ssh"
-fi
+    mlinux_version=$(cat /etc/mlinux-version | sed -n -e '/^mLinux/s/mLinux //p')
 
-cat << EOF > "${HOME}/.ssh/authorized_keys"
-{{ authorized_keys }}
+    if [ ! -e "${HOME}/.ssh" ]; then
+	mkdir -p "${HOME}/.ssh"
+	chmod 700 "${HOME}/.ssh"
+    fi
+
+    cat << EOF > "${HOME}/.ssh/authorized_keys"
+{{ authorized_keys_list | flatten }}
 EOF
 
-# Fix version in opkg feeds config
-expr ${mlinux_version} : "3.3.[0-9]" && sed -i -e "s%/3.3/%/${mlinux_version}/%" /etc/opkg/mlinux-feed.conf
+    # Fix version in opkg feeds config
+    expr ${mlinux_version} : "3.3.[0-9]" && sed -i -e "s%/3.3/%/${mlinux_version}/%" /etc/opkg/mlinux-feed.conf
 
-# Install ansible dependencies
-opkg update
-opkg install python-pkgutil python-distutils
+    # Install ansible dependencies
+    opkg update
+    opkg install {{ ansible_depends | join(' ') }} ntp ntp-utils libmpsse
 
-test -d /var/config/ansible && ln -s /var/config/ansible /etc/ansible
+    test -d /var/config/ansible && ln -s /var/config/ansible /etc/ansible
+fi
 
 rm -f /var/config/mlinux_setup
 
