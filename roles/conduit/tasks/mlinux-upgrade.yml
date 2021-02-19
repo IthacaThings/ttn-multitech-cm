@@ -34,6 +34,15 @@
   when:
     - mlinux_md5sums_stat.stat.exists == False
 
+- name: Remove some temp files from a failed upgrade
+  file:
+    name: "{{ item }}"
+    state: absent
+    force: true
+  loop:
+    - /var/volatile/do_flash_upgrade
+    - /var/volatile/flash-upgrade
+
   # upgrade.bin
 - name: Get expected md5 of {{ mlinux_upgrade_bin }}_{{ mlinux_version }}
   local_action:
