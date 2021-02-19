@@ -2,6 +2,7 @@
 
 # Log to syslog
 set logfile syslog facility log_daemon
+set statefile /var/config/monit/monit.state
 
 # Poll every {{ monit_poll }} seconds
 set daemon {{ monit_poll }}

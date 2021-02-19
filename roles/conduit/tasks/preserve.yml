@@ -9,11 +9,7 @@
     group: root
 
 - name: Enable Preserve service
-  sysvinit:
-    name: preserve_config
-    enabled: true
-    runlevels:
-      - "start 39 0 6 ."
+  command: update-rc.d preserve_config start 39 0 6 .
 
 - name: Save a copy of the restore script
   get_url:
