@@ -73,13 +73,12 @@
 
 - name: Copy {{ mlinux_upgrade_bin }}_{{ mlinux_version }} to {{ hostname }}
   copy:
-    dest: ~/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}
+    dest: /var/volatile/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}
     src: "{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
     mode: "0600"
     owner: root
     group: root
     unsafe_writes: yes
-  register: upgrade_copy
 
 - name: Copy over setup script
   template:
@@ -99,7 +98,9 @@
     group: root
 
 - name: Prep flash upgrade
-  shell: "/usr/sbin/mlinux-firmware-upgrade -N {{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
+  shell:
+    cmd: "/usr/sbin/mlinux-firmware-upgrade -N {{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
+    chdir: //var/volatile
   register: flash_upgrade
 
 - name: Reboot
