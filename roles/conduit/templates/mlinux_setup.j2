@@ -9,7 +9,7 @@ fi
 
 if [ -f /var/config/restore_config ]; then
     /var/config/restore_config
-    /var/config/restore.init
+    test -f /var/config/restore.init && /var/config/restore.init
 else
 
     mlinux_version=$(cat /etc/mlinux-version | sed -n -e '/^mLinux/s/mLinux //p')
