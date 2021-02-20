@@ -135,9 +135,7 @@
 #
 
 - name: Run mlinux_setup script
-  shell:
-    cmd: "sshpass -proot ssh root@{{ ansible_host }} /var/config/mlinux_setup"
-  delegate_to: localhost
+  import_tasks: mlinux_setup.yml
   when: ansible_local.opkg.preserve is not defined
 
 # XXX - Change root password

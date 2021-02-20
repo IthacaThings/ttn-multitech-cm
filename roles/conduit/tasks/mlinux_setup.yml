@@ -1,0 +1,19 @@
+---
+#
+#	Do inital login and try to run setup script
+#
+
+- name: Run mlinux_setup (mlinux 3)
+  shell:
+    cmd: "sshpass -proot ssh root@{{ ansible_host }} /var/config/mlinux_setup"
+  delegate_to: localhost
+  when: mlinux_version is version('4', '<')
+
+- name: Run mlinux_setup (4 < mlinux_verson <= 5.1.8)
+  shell:
+    cmd: "echo root | sshpass -proot ssh mtadm@{{ ansible_host }} sudo -S /var/config/mlinux_setup"
+  delegate_to: localhost
+  when:
+    - mlinux_version is version('4', '>=')
+    - mlinux_version is version('5.2.7', '<')
+...
