@@ -1,5 +1,5 @@
 [appurl]: http://www.thethingsnetwork.org/
-[![The Things Network](https://ttnstaticfile.blob.core.windows.net/static/ttn/media/logo/TheThingsRond.png)][appurl]
+[![The Things Network](https://www.thethingsnetwork.org/spa/public/favicons/favicon-32.png)][appurl]
 
 # Configuration Management of MultiTech Conduits as The Things Network Gateways
 
