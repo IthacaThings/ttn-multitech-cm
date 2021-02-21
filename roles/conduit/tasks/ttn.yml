@@ -4,6 +4,14 @@
 #	Register gateway
 #
 
+- name: Lora dir
+  file:
+    name: /var/config/lora
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+
 - name: Check if using correct card for the region
   fail:
     msg: "Lora card {{ ansible_local.lora.product_id }} and region {{region }} mismatch"
@@ -187,13 +195,6 @@
 #
 #	Install the TTN config files
 #
-- name: Lora dir
-  file:
-    name: /var/config/lora
-    mode: "0755"
-    owner: root
-    group: root
-
 - name: Local packet forwarder configuration file
   template:
     src: local_conf.json.j2
