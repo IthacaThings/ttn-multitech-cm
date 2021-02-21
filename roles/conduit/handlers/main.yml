@@ -72,9 +72,11 @@
 
 - name: monit monitor check_pktfwdlog
   shell: "monit monitor check_pktfwdlog"
+  ignore_errors: true
 
 - name: monit monitor volatile
   shell: "monit monitor volatile"
+  ignore_errors: true
 
 - name: Update system checksum file
   include_tasks: update_checksums.yml
