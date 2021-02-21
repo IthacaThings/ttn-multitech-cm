@@ -73,3 +73,7 @@
   
 - name: monit monitor check_pktfwdlog
   shell: "monit monitor check_pktfwdlog"
+
+- name: Update system checksum file
+  shell: /usr/local/lib/check_system_md5 || /usr/local/lib/check_system_md5 --reset
+  become: true

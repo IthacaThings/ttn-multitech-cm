@@ -161,10 +161,11 @@
     - setup
 
 #
+#	Always update system checksum file last
 #
-#
-- name: Update system checksum file
-  shell: /usr/local/lib/check_system_md5 || /usr/local/lib/check_system_md5 --reset
-  become: true
+- name: Schedule update of system checksum file
+  command: "true"
+  delegate_to: localhost
+  notify: Update system checksum file
   tags:
     - always
