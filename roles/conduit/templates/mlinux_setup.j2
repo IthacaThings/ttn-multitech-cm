@@ -20,7 +20,7 @@ else
     fi
 
     cat << EOF > "${HOME}/.ssh/authorized_keys"
-{{ authorized_keys_list | flatten }}
+{{ authorized_keys | join('\n') }}
 EOF
 
     # Fix version in opkg feeds config

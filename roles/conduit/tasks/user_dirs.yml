@@ -57,7 +57,7 @@
     manage_dir: no
     path: "{{ ttn_newsshdir }}/authorized_keys"
     user: "{{ target_user }}"
-    key: "{{ item }}"
-  with_flattened: "{{ authorized_keys_list }}"
+    key: "{{ authorized_keys | join('\n') }}"
+    exclusive: true
 
     

@@ -1,6 +1,15 @@
 ---
 
 #
+#	Build the list of authorized keys
+#
+- name: Build list of authorized keys
+  import_tasks: authorized_keys.yml
+  tags:
+    - always
+
+#
+#
 #	Ansible first pass setup
 #
 - name: Ansible setup
