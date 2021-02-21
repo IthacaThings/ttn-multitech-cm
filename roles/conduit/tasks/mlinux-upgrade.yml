@@ -80,6 +80,11 @@
     module: shell
     args: "{{ role_path }}/files/mlinux-firmware-upgrade -h {{conduit_type }} -n {{ role_path }}/files/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
 
+- name: Unmonitor space usage on /var/volatile
+  shell: "monit unmonitor volatile"
+  notify: monit monitor volatile
+  ignore_errors: yes
+
 - name: Copy {{ mlinux_upgrade_bin }}_{{ mlinux_version }} to {{ hostname }}
   copy:
     dest: /var/volatile/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}

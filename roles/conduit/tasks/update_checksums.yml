@@ -1,0 +1,13 @@
+---
+- name: Unmonitor check_system_md5 to avoid corruption
+  shell: monit unmonitor check_system_md5
+  ignore_errors: true
+
+- name: Update system checksums
+  shell: /usr/local/lib/check_system_md5 || /usr/local/lib/check_system_md5 --reset
+  ignore_errors: true
+
+- name: Monitor check_system_md5 again  
+  shell: monit monitor check_system_md5
+  ignore_errors: true
+...
