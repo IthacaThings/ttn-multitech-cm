@@ -144,7 +144,3 @@
   when: ansible_local.opkg.preserve is not defined
 
 # XXX - Change root password
-  
-- name: Reload ansible_local
-  setup: filter=ansible_local
-
