@@ -3,29 +3,28 @@
 #	Check mLinux version
 #
 
-- name: Check if md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt is downloaded
-  local_action: stat
-  args:
-    path: "{{ role_path }}/files/md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt"
-  register: mlinux_md5sums_stat
-  
-- name: Download md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt
+- name: Create temporary file for checksum
+  ansible.builtin.tempfile:
+    state: file
+    suffix: temp
+  delegate_to: localhost
+  register: checksum_file
+
+- name: Download checksum_file
   local_action: get_url
   args:
     url: "{{ mlinux_url }}/{{ item }}"
-    dest: "{{ role_path }}/files/md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt"
+    dest: "{{ checksum_file.path }}"
     timeout: 14400
   ignore_errors: true
   loop:
     - md5sum.txt
     - md5sums.txt
-  when:
-    - mlinux_md5sums_stat.stat.exists == False
 
-- name: Get status of md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt
+- name: Get status of temporary checksum file
   local_action: stat
   args:
-    path: "{{ role_path }}/files/md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt"
+    path: "{{ checksum_file.path }}"
   register: mlinux_md5sums_stat
 
 - name: Exit if md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt was not downloaded
@@ -34,21 +33,20 @@
   when:
     - mlinux_md5sums_stat.stat.exists == False
 
-- name: Remove some temp files from a failed upgrade
-  file:
-    name: "{{ item }}"
-    state: absent
-    force: true
-  loop:
-    - /var/volatile/do_flash_upgrade
-    - /var/volatile/flash-upgrade
-
   # upgrade.bin
 - name: Get expected md5 of {{ mlinux_upgrade_bin }}_{{ mlinux_version }}
-  local_action:
-    module: shell
-    args: "grep '{{ mlinux_upgrade_bin }}' {{ role_path }}/files/md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt | cut -d ' ' -f 1"
+  shell: "grep '{{ mlinux_upgrade_bin }}' {{ checksum_file.path }} | cut -d ' ' -f 1"
+  delegate_to: localhost
   register: mlinux_upgrade_expected_md5
+
+- debug:
+    var: mlinux_upgrade_expected_md5
+
+- name: Delete temp file
+  ansible.builtin.file:
+    path: "{{ checksum_file.path }}"
+    state: absent
+  delegate_to: localhost
 
 - name: Check if {{ mlinux_upgrade_bin }}_{{ mlinux_version }} is downloaded
   local_action: stat
@@ -64,6 +62,9 @@
     state: absent
   when:
     - mlinux_upgrade_stat.stat.exists and mlinux_upgrade_stat.stat.checksum != mlinux_upgrade_expected_md5.stdout
+
+- debug:
+    var: mlinux_upgrade_stat.stat.checksum
 
 - name: Download {{ mlinux_upgrade_bin }}_{{ mlinux_version }}
   local_action: get_url
@@ -84,6 +85,15 @@
   shell: "monit unmonitor volatile"
   notify: monit monitor volatile
   ignore_errors: yes
+
+- name: Remove some temp files from a failed upgrade
+  file:
+    name: "{{ item }}"
+    state: absent
+    force: true
+  loop:
+    - /var/volatile/do_flash_upgrade
+    - /var/volatile/flash-upgrade
 
 - name: Copy {{ mlinux_upgrade_bin }}_{{ mlinux_version }} to {{ hostname }}
   copy:
