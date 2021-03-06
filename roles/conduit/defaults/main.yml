@@ -142,7 +142,7 @@ monit_pktfwd_reboot: 'exec "/sbin/reboot"'
 monit_root_test: "usage > 50%"
 
 # Monitor space on /var/config
-monit_config_test: "usage > 10%"
+monit_config_test: "usage > 15%"
 
 # Monitor space on /var/volatile
 monit_volatile_test: "usage > 75%"
