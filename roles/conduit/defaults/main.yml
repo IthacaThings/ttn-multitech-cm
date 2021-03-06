@@ -139,7 +139,7 @@ monit_pktfwd_restart: '"/etc/init.d/ttn-pkt-forwarder restart"'
 monit_pktfwd_reboot: 'exec "/sbin/reboot"'
 
 # Monitor space on /
-monit_root_test: "usage > 40%"
+monit_root_test: "usage > 50%"
 
 # Monitor space on /var/config
 monit_config_test: "usage > 10%"
