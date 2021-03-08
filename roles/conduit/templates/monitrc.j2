@@ -75,7 +75,6 @@ check filesystem volatile with path /var/volatile
 #       Ansible reconfiguration.
 #
 
-# Monitor ttn-pkt-forwarder
 # Check for error conditions in packet forwarder log
 check program check_pktfwdlog with path /usr/local/lib/check_pktfwdlog
     if status == 1 then exec {{ monit_pktfwd_restart }}
