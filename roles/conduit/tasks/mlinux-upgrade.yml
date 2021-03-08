@@ -28,7 +28,7 @@
   register: mlinux_md5sums_stat
 
 - name: Exit if md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt was not downloaded
-  file:
+  fail:
     msg: "Unable to find checksum file"
   when:
     - mlinux_md5sums_stat.stat.exists == False
