@@ -32,4 +32,4 @@ authorized_keys_list:
 
 
 # Monit stuff
-monit_ntpd_pidfile: "{{ '/var/run/ntp.pid' if mlinux_version.startswith('3.') else '/var/run/ntpd.pid' }}"
+monit_ntpd_pidfile: "{{ '/var/run/ntp.pid' if ansible_local.opkg.ntp_utils is version('4.2.8', '<') else '/var/run/ntpd.pid' }}"
