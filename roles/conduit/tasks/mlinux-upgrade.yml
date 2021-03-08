@@ -79,7 +79,7 @@
 - name: Validate {{ mlinux_upgrade_bin }}_{{ mlinux_version }}
   local_action:
     module: shell
-    args: "{{ role_path }}/files/mlinux-firmware-upgrade -h {{conduit_type }} -n {{ role_path }}/files/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
+    args: "{{ role_path }}/files/mlinux-firmware-upgrade -h {{ conduit_type }} -n {{ role_path }}/files/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
 
 - name: Unmonitor space usage on /var/volatile
   shell: "monit unmonitor volatile"
