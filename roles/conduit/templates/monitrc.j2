@@ -73,7 +73,7 @@ check filesystem volatile with path /var/volatile
 #
 
 # Monitor ttn-pkt-forwarder
-check process ttn-pkt-forwader PIDFILE {{ monit_pktfwd_pidfile }}
+check process ttn-pkt-forwarder PIDFILE {{ monit_pktfwd_pidfile }}
     if does not exist for {{ monit_pktfwd_period }} then restart
     start program = {{ monit_pktfwd_start }}
     stop program = {{ monit_pktfwd_stop }}
