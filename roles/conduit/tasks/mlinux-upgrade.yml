@@ -4,7 +4,7 @@
 #
 
 - name: Create temporary file for checksum
-  ansible.builtin.tempfile:
+  tempfile:
     state: file
     suffix: temp
   delegate_to: localhost
@@ -43,7 +43,7 @@
     var: mlinux_upgrade_expected_md5
 
 - name: Delete temp file
-  ansible.builtin.file:
+  file:
     path: "{{ checksum_file.path }}"
     state: absent
   delegate_to: localhost

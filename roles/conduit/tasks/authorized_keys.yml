@@ -3,7 +3,7 @@
 #	Merge the list of authorized keys into one file
 #
 - name: Create temporary file
-  ansible.builtin.tempfile:
+  tempfile:
     state: file
     suffix: temp
   delegate_to: localhost
@@ -24,7 +24,7 @@
     authorized_keys: "{{ lookup('file', tempfile.path).splitlines() | flatten }}"
 
 - name: Delete temp file
-  ansible.builtin.file:
+  file:
     path: "{{ tempfile.path }}"
     state: absent
   delegate_to: localhost
