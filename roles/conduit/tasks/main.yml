@@ -35,6 +35,7 @@
   when:
     - mlinux_version is defined
     - mlinux_version != ansible_local.mlinux.version
+    - mlinux_version is version('5.3.0d', '!=') or ansible_local.mlinux.version is version('5.3.0b', '!=')
   tags:
     - setup
     - mlinux
