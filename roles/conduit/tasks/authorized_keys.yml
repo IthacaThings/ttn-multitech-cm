@@ -17,15 +17,18 @@
     path: "{{ tempfile.path }}"
     key: "{{ item }}"
   loop: "{{ authorized_keys_list | flatten }}"
+  when: not ansible_check_mode
   delegate_to: localhost
 
 - name: Read the keys from the temporary file
   set_fact:
     authorized_keys: "{{ lookup('file', tempfile.path).splitlines() | flatten }}"
+  when: not ansible_check_mode
 
 - name: Delete temp file
   file:
     path: "{{ tempfile.path }}"
     state: absent
   delegate_to: localhost
+  when: not ansible_check_mode
 ...
