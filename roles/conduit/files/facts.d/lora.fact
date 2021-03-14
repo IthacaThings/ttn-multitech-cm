@@ -2,10 +2,8 @@
 
 cat << EOF
 {
-	"device_id": "$(mts-io-sysfs show lora/device-id 2> /dev/null)",
 	"eui":	      "$(mts-io-sysfs show lora/eui 2> /dev/null | sed 's/://g')",
 	"hw_version": "$(mts-io-sysfs show lora/hw-version 2> /dev/null)",
-	"product_id": "$(mts-io-sysfs show lora/product-id 2> /dev/null)",
-	"vendor_id": "$(mts-io-sysfs show lora/vendor-id 2> /dev/null)"
+	"product_id": "$(mts-io-sysfs show lora/product-id 2> /dev/null)"
 }
 EOF
