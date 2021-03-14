@@ -68,8 +68,8 @@
 #	opkg handlers
 #
 - name: opkg clean
-  shell: "opkg clean"
-  ignore_errors: true
+  shell: "opkg clean --autoremove"
+  when: mlinux_version is version('5', '>=')
 
 #
 #	Monit handlers

@@ -30,5 +30,4 @@ authorized_keys_list:
   - "{{ authorized_keys }}"	# XXX - What if this is empty?
   - "{% for group in group_names %}{% if 'authorized_keys_' ~ group in vars %}{{ vars['authorized_keys_' ~ group] }}{% endif %}{% endfor %}"
 
-# Monit stuff
-monit_ntpd_pidfile: "{{ '/var/run/ntp.pid' if ansible_local.opkg.ntp is version('4.2.8', '<') else '/var/run/ntpd.pid' }}"
+

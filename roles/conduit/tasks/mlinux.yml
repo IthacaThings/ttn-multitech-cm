@@ -15,5 +15,9 @@
 
 - name: Update opkg cache
   shell: "opkg update"
+  register: result
   when: mlinux_feed is changed
+  until: result is succeeded
+  retries: 10
+  delay: 10
   notify: Reload facts
