@@ -9,9 +9,12 @@
     state: installed
     pkg: "{{ item }}"
     update_cache: yes
+  ignore_errors: true
   when: ansible_local is not defined or ansible_local.opkg is not defined or item|regex_replace('-','_') not in ansible_local.opkg.keys()
-  with_items: "{{ ansible_depends }}"
-  notify: Reload facts
+  notify:
+    - Reload facts
+    - opkg clean
+  loop: "{{ ansible_depends }}"
 
 - name: /var/config/ansible
   file:

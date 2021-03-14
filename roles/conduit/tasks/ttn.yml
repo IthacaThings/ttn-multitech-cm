@@ -72,14 +72,18 @@
     name: lora-network-server
     state: absent
   when: ansible_local.opkg.lora_network_server is defined
-  notify: Reload facts
+  notify:
+    - Reload facts
+    - opkg clean
 
 - name: Remove Multi-Tech lora-packet-forwarder
   opkg:
     name: lora-packet-forwarder
     state: absent
   when: ansible_local.opkg.lora_packet_forwarder is defined
-  notify: Reload facts
+  notify:
+    - Reload facts
+    - opkg clean
 
 #
 #	Install dependencies
@@ -90,9 +94,10 @@
     pkg: "{{ item }}"
   when: (ansible_local is not defined) or (ansible_local.opkg is not defined) or (item not in ansible_local.opkg.keys())
   with_items:
-    - nodejs
     - libmpsse
-  notify: Reload facts
+  notify:
+    - Reload facts
+    - opkg clean
 
 #
 #	Make sure we have package for correct version
@@ -206,6 +211,15 @@
 
 - name: Packet Forwarder configuration (before 3.0.25)
   block:
+    - opkg: 
+        state: present
+        pkg: "{{ item }}"
+      when: (ansible_local is not defined) or (ansible_local.opkg is not defined) or (item not in ansible_local.opkg.keys())
+      loop:
+        - nodejs
+      notify:
+        - Reload facts
+        - opkg clean
     - copy:
         src: "{{ region }}-global_conf.json"
         dest: /var/config/lora/ttn_global_conf.json
@@ -224,6 +238,15 @@
 
 - name: Packet Forwarder configuration (3.0.25 and later)
   block:
+    - opkg: 
+        state: absent
+        pkg: "{{ item }}"
+      when: (ansible_local is not defined) or (ansible_local.opkg is not defined) or (item in ansible_local.opkg.keys())
+      loop:
+        - nodejs
+      notify:
+        - Reload facts
+        - opkg clean
     - copy:
         src: "{{ region }}-global_conf.json"
         dest: /var/config/lora/global_conf.json

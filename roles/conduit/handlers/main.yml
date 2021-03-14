@@ -65,6 +65,13 @@
   include_tasks: reload_facts.yml
 
 #
+#	opkg handlers
+#
+- name: opkg clean
+  shell: "opkg clean"
+  ignore_errors: true
+
+#
 #	Monit handlers
 #
 - name: Restart monit
