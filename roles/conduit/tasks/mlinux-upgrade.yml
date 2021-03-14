@@ -39,9 +39,6 @@
   delegate_to: localhost
   register: mlinux_upgrade_expected_md5
 
-- debug:
-    var: mlinux_upgrade_expected_md5
-
 - name: Delete temp file
   file:
     path: "{{ checksum_file.path }}"
@@ -58,13 +55,13 @@
 - name: Remove bad copy of {{ mlinux_upgrade_bin }}_{{ mlinux_version }}
   local_action: file
   args:
-    name: "{{ role_path }}/files/{{ mlinux_upgrade }}_{{ mlinux_version }}"
+    name: "{{ role_path }}/files/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
     state: absent
   when:
     - mlinux_upgrade_stat.stat.exists and mlinux_upgrade_stat.stat.checksum != mlinux_upgrade_expected_md5.stdout
 
 - debug:
-    var: mlinux_upgrade_stat.stat.checksum
+    var: mlinux_upgrade_stat
 
 - name: Download {{ mlinux_upgrade_bin }}_{{ mlinux_version }}
   local_action: get_url
@@ -74,7 +71,7 @@
     timeout: 14400
     checksum: "md5:{{ mlinux_upgrade_expected_md5.stdout }}"
   when:
-    - mlinux_upgrade_stat.stat.exists == False
+    - mlinux_upgrade_stat.stat.exists == False or mlinux_upgrade_stat.stat.checksum != mlinux_upgrade_expected_md5.stdout
 
 - name: Validate {{ mlinux_upgrade_bin }}_{{ mlinux_version }}
   local_action:
