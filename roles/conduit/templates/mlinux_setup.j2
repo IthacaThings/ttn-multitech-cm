@@ -1,5 +1,7 @@
 #!/bin/sh -x
 
+test -f /var/lib/mlinux_setup.done && exit 0
+
 # XXX Setup /etc/network/interfaces and /etc/resolv.conf?
 
 if [ ! -e /etc/mlinux-version ]; then
@@ -33,6 +35,6 @@ EOF
     test -d /var/config/ansible && ln -s /var/config/ansible /etc/ansible
 fi
 
-rm -f /var/config/mlinux_setup
+touch /var/lib/mlinux_setup.done
 
 exit 0
