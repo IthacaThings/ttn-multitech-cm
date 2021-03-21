@@ -20,7 +20,4 @@
   when:
     - mlinux_version is version('4', '>=')
     - mlinux_version is version('5.2.7', '<')
-
-- name: Reload ansible_local
-  setup: filter=ansible_local
 ...
