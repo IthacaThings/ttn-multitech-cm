@@ -3,47 +3,25 @@
 #	Check mLinux version
 #
 
-- name: Create temporary file for checksum
-  tempfile:
-    state: file
-    suffix: temp
-  delegate_to: localhost
-  register: checksum_file
-
-- name: Download checksum_file
-  local_action: get_url
-  args:
+- name: Read checksum file
+  ansible.builtin.uri:
     url: "{{ mlinux_url }}/{{ item }}"
-    dest: "{{ checksum_file.path }}"
-    timeout: 14400
+    return_content: yes
+    timeout: 120
   ignore_errors: true
+  delegate_to: localhost
+  register: checksum_data
+  until: "checksum_data.content != ''"
   loop:
-    - md5sum.txt
-    - md5sums.txt
+    - "md5sum.txt"
+    - "md5sums.txt"
 
-- name: Get status of temporary checksum file
-  local_action: stat
-  args:
-    path: "{{ checksum_file.path }}"
-  register: mlinux_md5sums_stat
-
-- name: Exit if md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt was not downloaded
-  fail:
-    msg: "Unable to find checksum file"
-  when:
-    - mlinux_md5sums_stat.stat.exists == False
-
-  # upgrade.bin
-- name: Get expected md5 of {{ mlinux_upgrade_bin }}_{{ mlinux_version }}
-  shell: "grep '{{ mlinux_upgrade_bin }}' {{ checksum_file.path }} | cut -d ' ' -f 1"
-  delegate_to: localhost
-  register: mlinux_upgrade_expected_md5
-
-- name: Delete temp file
-  file:
-    path: "{{ checksum_file.path }}"
-    state: absent
-  delegate_to: localhost
+- name: Extract checksum from file
+  set_fact:
+    mlinux_upgrade_expected_md5: "{{ item.content | regex_findall('^([a-z0-9]{32})\\s+' ~ mlinux_upgrade_bin ~ '\\b', multiline=True) }}"
+  when: item.status == 200
+  until: mlinux_upgrade_expected_md5 != ""
+  loop: "{{ checksum_data.results }}"
 
 - name: Check if {{ mlinux_upgrade_bin }}_{{ mlinux_version }} is downloaded
   local_action: stat
@@ -58,10 +36,7 @@
     name: "{{ role_path }}/files/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
     state: absent
   when:
-    - mlinux_upgrade_stat.stat.exists and mlinux_upgrade_stat.stat.checksum != mlinux_upgrade_expected_md5.stdout
-
-- debug:
-    var: mlinux_upgrade_stat
+    - mlinux_upgrade_stat.stat.exists and mlinux_upgrade_stat.stat.checksum != mlinux_upgrade_expected_md5
 
 - name: Download {{ mlinux_upgrade_bin }}_{{ mlinux_version }}
   local_action: get_url
@@ -69,9 +44,9 @@
     url: "{{ mlinux_url }}/{{ mlinux_upgrade_bin }}"
     dest: "{{ role_path }}/files/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
     timeout: 14400
-    checksum: "md5:{{ mlinux_upgrade_expected_md5.stdout }}"
+    checksum: "md5:{{ mlinux_upgrade_expected_md5 }}"
   when:
-    - mlinux_upgrade_stat.stat.exists == False or mlinux_upgrade_stat.stat.checksum != mlinux_upgrade_expected_md5.stdout
+    - mlinux_upgrade_stat.stat.exists == False or mlinux_upgrade_stat.stat.checksum != mlinux_upgrade_expected_md5
 
 - name: Validate {{ mlinux_upgrade_bin }}_{{ mlinux_version }}
   local_action:
@@ -148,6 +123,10 @@
 
 - name: Run mlinux_setup script
   import_tasks: mlinux_setup.yml
-  when: ansible_local.opkg.preserve is not defined
 
 # XXX - Change root password
+
+- name: Reload ansible_local
+  setup: filter=ansible_local
+...
+
