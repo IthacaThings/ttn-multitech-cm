@@ -1,0 +1,45 @@
+---
+#
+#	Do inital login and try to run setup script
+#
+
+- name: Create temporary file
+  ansible.builtin.tempfile:
+    state: file
+    suffix: temp
+  delegate_to: localhost
+  register: tempfile
+
+- name: Generate the boostrap script
+  template:
+    src: mlinux_setup.j2
+    dest: "{{ tempfile.path }}"
+  delegate_to: localhost
+
+- name: Run mlinux_setup (mlinux 3)
+  script:
+    cmd: "{{ tempfile.path }}"
+  become: false
+  vars:
+    ansible_ssh_user: root
+    ansible_password: root
+  when: mlinux_version is version('4', '<')
+
+- name: Run mlinux_setup (4 < mlinux_verson <= 5.1.8)
+  script:
+    cmd: "{{ role_path }}/files/mlinux_setup"
+  become: true
+  vars:
+    ansible_ssh_user: mtadm
+    ansible_password: root
+    ansible_become_password: root
+  when:
+    - mlinux_version is version('4', '>=')
+    - mlinux_version is version('5.2.7', '<')
+
+- name: Delete temp file
+  ansible.builtin.file:
+    path: "{{ tempfile.path }}"
+    state: absent
+  delegate_to: localhost
+...

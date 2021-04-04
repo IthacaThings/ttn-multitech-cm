@@ -9,6 +9,15 @@
     - always
 
 #
+#	Attempt to bootstrap an unconfigured gateway
+#
+- name: Bootstrap
+  import_tasks: bootstrap.yml
+  tags:
+    - bootstrap
+    - never
+
+#
 #
 #	Ansible first pass setup
 #
