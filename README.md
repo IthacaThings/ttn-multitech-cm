@@ -88,6 +88,24 @@ authentication. It is also recommended that you use ssh-agent to
 forward keys from your local system to the jump host and not keep
 private keys on cloud hosts.
 
+## Commissioning
+
+From version 5.2, official mLinux images require commisioning to
+create login creditionalls before an initial logging into the
+conduit.
+
+The script
+`bin/commission` is intented to perform this function.
+
+Run it as
+
+```bash
+bin/commission --address 192.168.2.1 --password PASSWORD
+```
+
+This will set the password for the `mtadm` user (or specify a user
+with `--username USER` so that you can log in and do initial setup.
+
 ## Jump Host
 
 This configuration relies on a *jump host* or ssh tunnel host. For
