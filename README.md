@@ -34,8 +34,8 @@ changes you need instead of making local changes.
 
 ## mLinux version
 
-This repo has been extensively tested on later versions of mLinux
-3.3.  It is recommended to update conduits to a later version of
+This repo has been extensively tested on later versions of mLinux 3.3
+and 5.3.  It is recommended to update conduits to a later version of
 mLinux before running this repo. It is important to keep your version
 of mLinux up to date to keep up with any security fixes.
 
@@ -64,10 +64,9 @@ configured Ansible with any configuration.
 
 The TTNI custom build of mLinux includes a tool to preserve
 configuration during an mLinux firmware upgrade. This tool will
-eventually be installed on any version of mLinux 3.3 configured via
-this Ansible configuration.
+is also installed by this Ansible configuration.
 
-Ansible Preserves configuration by ensuring all local changes that
+Ansible preserves configuration by ensuring all local changes that
 must be preserved are stored in the /var/config filesystem with
 symlinks from filesystems that are not preserved. The contents of this
 filesystem is normally preserved during a firmware upgrade. In
@@ -77,7 +76,12 @@ boot after a firmware upgrade.
 
 Packages installed in /opt (such as the Kersing packet forwarder) are
 not preserved and are re-installed by Ansible after a firmware
-upgrade. 
+upgrade.
+
+When upgrading to an image that does not contain the preserve script,
+it is necessary to log into the gateway and manually run the restore
+script (/var/config/restore_config).  This repo attempts to log in and
+run that script.
 
 ## Key based authentication
 
