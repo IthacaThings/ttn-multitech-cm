@@ -45,11 +45,12 @@ forwarder_restart_delay: 20
 autoquit_threshold: 5
 
 # Multi-tech version of mLinux images
-mlinux_upgrade_bin: "mlinux-{{ 'factory' if conduit_type == 'mtcdt' else conduit_type }}-image-{{ conduit_type }}-upgrade.bin"
-mlinux_url: "http://www.multitech.net/mlinux/images/{{ conduit_type }}/{{ mlinux_version }}"
+#mlinux_upgrade_bin: "mlinux-{{ 'factory' if conduit_type == 'mtcdt' else conduit_type }}-image-{{ conduit_type }}-upgrade.bin"
+#mlinux_url: "http://www.multitech.net/mlinux/images/{{ conduit_type }}/{{ mlinux_version }}"
 # TTNI version of mLinux images
-#JCH mlinux_upgrade_bin: "ttni-base-image-{{ conduit_type }}-upgrade.bin"
-#JCH mlinux_url: "https://github.com/IthacaThings/mlinux-images/raw/master/{{mlinux_version }}/{{ conduit_type }}"
+mlinux_base_url: https://ttni.tech/mlinux
+mlinux_upgrade_bin: "ttni-base-image-{{ conduit_type }}-upgrade.bin"
+mlinux_url: "{{ mlinux_base_url }}/images/{{ conduit_type }}/{{ mlinux_version }}"
 
 # Tag used by our support repos for this version of mlinux
 mlinux_ttni_preserve_root:
