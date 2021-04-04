@@ -129,4 +129,3 @@
 - name: Reload ansible_local
   setup: filter=ansible_local
 ...
-
