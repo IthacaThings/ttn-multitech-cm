@@ -69,7 +69,7 @@
 #
 - name: opkg clean
   shell: "opkg clean --autoremove"
-  when: mlinux_version is version('5', '>=')
+  when: ansible_local.mlinux.version is version('5', '>=')
 
 #
 #	Monit handlers
