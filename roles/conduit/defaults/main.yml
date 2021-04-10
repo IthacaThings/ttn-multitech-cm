@@ -51,6 +51,7 @@ autoquit_threshold: 5
 mlinux_base_url: https://ttni.tech/mlinux
 mlinux_upgrade_bin: "ttni-base-image-{{ conduit_type }}-upgrade.bin"
 mlinux_url: "{{ mlinux_base_url }}/images/{{ conduit_type }}/{{ mlinux_version }}"
+mlinux_ttni_base_url: https://ttni.tech/mlinux
 
 # Tag used by our support repos for this version of mlinux
 mlinux_ttni_preserve_root:
