@@ -37,6 +37,8 @@ authorized_keys: []
 
 # Where to fetch the kersing packages
 forwarder_baseurl_kersing: https://github.com/kersing/multitech-installer/raw/master
+# TTNI cache of packages
+forwarder_baseurl_ttni: "{{ mlinux_ttni_base_url }}/feeds/ttni-arm926ejste"
 # Command to run when rotating logs
 forwarder_logrotate_command: /etc/init.d/ttn-pkt-forwarder restart
 # How long to wait between stop and start
