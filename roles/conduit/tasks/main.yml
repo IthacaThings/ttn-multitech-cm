@@ -1,15 +1,6 @@
 ---
 
 #
-#	Collect logs
-#
-- name: Collect lora logs from all conduits
-  import_tasks: logs.yml
-  tags:
-    - never
-    - logs
-
-#
 #	Build the list of authorized keys
 #
 - name: Build list of authorized keys

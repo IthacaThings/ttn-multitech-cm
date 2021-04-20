@@ -172,6 +172,12 @@ ansible-setup:
 	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
 		ansible --inventory ${INVENTORY} -o ${OPTIONS} ${TARGET} --become -m shell -a "opkg update; opkg install ${ANSIBLE_DEPENDS_COMMON}; opkg install ${ANSIBLE_DEPENDS_OLD} || exit 0"
 
+# Collect logs from gateways
+fetch-logs:
+	@for target in ${HOSTS}; do mkdir -p logs/$${target}; done
+	@ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
+		ansible --inventory ${INVENTORY} -o ${OPTIONS} ${TARGET} --become -m synchronize -a 'mode=pull src=/var/log/lora-pkt-fwd.log* dest="logs/{{ ansible_hostname }}/" delete=yes'
+
 ${CATALOG}:	true
 	@mkdir -p ${CATALOG} 2>/dev/null || exit 0
 

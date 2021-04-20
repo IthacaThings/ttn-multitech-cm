@@ -476,6 +476,10 @@ roles/conduit/defaults:ansible_depends
 This can be required when Ansible is updated to require more python
 modules on the target.
 
+#### fetch-logs
+
+Fetch the lora logs from specified targets.  Logs are stored as *logs/ANSIBLE_HOSTNAME*
+
 #### gather
 
 Run a *ping* on all hosts/targets to gather all their facts
