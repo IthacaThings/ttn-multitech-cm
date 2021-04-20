@@ -1,4 +1,24 @@
----    
+---
+
+- name: Fetch preserve script
+  get_url:
+    url: "{{ mlinux_ttni_preserve_root[ansible_distribution_major_version] }}/preserve_config"
+    dest: /etc/init.d/preserve_config
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: Enable Preserve service
+  command: update-rc.d preserve_config start 39 0 6 .
+
+- name: Save a copy of the restore script
+  get_url:
+    url: "{{ mlinux_ttni_preserve_root[ansible_distribution_major_version] }}/restore_config"
+    dest: /var/config/restore_config
+    mode: "0755"
+    owner: root
+    group: root
+
 - name: Create restore dir
   file:
     dest: /var/config/restore.d

@@ -1,0 +1,25 @@
+---
+#
+#	Do inital login and try to run setup script
+#
+
+- name: Remember ssh options
+  set_fact:
+    ssh_options: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+
+- name: Run mlinux_setup (mlinux 3)
+  shell:
+    cmd: "sshpass -proot ssh {{ ssh_options }} root@{{ ansible_host }} /var/config/mlinux_setup"
+  delegate_to: localhost
+  ignore_errors: true
+  when: mlinux_version is version('4', '<')
+
+- name: Run mlinux_setup (4 < mlinux_verson <= 5.1.8)
+  shell:
+    cmd: "echo root | sshpass -proot ssh {{ ssh_options }} mtadm@{{ ansible_host }} sudo -S /var/config/mlinux_setup"
+  delegate_to: localhost
+  ignore_errors: true
+  when:
+    - mlinux_version is version('4', '>=')
+    - mlinux_version is version('5.2.7', '<')
+...

@@ -37,6 +37,8 @@ authorized_keys: []
 
 # Where to fetch the kersing packages
 forwarder_baseurl_kersing: https://github.com/kersing/multitech-installer/raw/master
+# TTNI cache of packages
+forwarder_baseurl_ttni: "{{ mlinux_ttni_base_url }}/feeds/ttni-arm926ejste"
 # Command to run when rotating logs
 forwarder_logrotate_command: /etc/init.d/ttn-pkt-forwarder restart
 # How long to wait between stop and start
@@ -45,12 +47,18 @@ forwarder_restart_delay: 20
 autoquit_threshold: 5
 
 # Multi-tech version of mLinux images
-mlinux_upgrade_bin: "mlinux-{{ 'factory' if conduit_type == 'mtcdt' else conduit_type }}-image-{{ conduit_type }}-upgrade.bin"
-mlinux_url: "http://www.multitech.net/mlinux/images/{{ conduit_type }}/{{ mlinux_version }}"
+#mlinux_upgrade_bin: "mlinux-{{ 'factory' if conduit_type == 'mtcdt' else conduit_type }}-image-{{ conduit_type }}-upgrade.bin"
+#mlinux_url: "http://www.multitech.net/mlinux/images/{{ conduit_type }}/{{ mlinux_version }}"
 # TTNI version of mLinux images
-#JCH mlinux_upgrade_bin: "ttni-base-image-{{ conduit_type }}-upgrade.bin"
-#JCH mlinux_url: "https://github.com/IthacaThings/mlinux-images/raw/master/{{mlinux_version }}/{{ conduit_type }}"
+mlinux_base_url: https://ttni.tech/mlinux
+mlinux_upgrade_bin: "ttni-base-image-{{ conduit_type }}-upgrade.bin"
+mlinux_url: "{{ mlinux_base_url }}/images/{{ conduit_type }}/{{ mlinux_version }}"
+mlinux_ttni_base_url: https://ttni.tech/mlinux
 
+# Tag used by our support repos for this version of mlinux
+mlinux_ttni_preserve_root:
+  "3": https://raw.githubusercontent.com/IthacaThings/meta-ttni/mlinux-3/recipes-core/preserve/preserve-1.0
+  "5": https://raw.githubusercontent.com/IthacaThings/meta-ttni/mlinux-5/recipes-core/preserve/preserve-1.0
 
 # For configuration of TTN Console
 gateway_brand: MultiTech
@@ -135,10 +143,10 @@ monit_pktfwd_restart: '"/etc/init.d/ttn-pkt-forwarder restart"'
 monit_pktfwd_reboot: 'exec "/sbin/reboot"'
 
 # Monitor space on /
-monit_root_test: "usage > 40%"
+monit_root_test: "usage > 50%"
 
 # Monitor space on /var/config
-monit_config_test: "usage > 10%"
+monit_config_test: "usage > 15%"
 
 # Monitor space on /var/volatile
 monit_volatile_test: "usage > 75%"

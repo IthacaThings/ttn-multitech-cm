@@ -4,6 +4,14 @@
 #	Register gateway
 #
 
+- name: Lora dir
+  file:
+    name: /var/config/lora
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+
 - name: Check if using correct card for the region
   fail:
     msg: "Lora card {{ ansible_local.lora.product_id }} and region {{region }} mismatch"
@@ -64,14 +72,18 @@
     name: lora-network-server
     state: absent
   when: ansible_local.opkg.lora_network_server is defined
-  notify: Reload facts
+  notify:
+    - Reload facts
+    - opkg clean
 
 - name: Remove Multi-Tech lora-packet-forwarder
   opkg:
     name: lora-packet-forwarder
     state: absent
   when: ansible_local.opkg.lora_packet_forwarder is defined
-  notify: Reload facts
+  notify:
+    - Reload facts
+    - opkg clean
 
 #
 #	Install dependencies
@@ -82,9 +94,10 @@
     pkg: "{{ item }}"
   when: (ansible_local is not defined) or (ansible_local.opkg is not defined) or (item not in ansible_local.opkg.keys())
   with_items:
-    - nodejs
     - libmpsse
-  notify: Reload facts
+  notify:
+    - Reload facts
+    - opkg clean
 
 #
 #	Make sure we have package for correct version
@@ -128,6 +141,13 @@
   when:
     - forwarder_installed != forwarder_package_version
 
+- name: Unmonitor packet forwarder if changes are being made
+  shell: "monit unmonitor check_pktfwdlog"
+  notify: monit monitor check_pktfwdlog
+  ignore_errors: yes
+  when:
+    - forwarder_installed != forwarder_package_version
+
 - name: Stop packet-forwarder
   service: name=ttn-pkt-forwarder state=stopped
   when: forwarder_installed != forwarder_package_version
@@ -145,11 +165,6 @@
   notify:
     - restart ttn-pkt-forwarder
     - Reload facts
-
-- name: Delete the ipk file
-  file:
-    path: "/var/config/{{ forwarder_package_full }}"
-    state: absent
 
 - name: Install /var/config/ttn-pkt-forwarder
   template:
@@ -180,38 +195,74 @@
 #
 #	Install the TTN config files
 #
-- name: Lora dir
-  file:
-    name: /var/config/lora
-    mode: "0755"
+- name: Local packet forwarder configuration file
+  template:
+    src: local_conf.json.j2
+    dest: /var/config/lora/local_conf.json
+    mode: "0644"
     owner: root
     group: root
 
-- block:
-    - template:
-        src: local_conf.json.j2
-        dest: /var/config/lora/local_conf.json
-        mode: "0644"
-        owner: root
-        group: root
+- name: Global packet forwarder configuration file
+  local_action: get_url
+  args:
+    url: "https://raw.githubusercontent.com/TheThingsNetwork/gateway-conf/master/{{ region }}-global_conf.json"
+    dest: "{{ role_path }}/files"
 
-    - local_action: get_url
-      args:
-        url: "https://raw.githubusercontent.com/TheThingsNetwork/gateway-conf/master/{{ region }}-global_conf.json"
-        dest: "{{ role_path }}/files"
-
+- name: Packet Forwarder configuration (before 3.0.25)
+  block:
+    - opkg: 
+        state: present
+        pkg: "{{ item }}"
+      when: (ansible_local is not defined) or (ansible_local.opkg is not defined) or (item not in ansible_local.opkg.keys())
+      loop:
+        - nodejs
+      notify:
+        - Reload facts
+        - opkg clean
     - copy:
         src: "{{ region }}-global_conf.json"
         dest: /var/config/lora/ttn_global_conf.json
         mode: "0644"
         owner: root
         group: root
-
     - shell: node /opt/lora/merge.js /var/config/lora/ttn_global_conf.json /var/config/lora/multitech_overrides.json /var/config/lora/global_conf.json
       notify: restart ttn-pkt-forwarder
+    - copy:
+        src: "{{ region }}-global_conf.json"
+        dest: /var/config/lora/global_conf.json
+        mode: "0644"
+        owner: root
+        group: root
+  when: forwarder_variant != "mp" or forwarder_version is version('3.0.25', '<')
 
-- name: Remove TTN packet forwarder config
+- name: Packet Forwarder configuration (3.0.25 and later)
+  block:
+    - opkg: 
+        state: absent
+        pkg: "{{ item }}"
+      when: (ansible_local is not defined) or (ansible_local.opkg is not defined) or (item in ansible_local.opkg.keys())
+      loop:
+        - nodejs
+      notify:
+        - Reload facts
+        - opkg clean
+    - copy:
+        src: "{{ region }}-global_conf.json"
+        dest: /var/config/lora/global_conf.json
+        mode: "0644"
+        owner: root
+        group: root
+      notify: restart ttn-pkt-forwarder
+    - file:
+        dest: /var/config/lora/ttn_global_conf.json
+        state: absent
+  when: forwarder_variant == "mp" and forwarder_version is version('3.0.25', '>=')
+
+- name: Remove some files
   file:
-    name: /var/config/lora/config.yml
+    name: "{{ item }}"
     state: absent
-  when: forwarder_variant != 'ttn'
+  loop:
+    - /var/config/lora/config.yml
+    - /var/config/lora/samples

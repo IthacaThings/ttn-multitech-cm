@@ -90,9 +90,8 @@ ifeq ($(wildcard $(CATALOG)/.),)
 endif
 
 
-ANSIBLE_DEPENDS = python-core \
+ANSIBLE_DEPENDS_COMMON = python-core \
 	python-argparse \
-	python-async \
 	python-compression \
 	python-dateutil \
 	python-distutils \
@@ -101,7 +100,6 @@ ANSIBLE_DEPENDS = python-core \
 	python-multiprocessing \
 	python-pkgutil \
 	python-psutil \
-	python-pycurl \
 	python-pyopenssl \
 	python-pyserial \
 	python-pyudev \
@@ -113,6 +111,9 @@ ANSIBLE_DEPENDS = python-core \
 	python-textutils \
 	python-unixadmin \
 	python-xml
+
+ANSIBLE_DEPENDS_OLD = python-async \
+	python-pycurl
 
 # now that we know the inventory, get the hosts.
 HOSTS=$(shell ansible --inventory ${INVENTORY} --list-hosts ${TARGET} | sed -e 's/^ *//' -e '/^hosts ([0-9]*):/d')
@@ -169,8 +170,7 @@ gather: ${CATALOG}
 # Ensure all ansible dependiences are installed (useful if the list gets updated)
 ansible-setup:
 	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
-		ansible --inventory ${INVENTORY} -o ${OPTIONS} ${TARGET} -b -a "sudo opkg update"; \
-		ansible --inventory ${INVENTORY} -o ${OPTIONS} ${TARGET} -b -a "sudo opkg install ${ANSIBLE_DEPENDS}"
+		ansible --inventory ${INVENTORY} -o ${OPTIONS} ${TARGET} --become -m shell -a "opkg update; opkg install ${ANSIBLE_DEPENDS_COMMON}; opkg install ${ANSIBLE_DEPENDS_OLD} || exit 0"
 
 ${CATALOG}:	true
 	@mkdir -p ${CATALOG} 2>/dev/null || exit 0

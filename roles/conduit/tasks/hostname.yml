@@ -19,12 +19,11 @@
 - name: Set hostname file
   copy:
     dest: /var/config/hostname
-    content: "{{ hostname }}"
+    content: "{{ hostname }}\n"
     mode: "0644"
     owner: root
     group: root
   when: hostname is defined
-  notify: Set hostname
 
 - name: Set hostname
   shell: "hostname -F /etc/hostname"

@@ -4,14 +4,15 @@ from __future__ import print_function
 
 import argparse
 import datetime
-from dateutil import parser
 import logging
+from logging.handlers import SysLogHandler
 import os
+import psutil
 import re
 import sys
 import time
 
-from logging.handlers import SysLogHandler
+from dateutil import parser
 
 def parse_args():
     """ What do we need to do """
@@ -41,6 +42,9 @@ def parse_args():
     group.add_argument("--logfile",
                        dest="logfile", default="/var/log/lora-pkt-fwd.log",
                        help="Location of the log file")
+    group.add_argument("--pidfile",
+                       dest="pidfile", default="/var/run/lora-pkt-fwd.pid",
+                       help="Location of the PID file")
     group.add_argument("--mtime",
                        dest="mtime", default=10*60, type=int,
                        help="File must have been updated this many seconds ago")
@@ -56,7 +60,7 @@ def parse_args():
         options.debug = True
 
     # Init Logging
-    logger = init_logging(options)
+    init_logging(options)
 
     return options
 
@@ -81,74 +85,130 @@ def init_logging(options):
     else:
         logger.setLevel('WARNING')
 
-    return logger
-
 class LogCheck(object):
     """ Perform check on the logfile """
 
-    _EXITED_RE = re.compile("^(?P<time>\d\d:\d\d:\d\d)\s+INFO: Exiting packet forwarder program")
-    _FAILED_RE = re.compile("^(?P<time>\d\d:\d\d:\d\d)\s+ERROR: \[main\] failed to start the concentrator")
-    _DOWNLINK_RE = re.compile("(?P<time>\d\d:\d\d:\d\d)\s+(PULL_ACK received in|INFO: \[TTN\] send status success for)")
+    _BANNER_RE = re.compile(r"^(?P<time>\d\d:\d\d:\d\d)\s+\*\*\* Multi Protocol Packet Forwarder for Lora Gateway \*\*\*")
+    _EXITED_RE = re.compile(r"^(?P<time>\d\d:\d\d:\d\d)\s+INFO: Exiting packet forwarder program")
+    _FAILED_RE = re.compile(r"^(?P<time>\d\d:\d\d:\d\d)\s+ERROR: \[main\] failed to start the concentrator")
+    _FATAL_RE = re.compile(r"^ERROR: FAIL TO CONNECT BOARD")
+    _DOWNLINK_RE = re.compile(r"(?P<time>\d\d:\d\d:\d\d)\s+(PULL_ACK received in|INFO: \[TTN\] send status success for)")
+    _TIMESTAMP_RE = re.compile(r"##### (?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} GMT) #####$")
 
     def __init__(self, options):
 
         self._options = options
         self._time_now = datetime.datetime.now()
+        self._time_utcnow = datetime.datetime.utcnow()
+        self._time_downlink = self._time_now - datetime.timedelta(seconds=self._options.downlink_time)
+
+    def pid_check(self):
+        """ Check if the process is running """
+
+        try:
+            lora_pid = None
+            with open(self._options.pidfile, "r") as filep:
+                line = filep.read().strip()
+                lora_pid = int(line)
+            logging.debug("Read %s: '%s': %d", self._options.pidfile, line, lora_pid)
+            if lora_pid is not None:
+                return psutil.pid_exists(lora_pid)
+        except (IOError, ValueError, TypeError) as error:
+            logging.debug("Read PID from %s: %s", self._options.pidfile, error)
+            return False
+
+        return False
 
     def check(self):
         """ Perform the checks """
 
+        retcode = (0, "OK")
+
+        if not self.pid_check():
+            retcode = (1, "Packet forwarder is not running")
+        logging.info("pid_check: %d %s" % retcode)
+
         try:
             stat = os.stat(self._options.logfile)
         except OSError:
-            return "%s does not exist" % self._options.logfile
+            return 2, "%s does not exist" % self._options.logfile
+        logging.info("Logfile exists")
 
         # Check that file is being updated
         if time.time() - stat.st_mtime > self._options.mtime:
-            return "%s has not been updated in %d seconds" % (self._options.logfile,
-                                                              time.time() - stat.st_mtime)
+            return 2, "%s has not been updated in %d seconds" % (self._options.logfile,
+                                                                 time.time() - stat.st_mtime)
+
+        look_back_to = self._time_utcnow - datetime.timedelta(seconds=self._options.downlink_time)
 
         # Read the logfile in reverse
         line_no = 0
+        saw_downlink = False
+        saw_quit = None
         for line in self._readlines_reverse(self._options.logfile):
             line_no += 1
             logging.debug("%d: %s", line_no, line)
 
-            # Only go back about 100 lines
-            if line_no > 100:
-                break
+            # Check for fatal error
+            if line_no < 5:
+                if self._FATAL_RE.match(line):
+                    return 3, "Fatal error, reboot needed: '%s'" % line
+                if self._EXITED_RE.match(line):
+                    saw_quit = "Last message was quit: '%s'" % line
+                    logging.debug("Found: %s", saw_quit)
+                    continue
+                if self._FAILED_RE.match(line):
+                    saw_quit = "Packet fowarder failed to start: '%s'" % line
+                    logging.debug("Found: %s", saw_quit)
+                    continue
+            elif saw_quit:
+                return 2, saw_quit
 
-            # Check for packet fowarder exit
-            if line_no < 3 and self._EXITED_RE.match(line):
-                return "Last message was quit"
+            match = self._TIMESTAMP_RE.match(line)
+            if match:
+                timestamp = parser.parse(match.group('timestamp'), ignoretz=True)
+                logging.info("Found timestamp: '%s'", line)
+                if timestamp < look_back_to:
+                    break
 
-            # Check that there wasn't a failure starting
-            if line_no < 10 and self._FAILED_RE.match(line):
-                return "Packet fowarder failed to start"
+            # If we see a restart banner, indicate it needs time to restart
+            match = self._BANNER_RE.match(line)
+            if match:
+                logging.info("Found restart banner: '%s'", line)
+                return 2, "Found restart at %s" % match.group('time')
 
             # Check that we are receiving downlink messages
             match = self._DOWNLINK_RE.match(line)
             if match:
-                logging.info("Downlink at %s", match.group('time'))
+                logging.info("Found downlink at %s: '%s'",
+                             match.group('time'),
+                             line)
                 msg_time = parser.parse(match.group('time'))
-                delta = self._time_now - msg_time
-                if delta > datetime.timedelta(seconds=self._options.downlink_time):
-                    return "No downlink messages in the last %s seconds" % delta.seconds
+                if msg_time < self._time_downlink:
+                    return 1, "Last downlink message at %s, more than %s seconds ago" % (
+                        msg_time.isoformat(),
+                        self._options.downlink_time
+                    )
+                saw_downlink = True
                 break
 
-        return 0
+        if not saw_downlink:
+            return 1, "No downlink messages found in last %s seconds" % self._options.downlink_time
+
+        return retcode
 
     #
     #	This may not work in python 3
     #
-    def _readlines_reverse(self, filename):
+    @staticmethod
+    def _readlines_reverse(filename):
         with open(filename, "rb") as qfile:
             qfile.seek(0, os.SEEK_END)
             position = qfile.tell()
             line = ''
             while position >= 0:
                 qfile.seek(position)
-                next_char = qfile.read(1)
+                next_char = qfile.read(1).decode('Latin1')
                 if next_char == "\n":
                     yield line[::-1]
                     line = ''
@@ -162,13 +222,13 @@ def main():
 
     options = parse_args()
 
-    response = LogCheck(options).check()
+    ret_code, response = LogCheck(options).check()
 
-    logging.info("Check returns %s", response)
+    logging.warning("Check returns %d, %s", ret_code, response)
 
-    sys.exit(response)
+    print("%s" % response)
+    sys.exit(ret_code)
 
 if __name__ == "__main__":
     main()
     sys.exit(0)
-

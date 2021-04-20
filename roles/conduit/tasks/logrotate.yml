@@ -10,7 +10,9 @@
     pkg: "logrotate"
   when:
     - ansible_local.opkg.logrotate is not defined
-  notify: Reload facts
+  notify:
+    - Reload facts
+    - opkg clean
 
 - name: /var/config/logrotate.d
   file:

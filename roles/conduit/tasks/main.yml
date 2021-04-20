@@ -1,6 +1,33 @@
 ---
 
 #
+#	Collect logs
+#
+- name: Collect lora logs from all conduits
+  import_tasks: logs.yml
+  tags:
+    - never
+    - logs
+
+#
+#	Build the list of authorized keys
+#
+- name: Build list of authorized keys
+  import_tasks: authorized_keys.yml
+  tags:
+    - always
+
+#
+#	Attempt to bootstrap an unconfigured gateway
+#
+- name: Bootstrap
+  import_tasks: bootstrap.yml
+  tags:
+    - bootstrap
+    - never
+
+#
+#
 #	Ansible first pass setup
 #
 - name: Ansible setup
@@ -14,7 +41,6 @@
 #
 - name: Preserve config setup
   import_tasks: preserve.yml
-  when: ansible_local.opkg.preserve is defined
   tags:
     - setup
     - preserve
@@ -27,6 +53,7 @@
   when:
     - mlinux_version is defined
     - mlinux_version != ansible_local.mlinux.version
+    - mlinux_version is version('5.3.0d', '!=') or ansible_local.mlinux.version is version('5.3.0b', '!=')
   tags:
     - setup
     - mlinux
@@ -162,10 +189,11 @@
     - setup
 
 #
+#	Always update system checksum file last
 #
-#
-- name: Update system checksum file
-  shell: /usr/local/lib/check_system_md5 || /usr/local/lib/check_system_md5 --reset
-  become: true
+- name: Schedule update of system checksum file
+  command: "true"
+  delegate_to: localhost
+  notify: Update system checksum file
   tags:
     - always

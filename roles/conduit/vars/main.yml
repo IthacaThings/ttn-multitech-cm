@@ -4,7 +4,7 @@
 forwarder_package: "{{ forwarder_variant }}-packet-forwarder"
 forwarder_package_version: "{{ forwarder_package }}_{{forwarder_version }}"
 forwarder_package_full: "{{forwarder_package_version }}_arm926ejste.ipk"
-forwarder_url: "{{ forwarder_baseurl_kersing }}/{{ forwarder_package_full }}"
+forwarder_url: "{{ forwarder_baseurl_ttni }}/{{ forwarder_package_full }}"
 
 forwarder_installed_package: "{{ 'poly-packet-forwarder' if ansible_local.opkg.poly_packet_forwarder is defined else 'mp-packet-forwarder' if ansible_local.opkg.mp_packet_forwarder is defined else False }}"
 
@@ -31,5 +31,3 @@ authorized_keys_list:
   - "{% for group in group_names %}{% if 'authorized_keys_' ~ group in vars %}{{ vars['authorized_keys_' ~ group] }}{% endif %}{% endfor %}"
 
 
-# Monit stuff
-monit_ntpd_pidfile: "{{ '/var/run/ntp.pid' if ansible_local.opkg.ntp_utils is version('4.2.8', '<') else '/var/run/ntpd.pid' }}"

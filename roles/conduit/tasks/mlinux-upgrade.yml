@@ -3,27 +3,25 @@
 #	Check mLinux version
 #
 
-- name: Check if md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt is downloaded
-  local_action: stat
-  args:
-    path: "{{ role_path }}/files/md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt"
-  register: mlinux_md5sums_stat
-  
-- name: Download md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt
-  local_action: get_url
-  args:
-    url: "{{ mlinux_url }}/md5sum.txt"
-    dest: "{{ role_path }}/files/md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt"
-    timeout: 14400
-  when:
-    - mlinux_md5sums_stat.stat.exists == False
+- name: Read checksum file
+  ansible.builtin.uri:
+    url: "{{ mlinux_url }}/{{ item }}"
+    return_content: yes
+    timeout: 120
+  ignore_errors: true
+  delegate_to: localhost
+  register: checksum_data
+  until: "checksum_data.content != ''"
+  loop:
+    - "md5sum.txt"
+    - "md5sums.txt"
 
-  # upgrade.bin
-- name: Get expected md5 of {{ mlinux_upgrade_bin }}_{{ mlinux_version }}
-  local_action:
-    module: shell
-    args: "grep '{{ mlinux_upgrade_bin }}' {{ role_path }}/files/md5sums_{{ conduit_type }}_{{ mlinux_version }}.txt | cut -d ' ' -f 1"
-  register: mlinux_upgrade_expected_md5
+- name: Extract checksum from file
+  set_fact:
+    mlinux_upgrade_expected_md5: "{{ item.content | regex_findall('^([a-z0-9]{32})\\s+' ~ mlinux_upgrade_bin ~ '\\b', multiline=True) }}"
+  when: item.status == 200
+  until: mlinux_upgrade_expected_md5 != ""
+  loop: "{{ checksum_data.results }}"
 
 - name: Check if {{ mlinux_upgrade_bin }}_{{ mlinux_version }} is downloaded
   local_action: stat
@@ -35,10 +33,10 @@
 - name: Remove bad copy of {{ mlinux_upgrade_bin }}_{{ mlinux_version }}
   local_action: file
   args:
-    name: "{{ role_path }}/files/{{ mlinux_upgrade }}_{{ mlinux_version }}"
+    name: "{{ role_path }}/files/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
     state: absent
   when:
-    - mlinux_upgrade_stat.stat.exists and mlinux_upgrade_stat.stat.checksum != mlinux_upgrade_expected_md5.stdout
+    - mlinux_upgrade_stat.stat.exists and mlinux_upgrade_stat.stat.checksum != mlinux_upgrade_expected_md5
 
 - name: Download {{ mlinux_upgrade_bin }}_{{ mlinux_version }}
   local_action: get_url
@@ -46,24 +44,37 @@
     url: "{{ mlinux_url }}/{{ mlinux_upgrade_bin }}"
     dest: "{{ role_path }}/files/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
     timeout: 14400
-    checksum: "md5:{{ mlinux_upgrade_expected_md5.stdout }}"
+    checksum: "md5:{{ mlinux_upgrade_expected_md5 }}"
   when:
-    - mlinux_upgrade_stat.stat.exists == False
+    - mlinux_upgrade_stat.stat.exists == False or mlinux_upgrade_stat.stat.checksum != mlinux_upgrade_expected_md5
 
 - name: Validate {{ mlinux_upgrade_bin }}_{{ mlinux_version }}
   local_action:
     module: shell
-    args: "{{ role_path }}/files/mlinux-firmware-upgrade -h {{conduit_type }} -n {{ role_path }}/files/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
+    args: "{{ role_path }}/files/mlinux-firmware-upgrade -h {{ conduit_type }} -n {{ role_path }}/files/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
+
+- name: Unmonitor space usage on /var/volatile
+  shell: "monit unmonitor volatile"
+  notify: monit monitor volatile
+  ignore_errors: yes
+
+- name: Remove some temp files from a failed upgrade
+  file:
+    name: "{{ item }}"
+    state: absent
+    force: true
+  loop:
+    - /var/volatile/do_flash_upgrade
+    - /var/volatile/flash-upgrade
 
 - name: Copy {{ mlinux_upgrade_bin }}_{{ mlinux_version }} to {{ hostname }}
   copy:
-    dest: ~/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}
+    dest: /var/volatile/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}
     src: "{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
     mode: "0600"
     owner: root
     group: root
     unsafe_writes: yes
-  register: upgrade_copy
 
 - name: Copy over setup script
   template:
@@ -83,7 +94,9 @@
     group: root
 
 - name: Prep flash upgrade
-  shell: "/usr/sbin/mlinux-firmware-upgrade -N {{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
+  shell:
+    cmd: "/usr/sbin/mlinux-firmware-upgrade -N {{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
+    chdir: //var/volatile
   register: flash_upgrade
 
 - name: Reboot
@@ -107,13 +120,12 @@
 #
 #	Recover state
 #
+
 - name: Run mlinux_setup script
-  local_action: shell
-  args: "sshpass -proot ssh root@{{ ansible_host }} /var/config/mlinux_setup"
-  when: ansible_local.opkg.preserve is not defined
+  import_tasks: mlinux_setup.yml
 
 # XXX - Change root password
-  
+
 - name: Reload ansible_local
   setup: filter=ansible_local
-
+...

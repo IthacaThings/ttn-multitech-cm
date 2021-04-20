@@ -2,12 +2,15 @@
 
 # Log to syslog
 set logfile syslog facility log_daemon
+set statefile /var/config/monit/monit.state
 
 # Poll every {{ monit_poll }} seconds
 set daemon {{ monit_poll }}
 
 # Use a Unix socket for monitoring
-set httpd unixsocket /var/run/monit.sock
+set httpd
+    port 2812
+    use address 127.0.0.1
     allow monit:monit
 
 # Monitor the system
@@ -72,23 +75,19 @@ check filesystem volatile with path /var/volatile
 #       Ansible reconfiguration.
 #
 
-# Monitor ttn-pkt-forwarder
-check process ttn-pkt-forwarder PIDFILE {{ monit_pktfwd_pidfile }}
-    if does not exist for {{ monit_pktfwd_period }} then restart
-    start program = {{ monit_pktfwd_start }}
-    stop program = {{ monit_pktfwd_stop }}
-
 # Check for error conditions in packet forwarder log
 check program check_pktfwdlog with path /usr/local/lib/check_pktfwdlog
-    if status != 0 then exec {{ monit_pktfwd_restart }}
+    if status == 1 then exec {{ monit_pktfwd_restart }}
+    if status == 2 for 2 cycles then exec {{ monit_pktfwd_restart }}
+    if status == 3 then {{ monit_pktfwd_reboot }}
 
-{% if ssh_tunnel_enabled %}
+{% if ssh_tunnel_enabled -%}
 # Monitor autossh
 check process ssh_tunnel MATCHING /usr/bin/autossh
     if does not exist for {{ monit_process_period }} then restart
     start program = "/etc/init.d/ssh_tunnel start" with timeout 15 seconds
     stop program = "/etc/init.d/ssh_tunnel stop"
-{% endif %}
+{% endif -%}
 
 # Monitor sshd
 check process sshd PIDFILE /var/run/sshd.pid
@@ -107,3 +106,14 @@ check program check_system_md5  with path /usr/local/lib/check_system_md5
     every "{{ 60 | random(seed=inventory_hostname) }} * * * *"
     if status == 1 then alert
 
+{% if eth0_type is defined -%}
+check network "eth0" with interface "eth0"
+    if failed link then restart
+    if changed link capacity then alert
+{% endif -%}
+
+{% if wlan0_type is defined -%}
+check network "wlan0" with interface "wlan0"
+    if failed link then restart
+    if changed link capacity then alert
+{% endif -%}
