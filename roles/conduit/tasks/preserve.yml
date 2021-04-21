@@ -1,8 +1,13 @@
 ---
 
+- name: Figure out if we need to ignore certificates on older versions
+  set_fact:
+    validate_certs: "{{ mlinux_version is version('3.3.24', '>=') }}"
+
 - name: Fetch preserve script
   get_url:
     url: "{{ mlinux_ttni_preserve_root[ansible_distribution_major_version] }}/preserve_config"
+    validate_certs: "{{ validate_certs }}"
     dest: /etc/init.d/preserve_config
     mode: "0755"
     owner: root
@@ -14,6 +19,7 @@
 - name: Save a copy of the restore script
   get_url:
     url: "{{ mlinux_ttni_preserve_root[ansible_distribution_major_version] }}/restore_config"
+    validate_certs: "{{ validate_certs }}"
     dest: /var/config/restore_config
     mode: "0755"
     owner: root
