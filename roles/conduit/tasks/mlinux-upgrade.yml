@@ -18,7 +18,7 @@
 
 - name: Extract checksum from file
   set_fact:
-    mlinux_upgrade_expected_md5: "{{ item.content | regex_findall('^([a-z0-9]{32})\\s+' ~ mlinux_upgrade_bin ~ '\\b', multiline=True) }}"
+    mlinux_upgrade_expected_md5: "{{ item.content | regex_search('^([a-z0-9]{32})\\s+' ~ mlinux_upgrade_bin ~ '\\b', multiline=True) }}"
   when: item.status == 200
   until: mlinux_upgrade_expected_md5 != ""
   loop: "{{ checksum_data.results }}"
