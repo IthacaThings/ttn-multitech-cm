@@ -3,30 +3,33 @@
 #	Check mLinux version
 #
 
-- name: Read checksum file
+- name: Read md5sum.txt
   ansible.builtin.uri:
-    url: "{{ mlinux_url }}/{{ item }}"
+    url: "{{ mlinux_url }}/md5sum.txt"
     return_content: yes
     timeout: 120
   ignore_errors: true
   delegate_to: localhost
   register: checksum_data
-  until: checksum_data.content != ''
-  loop:
-    - "md5sum.txt"
-    - "md5sums.txt"
+
+- name: Read md5sums.txt
+  ansible.builtin.uri:
+    url: "{{ mlinux_url }}/md5sums.txt"
+    return_content: yes
+    timeout: 120
+  ignore_errors: true
+  delegate_to: localhost
+  register: checksum_data
+  when: checksum_data is not succeeded
 
 - name: Verify that we have a checksum
   fail:
-    msg: "Unable to find checksum file at: {{ mlinux_url }} | {{ checksum_data.results | selectattr('status', 'ne', 404) | map(attribute='msg') | join(' ') }}"
-  when: checksum_data.content is not defined or checksum_data.content == ''
+    msg: "Unable to find checksum file at: {{ mlinux_url }} | {{ checksum_data.msg }}"
+  when: checksum_data is not succeeded
 
 - name: Extract checksum from file
   set_fact:
-    mlinux_upgrade_expected_md5: "{{ item.content | regex_search('^([a-z0-9]{32})\\s+' ~ mlinux_upgrade_bin ~ '\\b', multiline=True) }}"
-  when: item.status == 200
-  until: mlinux_upgrade_expected_md5 != ""
-  loop: "{{ checksum_data.results }}"
+    mlinux_upgrade_expected_md5: "{{ (checksum_data.content | regex_search('^([a-z0-9]{32})\\s+' ~ mlinux_upgrade_bin ~ '\\b', multiline=True)).split()[0] }}"
 
 - name: Check if {{ mlinux_upgrade_bin }}_{{ mlinux_version }} is downloaded
   local_action: stat
