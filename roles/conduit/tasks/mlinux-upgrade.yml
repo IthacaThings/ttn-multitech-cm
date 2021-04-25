@@ -11,10 +11,15 @@
   ignore_errors: true
   delegate_to: localhost
   register: checksum_data
-  until: "checksum_data.content != ''"
+  until: checksum_data.content != ''
   loop:
     - "md5sum.txt"
     - "md5sums.txt"
+
+- name: Verify that we have a checksum
+  fail:
+    msg: "Unable to find checksum file at: {{ mlinux_url }} | {{ checksum_data.results | selectattr('status', 'ne', 404) | map(attribute='msg') | join(' ') }}"
+  when: checksum_data.content is not defined or checksum_data.content == ''
 
 - name: Extract checksum from file
   set_fact:
