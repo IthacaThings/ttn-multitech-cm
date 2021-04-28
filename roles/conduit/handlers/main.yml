@@ -41,7 +41,7 @@
 #       Restart ssh_tunnel
 #
 - name: restart ssh_tunnel
-  service: name=ssh_tunnel state=restarted
+  include_tasks: restart_tunnel.yml
 
 #
 #	Restart sshd after config changes
