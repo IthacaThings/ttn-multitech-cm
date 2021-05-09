@@ -503,3 +503,11 @@ Variables can be defined at three levels:
 
 The available variables are defined in the [Conduit role README](roles/conduit/README.md).
 
+# Migrating to TTNv3
+
+## Required changes
+
+The `ttn_version` variable defaults to 3, update any gateways that
+need to stay registered with TTNv2 with `ttn_version: 2` before
+running.
+

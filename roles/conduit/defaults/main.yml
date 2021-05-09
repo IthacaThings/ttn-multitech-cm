@@ -46,6 +46,9 @@ forwarder_restart_delay: 20
 # https://www.thethingsnetwork.org/forum/t/multitech-ttn-connection-lost-after-bad-connectivity/12355
 autoquit_threshold: 5
 
+# Default new gateways to TTNv3
+ttn_version: 3
+
 # Multi-tech version of mLinux images
 #mlinux_upgrade_bin: "mlinux-{{ 'factory' if conduit_type == 'mtcdt' else conduit_type }}-image-{{ conduit_type }}-upgrade.bin"
 #mlinux_url: "http://www.multitech.net/mlinux/images/{{ conduit_type }}/{{ mlinux_version }}"
@@ -65,6 +68,7 @@ gateway_brand: MultiTech
 gateway_model: "{{ ansible_local.conduit.product_id }}"
 antenna_type: "{{ 'internal' if conduit_type == 'mtcap' else '3.0dBi Rubber Duck' }}"
 antenna_model: "{{ 'internal' if conduit_type == 'mtcap' else 'MultiTech AN868-915A-1HRA' }}"
+antenna_gain: "{{ 2 if conduit_type == 'mtcap' else 3 }}"
 
 # SSH tunnel
 ssh_tunnel_ssh_key: /etc/ssh/ssh_host_rsa_key

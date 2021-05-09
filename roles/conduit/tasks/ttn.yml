@@ -4,18 +4,17 @@
 #	Register gateway
 #
 
+# XXX Testing
+# - v2 still works
+# - Audit params
+#   - location-public
+#   - status-public
+# - Test switching back and forth
+
 - name: Check versions
   fail:
     msg: "mp packet forwarder 3.0.25 or greater is required on this version of mLinux due to lack of nodejs"
   when: mlinux_version is version('5.3.0', '>=') and ( forwarder_variant != "mp" or forwarder_version is version('3.0.25', '<') )
-
-- name: Lora dir
-  file:
-    name: /var/config/lora
-    state: directory
-    mode: "0755"
-    owner: root
-    group: root
 
 - name: Check if using correct card for the region
   fail:
@@ -31,43 +30,24 @@
     - ansible_local.lora.hw_version != "MTAC-LORA-1.0"
     - forwarder_variant != "mp"
 
-- name: check if logged into TTN and refresh key
-  local_action:
-    module: shell
-    args: "bin/ttnctl user status"
-  run_once: true
+- name: Validate TTN version
+  fail:
+    msg: "Invalid TTN version: '{{ ttn_version }}'"
+  when: ttn_version != 2 and ttn_version != 3
 
-- name: register gateway and delete old name if necessary
-  local_action:
-    module: shell
-    args:
-      "bin/register
-        --json
-        --id {{ lora_hostname }} 
-      	--region {{ region }}
-        --latitude {{ latitude }}
-        --longitude {{ longitude }}
-        --router {{ router }}
-        --description {{ description | quote }}
-        --brand {{ gateway_brand | quote }}
-        --model {{ gateway_model | quote }}
-        --antenna-type {{ antenna_type | quote }}
-        --antenna-model {{ antenna_model | quote }}
-        --old_id {{ lora_hostname_delete }}
-        --collaborators '{{ gateway_collaborators | to_json }}'"
-  register: register_output
-  notify: register gateway
+- include_tasks: ttnv2.yml
+  when: ttn_version == 2
 
-- name: Set the gateway_info fact
-  set_fact:
-    gateway_info: "{{ register_output.stdout }}"
-  when: forwarder_variant == 'mp'
+- include_tasks: ttnv3.yml
+  when: ttn_version == 3
 
-- name: Set Some facts
-  set_fact:
-    gw_key: "{{ gateway_info|json_query('key') }}"
-    gw_router: "{{ gateway_info|json_query('info.router.mqtt_address')|urlsplit('hostname') }}"
-  when: forwarder_variant == 'mp'
+- name: Lora dir
+  file:
+    name: /var/config/lora
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
 
 #
 #	Remove Multi-Tech stuff that we don't want and install the TTN packet-forwarder
@@ -207,12 +187,7 @@
     mode: "0644"
     owner: root
     group: root
-
-- name: Global packet forwarder configuration file
-  local_action: get_url
-  args:
-    url: "https://raw.githubusercontent.com/TheThingsNetwork/gateway-conf/master/{{ region }}-global_conf.json"
-    dest: "{{ role_path }}/files"
+  notify: restart ttn-pkt-forwarder
 
 - name: Packet Forwarder configuration (before 3.0.25)
   block:
@@ -225,16 +200,16 @@
       notify:
         - Reload facts
         - opkg clean
-    - copy:
-        src: "{{ region }}-global_conf.json"
+    - template:
+        src: global_conf.json.j2
         dest: /var/config/lora/ttn_global_conf.json
         mode: "0644"
         owner: root
         group: root
     - shell: node /opt/lora/merge.js /var/config/lora/ttn_global_conf.json /var/config/lora/multitech_overrides.json /var/config/lora/global_conf.json
       notify: restart ttn-pkt-forwarder
-    - copy:
-        src: "{{ region }}-global_conf.json"
+    - template:
+        src: global_conf.json.j2
         dest: /var/config/lora/global_conf.json
         mode: "0644"
         owner: root
@@ -252,8 +227,8 @@
       notify:
         - Reload facts
         - opkg clean
-    - copy:
-        src: "{{ region }}-global_conf.json"
+    - template:
+        src: global_conf.json.j2
         dest: /var/config/lora/global_conf.json
         mode: "0644"
         owner: root
