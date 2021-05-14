@@ -2,12 +2,6 @@
 # handlers file for setup
 
 #
-#	Run update-ca-certificates
-#
-- name: update-ca-certificates
-  shell: "update-ca-certificates"
-
-#
 #	Make sure init script is run
 #
 - name: update rc
@@ -41,7 +35,7 @@
 #       Restart ssh_tunnel
 #
 - name: restart ssh_tunnel
-  service: name=ssh_tunnel state=restarted
+  include_tasks: restart_tunnel.yml
 
 #
 #	Restart sshd after config changes

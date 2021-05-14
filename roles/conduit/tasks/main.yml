@@ -151,16 +151,6 @@
     - ttn
 
 #
-#	Install additional ca-certificates
-#
-
-- name: Additional Certificates
-  import_tasks: certs.yml
-  tags:
-    - ca-certificates
-    - setup
-
-#
 #	Set up ssh_tunnel (autossh)
 #
 - name: Set up ssh_tunnel (autossh)
