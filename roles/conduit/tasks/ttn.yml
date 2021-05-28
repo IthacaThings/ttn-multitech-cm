@@ -7,7 +7,7 @@
 - name: Check versions
   fail:
     msg: "mp packet forwarder 3.0.25 or greater is required on this version of mLinux due to lack of nodejs"
-  when: mlinux_version is version('5.3.0', '>=') and ( forwarder_variant != "mp" or forwarder_version is version('3.0.25', '<') )
+  when: ansible_local.mlinux.version is version('5.3.0', '>=') and ( forwarder_variant != "mp" or forwarder_version is version('3.0.25', '<') )
 
 - name: Lora dir
   file:

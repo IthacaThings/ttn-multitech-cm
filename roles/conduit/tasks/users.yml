@@ -51,4 +51,4 @@
   vars:
     target_user: mtadm
   when:
-    - mlinux_version is version('4', '>=')
+    - ansible_local.mlinux.version is version('4', '>=')
