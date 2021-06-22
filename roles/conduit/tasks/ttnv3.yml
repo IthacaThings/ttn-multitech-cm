@@ -18,6 +18,8 @@
         --longitude {{ longitude }}
         --altitude {{ altitude }}
         {{ '--update-location-from-status' if use_gps and have_gps else '' }}
+        {{ '--status-public' if status_public else '--status-private' }}
+        {{ '--location-public' if location_public else '--location-private' }}
         --router {{ router_v3 }}
         --description {{ description | quote }}
         --brand {{ gateway_brand | quote }}
