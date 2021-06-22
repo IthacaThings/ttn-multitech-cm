@@ -40,6 +40,7 @@
     src: /var/config/monit/.monit.id
     state: link
     force: true
+    follow: no
     
 - name: Create monit event queue
   file:

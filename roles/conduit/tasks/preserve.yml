@@ -2,7 +2,7 @@
 
 - name: Figure out if we need to ignore certificates on older versions
   set_fact:
-    validate_certs: "{{ mlinux_version is version('3.3.24', '>=') }}"
+    validate_certs: "{{ ansible_local.mlinux.version is version('3.3.24', '>') }}"
 
 - name: Fetch preserve script
   get_url:
