@@ -3,6 +3,7 @@
 # XXX - Do we need to register with a specific region for TTNv3?
 # XXX - Can we provide a table of routers per region?
 # XXX - Key for v3
+# XXX - Fix error on get config on v3 gateway that does not exist
 
 """
 MIT License
@@ -465,7 +466,7 @@ class GatewayV3(object):
             "--location_public=%s" % json.dumps(self._options.location_public),
             "--status_public=%s" % json.dumps(self._options.status_public),
         ]
-        cmd.extend(["--router-id", self._options.router])
+        cmd.extend(["--gateway-server-address", self._options.router])
         if self._options.organization_id:
             cmd.extend(["--organization-id", self._options.organization_id])
         if self._options.user_id:
