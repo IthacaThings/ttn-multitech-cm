@@ -485,7 +485,7 @@ class GatewayV3(object):
             output = check_output(self._options.binaryv3, self._options.noop, cmd)
             logging.debug(output)
         except subprocess.CalledProcessError as error:
-            logging.warning(error)
+            logging.warning("Registering gateway: %s", error)
             return False
 
         self._data = self._get_config()
