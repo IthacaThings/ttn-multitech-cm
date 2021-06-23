@@ -804,7 +804,7 @@ def main():
                 time.sleep(random.uniform(0, 2))
 
         # Register the gateway if it does not exist
-        if not gateway.exists:
+        if not gateway.exists():
             if not gateway.register():
                 return 1
 
