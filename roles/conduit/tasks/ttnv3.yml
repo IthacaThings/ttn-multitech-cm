@@ -14,9 +14,9 @@
         --id {{ lora_hostname }} 
         --eui {{ ansible_local.lora.eui }}
       	--region {{ region }}
-        --latitude {{ latitude }}
-        --longitude {{ longitude }}
-        --altitude {{ altitude }}
+        {{ '--latitude' lattitude if latitude is defined and latitude != 0 else '' }}
+        {{ '--longitude' lattitude if longitude is defined and longitude != 0 else '' }}
+        {{ '--altitude' lattitude if altitude is defined and altitude != 0 else '' }}
         {{ '--update-location-from-status' if use_gps and have_gps else '' }}
         {{ '--status-public' if status_public else '--status-private' }}
         {{ '--location-public' if location_public else '--location-private' }}
