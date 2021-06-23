@@ -480,9 +480,9 @@ class GatewayV3(object):
         if self._options.altitude:
             cmd.extend(["--antenna.location.altitude", str(self._options.altitude)])
         if self._options.brand:
-            cmd.extend(["--version-ids.brand-id", quote(self._options.brand)])
+            cmd.extend(["--version-ids.brand-id", quote(self._options.brand).lower()])
         if self._options.model:
-            cmd.extend(["--version-ids.model-id", quote(self._options.model)])
+            cmd.extend(["--version-ids.model-id", quote(self._options.model).lower()])
 
         try:
             output = check_output(self._options.binaryv3, self._options.noop, cmd)
@@ -518,7 +518,7 @@ class GatewayV3(object):
         if self._options.brand and self.brand.lower() != self._options.brand.lower():
             changes.extend(["--version-ids.brand-id", quote(self._options.brand.lower())])
         if self._options.model and self.model.lower() != self._options.model.lower():
-            changes.extend(["--version-ids.model-id", quote(self._options.modell.lower())])
+            changes.extend(["--version-ids.model-id", quote(self._options.model.lower())])
         if self.location_public != self._options.location_public:
             changes.append("--location_public=%s" % json.dumps(self._options.location_public))
         if self.status_public != self._options.status_public:
