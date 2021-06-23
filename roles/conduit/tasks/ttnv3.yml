@@ -26,6 +26,7 @@
         --model {{ gateway_model | quote }}
         --antenna-type {{ antenna_type | quote }}
         --antenna-model {{ antenna_model | quote }}
+        {{ gateway_owner }}
         --collaborators '{{ gateway_collaborators | to_json }}'"
   register: register_output
 
