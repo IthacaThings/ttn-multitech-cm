@@ -460,12 +460,10 @@ class GatewayV3(object):
             "gateways",
             "register", self._options.gw_id,
             "--gateway-eui", self._options.gw_eui,
-            "--frequency-plan-id", self._options.region['plan_v3'],
+            "--frequency-plan-id", REGIONS[self._options.region]['plan_v3'],
             "--enforce-duty-cycle",
             "--location_public=%s" % json.dumps(self._options.location_public),
             "--status_public=%s" % json.dumps(self._options.status_public),
-            "--antenna.location.latitude", self._options.latitude,
-            "--antenna.location.longitude", self._options.longitude
         ]
         cmd.extend(["--router-id", self._options.router])
         if self._options.organization_id:
@@ -474,6 +472,10 @@ class GatewayV3(object):
             cmd.extend(["--user-id", self._options.user_id])
         if self._options.description:
             cmd.extend(["--name", quote(self._options.description)])
+        if self._options.latitude:
+            cmd.extend(["--antenna.location.latitude", self._options.latitude])
+        if self._options.longitude:
+            cmd.extend(["--antenna.location.longitude", self._options.longitude])
         if self._options.altitude:
             cmd.extend(["--antenna.location.altitude", self._options.altitude])
         if self._options.brand:
