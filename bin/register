@@ -509,9 +509,9 @@ class GatewayV3(object):
         if self._options.router and self.router != self._options.router:
             changes.extend(["--gateway-server-address", self._options.router])
         if self._options.latitude and self.latitude != self._options.latitude:
-            changes.extend(["--antenna.location.latitiude", str(self._options.latitude)])
+            changes.extend(["--antenna.location.latitude", str(self._options.latitude)])
         if self._options.longitude and self.longitude != self._options.longitude:
-            changes.extend(["--antenna.location.longitiude", str(self._options.longitude)])
+            changes.extend(["--antenna.location.longitude", str(self._options.longitude)])
         if self._options.altitude and self.altitude != self._options.altitude:
             changes.extend(["--antenna.location.altitude", str(self._options.altitude)])
         if self._options.description and self.description != self._options.description:
