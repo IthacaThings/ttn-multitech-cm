@@ -6,7 +6,7 @@
 
 - name: Register the gateway
   local_action:
-    module: shell
+    module: command
     args:
       "bin/register
         --v3
