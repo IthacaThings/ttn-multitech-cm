@@ -354,13 +354,15 @@ the home directories for root and the 'ttn' user defined by this repo.
 
 To force a Conduit to mLinux 3.3.7, in *host_vars/**HOST**.yml* set:
 
-```
+```yaml
 mlinux_version: 3.3.7
 ```
 
 and run
 
-```make apply```
+```bash
+make apply
+```
 
 # Syncing with Upstream
 This is necessary when the global configurations change, or if there
@@ -507,7 +509,108 @@ The available variables are defined in the [Conduit role README](roles/conduit/R
 
 ## Required changes
 
-The `ttn_version` variable defaults to 3, update any gateways that
+### ttn_version
+
+The `ttn_version` variable defaults to `3`, update any gateways that
 need to stay registered with TTNv2 with `ttn_version: 2` before
 running.
 
+### router_v3
+
+The `router_v3` variable needs to be defined in conduits.yml.  Select
+the proper router for your region.  Available clusters are listed if
+you go to [The Things Network
+Console](https://console.cloud.thethings.network/).
+
+### gateway_collaborators
+
+The `gateway_collaboraators` variable syntax is changed.  The new
+syntax is:
+
+```
+gateway_collaborators:
+  - { username: jchonig }
+  - { username: terrillmoore }
+  - { organization: ttn-ithaca }
+  - { organization: honig-net }
+```
+
+## Installing ttn-lw-cli
+
+Version 3 uses the `ttn-lw-cli` command, which is a little harder to
+install and configure than the `ttnctl` command used by TTN v2.
+
+See the instructions
+[here](https://www.thethingsindustries.com/docs/getting-started/cli/installing-cli/)
+
+### Config file location
+
+If you are using ttn-lw-cli on Linux you are probably using the
+[snap](https://snapcraft.io/) version.
+As of this writting, snaps can not access protected directories, that
+is, directories that contain a component starting with a dot,
+i.e. `~/.config`.
+Nor will `~/.ttn-lw-cli.yml` work.
+As a workaround, ensure the path to your ttn-lw-cli.yml file does not
+include a protected directory.
+Set the environment variable `TTN_LW_CONFIG` to point to this
+configuration file.
+
+Once you set the config file location you can create a config file by
+running the following command:
+
+```bash
+(cd $(dirname $TTN_LW_CONFIG); ttn-lw-cli use nam1.cloud.thethings.network --fetch-ca --config ${TTN_LW_CONFIG} --overwrite)
+```
+
+Change `nam1` to the appropriate region for your location (opening
+https://console.cloud.thethings.network/ in your browser will show you
+the options).
+
+### Authenticating on a remote session
+
+Normally the process to authenticate to ttn-lw-cli is
+
+```bash
+ttn-lw-cli login
+```
+
+This will open a browser window on your system for authentication.
+However, this will not work on a remote ssh session.
+
+If a browser does not open, or can not open a browser because you are
+on a remote system, open, use:
+
+```bash
+ttn-lw-cli login  --callback=false
+```
+
+and you will see:
+
+```
+$ ttn-lw-cli login --callback=false
+INFO	Opening your browser on https://eu1.cloud.thethings.network/oauth/authorize?client_id=cli&redirect_uri=code&response_type=code
+WARN	Could not open your browser, you'll have to go there yourself	{"error": "fork/exec /usr/bin/xdg-open: permission denied"}
+INFO	After logging in and authorizing the CLI, we'll get an access token for future commands.
+INFO	Please paste the authorization code and press enter
+>
+```
+
+Copy the URL from that output and paste it into your browser (note
+that all authentication is done in the eu1 region).
+If you are not logged in to the eu1 region of The Things Network in
+your browser session you will be prompted to login.
+
+You will be presented with an authorization token; click the button to
+copy it to your clipboard and enter it in the following command:
+
+```bash
+ttn-lw-cli login --api-key APIKEY
+```
+
+You now should be logged in.
+
+# TODO
+
+Add option to run basics station on conduit 
+http://www.multitech.net/developer/software/lora/running-basic-station-on-conduit/
