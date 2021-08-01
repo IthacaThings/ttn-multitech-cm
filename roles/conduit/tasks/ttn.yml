@@ -4,13 +4,6 @@
 #	Register gateway
 #
 
-# XXX Testing
-# - v2 still works
-# - Audit params
-#   - location-public
-#   - status-public
-# - Test switching back and forth
-
 - name: Check versions
   fail:
     msg: "mp packet forwarder 3.0.25 or greater is required on this version of mLinux due to lack of nodejs"
