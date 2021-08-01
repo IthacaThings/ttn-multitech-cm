@@ -173,11 +173,6 @@
     - update rc
     - restart ttn-pkt-forwarder
 
-- name: Clean up packet-forwarder crud
-  file:
-    name: /var/config/lora/local_conf.json-opkg
-    state: absent
-
 #
 #	Install the TTN config files
 #
@@ -247,3 +242,4 @@
   loop:
     - /var/config/lora/config.yml
     - /var/config/lora/samples
+    - /var/config/lora/local_conf.json-opkg
