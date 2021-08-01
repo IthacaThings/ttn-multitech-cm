@@ -1,22 +1,22 @@
 ---
 
-- name: Get info on /etc/ssh/sshd_config
+- name: sshd Get info on /etc/ssh/sshd_config
   stat:
     path: /etc/ssh/sshd_config
   register: sshd_config
 
-- name: Move /etc/ssh/sshd_config to /var/config/ssh if a file
+- name: sshd Move /etc/ssh/sshd_config to /var/config/ssh if a file
   command: mv /etc/ssh/sshd_config /var/config/ssh
   when: sshd_config.stat.islnk is defined and not sshd_config.stat.islnk
     
-- name: Link /etc/ssh/sshd_config to /var/config/ssh/sshd_config
+- name: sshd Link /etc/ssh/sshd_config to /var/config/ssh/sshd_config
   file:
     dest: /etc/ssh/sshd_config
     state: link
     src: /var/config/ssh/sshd_config
     force: yes
 
-- name: Disallow password authentication
+- name: sshd Disallow password authentication
   lineinfile: dest=/var/config/ssh/sshd_config
     regexp="^#?PasswordAuthentication\s"
     line="PasswordAuthentication no"
@@ -25,7 +25,7 @@
     - Restart ssh
     - Update system checksum file
 
-- name: Disallow root SSH access
+- name: sshd Disallow root SSH access
   lineinfile: dest=/var/config/ssh/sshd_config
     regexp="^#?PermitRootLogin\s"
     line="PermitRootLogin without-password"

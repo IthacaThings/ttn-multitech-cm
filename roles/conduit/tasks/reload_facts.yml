@@ -4,9 +4,9 @@
 #	Force a reload of the anible cache
 #
 
-- name: Clear the facts
+- name: reload_facts Clear the facts
   meta: clear_facts
   ignore_errors: true
 
-- name: Reload the facts
+- name: reload_facts Reload the facts
   setup:

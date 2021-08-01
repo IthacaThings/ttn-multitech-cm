@@ -4,7 +4,7 @@
 #	Register gateway with TTNv3
 #
 
-- name: Register the gateway
+- name: ttnv3 Register the gateway
   local_action:
     module: command
     args:
@@ -30,29 +30,29 @@
         --collaborators '{{ gateway_collaborators | to_json }}'"
   register: register_output
 
-- name: Set the gateway_info fact
+- name: ttnv3 Set the gateway_info fact
   set_fact:
     gateway_info: "{{ register_output.stdout | from_json }}"
   when: forwarder_variant == 'mp'
 
-- name: Set Some facts
+- name: ttnv3 Set Some facts
   set_fact:
     gw_router: "{{ gateway_info.gateway_server_address }}"
   when: forwarder_variant == 'mp'
 
-- name: Read local_conf from gateway
+- name: ttnv3 Read local_conf from gateway
   slurp:
     src: /var/config/lora/local_conf.json
   register: local_conf_b64
   ignore_errors: true
 
-- name: Parse local_conf
+- name: ttnv3 Parse local_conf
   set_fact:
     local_conf: "{{ local_conf_b64.content | b64decode | from_json }}"
   ignore_errors: true
   when: local_conf_b64 is succeeded
 
-- name: Extract gw_key
+- name: ttnv3 Extract gw_key
   set_fact:
     gw_key: "{{ local_conf.gateway_conf.servers[0].serv_gw_key }}"
   when:
@@ -62,7 +62,7 @@
     - "'serv_gw_key' in local_conf.gateway_conf.servers[0]"
     - local_conf.gateway_conf.servers[0].serv_gw_key.startswith("NNSXS.")
 
-- name: Test key by fetching config
+- name: ttnv3 Test key by fetching config
   uri:
     headers:
       Authorization: "Bearer {{ gw_key }}"
@@ -73,14 +73,14 @@
   delegate_to: 127.0.0.1
   when: gw_key is defined
 
-- name: Extract global.conf
+- name: ttnv3 Extract global.conf
   set_fact:
     global_conf: "{{ get_config.json }}"
   when:
     - gw_key is defined
     - get_config is succeeded
 
-- name: Generate a key  
+- name: ttnv3 Generate a key  
   local_action:
     module: shell
     args:
@@ -89,7 +89,7 @@
   notify: TTNv3 cleanup
   when: gw_key is not defined or get_config is not succeeded
 
-- name: Extract the key and key_id
+- name: ttnv3 Extract the key and key_id
   block:
     - set_fact:
         key_data: "{{ key_data_json.stdout | from_json }}"
@@ -98,7 +98,7 @@
         gw_key_id: "{{ key_data.id }}"
   when: gw_key is not defined and key_data_json is success
 
-- name: Get the config file
+- name: ttnv3 Get the config file
   uri:
     url: "https://{{ router_v3 }}/api/v3/gcs/gateways/{{ lora_hostname }}/semtechudp/global_conf.json"
     method: GET
@@ -108,7 +108,7 @@
   delegate_to: 127.0.0.1
   when: global_conf is not defined
 
-- name: Extract global.conf
+- name: ttnv3 Extract global.conf
   set_fact:
     global_conf: "{{ get_config.json }}"
   when: global_conf is not defined

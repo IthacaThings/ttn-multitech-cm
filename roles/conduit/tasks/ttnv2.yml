@@ -4,13 +4,13 @@
 #	Register gateway with TTNv2
 #
 
-- name: check if logged into TTN and refresh key
+- name: ttnv2 check if logged into TTN and refresh key
   local_action:
     module: shell
     args: "bin/ttnctl user status"
   run_once: true
 
-- name: register gateway and delete old name if necessary
+- name: ttnv2 register gateway and delete old name if necessary
   local_action:
     module: shell
     args:
@@ -31,12 +31,12 @@
   register: register_output
   notify: register gateway
 
-- name: Set the gateway_info fact
+- name: ttnv2 Set the gateway_info fact
   set_fact:
     gateway_info: "{{ register_output.stdout }}"
   when: forwarder_variant == 'mp'
 
-- name: Set Some facts
+- name: ttnv2 Set Some facts
   set_fact:
     gw_key: "{{ gateway_info|json_query('key') }}"
     gw_router: "{{ gateway_info|json_query('info.router.mqtt_address')|urlsplit('hostname') }}"
@@ -45,14 +45,14 @@
 - debug:
     msg: "key {{ gw_key }} router {{ gw_router }}"
 
-- name: Global packet forwarder configuration file
+- name: ttnv2 Global packet forwarder configuration file
   uri:
     url: "https://raw.githubusercontent.com/TheThingsNetwork/gateway-conf/master/{{ region }}-global_conf.json"
   register: get_config
   ignore_errors: true
   delegate_to: 127.0.0.1
 
-- name: Extract global.conf
+- name: ttnv2 Extract global.conf
   set_fact:
     global_conf: "{{ get_config.json }}"
 ...

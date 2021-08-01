@@ -1,16 +1,16 @@
 ---
 
-- name: Check that wlan0 exists if we are configuring it as only interface
+- name: networking Check that wlan0 exists if we are configuring it as only interface
   shell: ifconfig wlan0
   when:
     - eth0_type is not defined or eth0_type == 'manual'
     - wlan0_type is defined
 
-- name: Check if we need WiFi firmware
+- name: networking Check if we need WiFi firmware
   import_tasks: wifi_firmware.yml
   when: wlan0_type is defined
 
-- name: Static /etc/resolv.conf
+- name: networking Static /etc/resolv.conf
   template:
     src: resolv.conf-static.j2
     dest: "{{ resolv_conf_static }}"
@@ -20,7 +20,7 @@
   when:
     - ( eth0_type is defined and eth0_type == 'static' ) or ( wlan0_type is defined and wlan0_type == 'static' )
 
-- name: Set up dhcp /etc/resolv.conf
+- name: networking Set up dhcp /etc/resolv.conf
   file:
     name: /etc/resolv.conf
     state: link
@@ -30,7 +30,7 @@
     - eth0_type is not defined or eth0_type != 'static'
     - wlan0_type is not defined or wlan0_type != 'static'
 
-- name: Delete static /etc/resolv.conf if not used
+- name: networking Delete static /etc/resolv.conf if not used
   file:
     name: "{{ resolv_conf_static }}"
     state: absent
@@ -38,7 +38,7 @@
     - eth0_type is not defined or eth0_type != 'static'
     - wlan0_type is not defined or wlan0_type != 'static'
 
-- name: Set up /var/config/network/interfaces
+- name: networking Set up /var/config/network/interfaces
   template:
     src: interfaces.j2
     dest: /var/config/network/interfaces
@@ -49,7 +49,7 @@
   when:
     - eth0_type is defined or wlan0_type is defined
 
-- name: Set up {{ wpa_conf }}
+- name: networking Set up {{ wpa_conf }}
   template:
     src: wpa_supplicant.conf.j2
     dest: "{{ wpa_conf }}"
@@ -60,14 +60,14 @@
     - wpa_conf is defined
     - wireless_keys is defined
 
-- name: Delete {{ wpa_conf }} if no wireless keys
+- name: networking Delete {{ wpa_conf }} if no wireless keys
   file:
     name: "{{ wpa_conf }}"
     state: absent
   when:
     - wireless_keys is not defined
 
-- name: Install support scripts
+- name: networking Install support scripts
   copy:
     dest: "/var/config/{{ item }}"
     src: "{{ item }}"
@@ -78,14 +78,14 @@
     - udhcpc_restart
     - ifup_restart
 
-- name: Link /etc/udhcpc.d/60restart
+- name: networking Link /etc/udhcpc.d/60restart
   file:
     dest: /etc/udhcpc.d/60restart
     src: /var/config/udhcpc_restart
     state: link
     force: yes
 
-- name: Link /etc/network/if-up.d/restart
+- name: networking Link /etc/network/if-up.d/restart
   file:
     dest: /etc/network/if-up.d/restart
     src: /var/config/ifup_restart

@@ -1,12 +1,12 @@
 ---
-- name: Get all link keys
+- name: ttnv3_cleanup Get all link keys
   local_action:
     module: shell
     args:
       "ttn-lw-cli gateway api-keys list {{ lora_hostname }}"
   register: list_keys
 
-- name: Delete all link keys that are not in use
+- name: ttnv3_cleanup Delete all link keys that are not in use
   local_action:
     module: shell
     args: "ttn-lw-cli gateway api-keys delete {{ lora_hostname }} {{item.id }}"

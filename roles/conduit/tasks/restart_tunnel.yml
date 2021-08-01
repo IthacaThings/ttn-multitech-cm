@@ -4,13 +4,13 @@
 #	Restart the SSH tunnel and wait for it to come back
 #
 
-- name: Restart ssh tunnel
+- name: restart_tunnel Restart ssh tunnel
   service:
     name: ssh_tunnel
     state: restarted
   ignore_errors: true
 
-- name: Wait for ssh tunnel to come back
+- name: restart_tunnel Wait for ssh tunnel to come back
   wait_for:
     host: "{{ ansible_host }}"
     state: started

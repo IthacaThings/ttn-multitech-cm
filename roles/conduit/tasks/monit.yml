@@ -1,6 +1,6 @@
 ---
 
-- name: Install Monit and dependencies
+- name: monit Install Monit and dependencies
   opkg:
     state: installed
     pkg: "{{ item }}"
@@ -11,7 +11,7 @@
     - Reload facts
     - opkg clean
 
-- name: Create a persistent directory
+- name: monit Create a persistent directory
   file:
     name: /var/config/monit
     state: directory
@@ -20,12 +20,12 @@
     group: root
   notify: Restart monit
 
-- name: Get stat info about /var/config/monit/.monit.id
+- name: monit Get stat info about /var/config/monit/.monit.id
   stat:
     path: /var/config/monit/.monit.id
   register: config_monit_id
 
-- name: Move .monit.id to /var/config/monit if source exists and dest does not
+- name: monit Move .monit.id to /var/config/monit if source exists and dest does not
   block:
     - stat:
         path: /home/root/.monit.id
@@ -34,7 +34,7 @@
       when: monit_id.stat.exists and not monit_id.stat.islnk
   when: not config_monit_id.stat.exists
 
-- name: Link /home/root/.monit.id to /var/config/monit/.monit.id
+- name: monit Link /home/root/.monit.id to /var/config/monit/.monit.id
   file:
     path: /home/root/.monit.id
     src: /var/config/monit/.monit.id
@@ -42,7 +42,7 @@
     force: true
     follow: no
     
-- name: Create monit event queue
+- name: monit Create monit event queue
   file:
     name: /var/monit
     state: directory
@@ -53,7 +53,7 @@
   notify:
     - Restart monit
 
-- name: Install monit test scripts
+- name: monit Install monit test scripts
   copy:
     src: "{{ role_path }}/files/{{ item }}"
     dest: /usr/local/lib/{{ item }}
@@ -64,7 +64,7 @@
     - check_pktfwdlog
     - check_system_md5
 
-- name: Install config files
+- name: monit Install config files
   copy:
     src: "{{ role_path }}/files/{{ item | basename }}"
     dest: "{{ item }}"
@@ -74,11 +74,11 @@
   loop:
     - /var/config/system.md5sum.exclude
 
-- name: Calculate some facts monit depends on
+- name: monit Calculate some facts monit depends on
   set_fact:
     monit_ntpd_pidfile: "{{ '/var/run/ntp.pid' if ansible_local.opkg.ntp is version('4.2.8', '<') else '/var/run/ntpd.pid' }}"
 
-- name: /var/config/monit/monitrc
+- name: monit /var/config/monit/monitrc
   template:
     src: monitrc.j2
     dest: /var/config/monit/monitrc
@@ -88,7 +88,7 @@
   notify:
     - Restart monit
 
-- name: Point /etc/monitrc at /var/config/monit/monitrc
+- name: monit Point /etc/monitrc at /var/config/monit/monitrc
   file:
     name: /etc/monitrc
     state: link
@@ -98,7 +98,7 @@
     - Reload facts
     - Restart monit
 
-- name: Enable monit
+- name: monit Enable monit
   lineinfile: dest=/etc/default/monit
     regexp="^ENABLED="
     line="ENABLED="yes""

@@ -2,14 +2,14 @@
 #
 #	Merge the list of authorized keys into one file
 #
-- name: Create temporary file
+- name: authorized_keys Create temporary file
   tempfile:
     state: file
     suffix: temp
   delegate_to: localhost
   register: tempfile
 
-- name: Merge our authorized keys into temporary file
+- name: authorized_keys Merge our authorized keys into temporary file
   authorized_key:
     manage_dir: no
     exclusive: no
@@ -20,12 +20,12 @@
   when: not ansible_check_mode
   delegate_to: localhost
 
-- name: Read the keys from the temporary file
+- name: authorized_keys Read the keys from the temporary file
   set_fact:
     authorized_keys: "{{ lookup('file', tempfile.path).splitlines() | flatten }}"
   when: not ansible_check_mode
 
-- name: Delete temp file
+- name: authorized_keys Delete temp file
   file:
     path: "{{ tempfile.path }}"
     state: absent
