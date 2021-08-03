@@ -610,7 +610,46 @@ ttn-lw-cli login --api-key APIKEY
 
 You now should be logged in.
 
-# TODO
+## TODO
+
+### Lora Basic Station support
 
 Add option to run basics station on conduit 
 http://www.multitech.net/developer/software/lora/running-basic-station-on-conduit/
+
+### Requirements
+
+* Add Let's Encrypt Certificates
+  * /var/config/lora/rc.trust
+* Install lora-basic-station (specify version)
+  * Installed by default in our image
+* Ensure we have SPI card
+* Create LNS key (we already do)
+  * /var/config/lora/tc.key
+* /var/config/lora/tc.uri
+  * "wss://{{ router_v3 }}:8887
+* /var/config/lora/tc.trust:
+  * https://letsencrypt.org/certs/isrgrootx1.pem
+* /var/config/lora/station.conf
+  * [MTCDT|http://www.multitech.net/developer/wp-content/uploads/downloads/2020/06/mtcdt-station.conf_.txt]
+  * [MTCAP|http://www.multitech.net/developer/wp-content/uploads/downloads/2020/06/mtcap-station.conf_.txt]
+
+* Logging
+  * https://lora-developers.semtech.com/resources/tools/lora-basics/lora-basics-for-gateways/
+* Process
+  * lora-basic-station vs ttn-pkt-forwader
+* Configuration
+  * Fetch station.conf in Ansible and edit appropriately?
+  * Need a custom version of lora-basic-station, use a different
+    template for ttn-pkt-forwarder
+* Monitoring (monit)
+  * Changes in log file format
+
+### Optional
+
+#### CUPS
+
+* Create Cups key
+  * RIGHT_GATEWAY_INFO, RIGHT_GATEWAY_READ_SECRETS, RIGHT_GATEWAY_SETTINGS_BASIC
+* Add LNS key to general config
+
