@@ -10,17 +10,17 @@
 - set_fact:
     ttn_newsshdir: "{{ ttn_newhomedir }}/.ssh"
 
-- name: "Get info about /var/config/home/{{ target_user }}"
+- name: user_dirs "Get info about /var/config/home/{{ target_user }}"
   stat:
     path: "/var/config/home/{{ target_user }}"
   register: ttn_newhomedir_stat
 
-- name: "Get info about /home/{{ target_user }}/.ssh"
+- name: user_dirs "Get info about /home/{{ target_user }}/.ssh"
   stat:
     path: "/home/{{ target_user }}/.ssh"
   register: ttn_sshdir_stat
 
-- name: "Create {{ target_user }} dirs"
+- name: user_dirs "Create {{ target_user }} dirs"
   file:
     dest: "{{ item }}"
     state: directory
@@ -31,13 +31,13 @@
     - "{{ ttn_newhomedir }}"
     - "{{ ttn_newsshdir }}"
 
-- name: Copy /home/{{ target_user }}/.ssh content to /var/config/home/{{target_user }}/.ssh
+- name: user_dirs Copy /home/{{ target_user }}/.ssh content to /var/config/home/{{target_user }}/.ssh
   shell: "rsync -av ~{{ target_user }}/.ssh/ {{ ttn_newsshdir }}"
   when:
     - ttn_sshdir_stat.stat.exists
     - ttn_sshdir_stat.stat.lnk_target is not defined
 
-- name: Remove existing .ssh dir
+- name: user_dirs Remove existing .ssh dir
   file:
     dest: "/home/{{ target_user }}/.ssh"
     state: absent
@@ -45,14 +45,14 @@
     - ttn_sshdir_stat.stat.exists
     - ttn_sshdir_stat.stat.lnk_target is not defined
 
-- name: Replace /home/{{ target_user }}/.ssh with a symlink to {{ ttn_newsshdir }}
+- name: user_dirs Replace /home/{{ target_user }}/.ssh with a symlink to {{ ttn_newsshdir }}
   command: "ln -fTs {{ ttn_newsshdir }} /home/{{ target_user }}/.ssh"
   args:
     warn: false
   when:
     - ttn_sshdir_stat.stat.lnk_target is not defined or ttn_sshdir_stat.stat.lnk_target != ttn_newsshdir
 
-- name: "Install {{ target_user }} authorized keys"
+- name: user_dirs "Install {{ target_user }} authorized keys"
   authorized_key:
     manage_dir: no
     path: "{{ ttn_newsshdir }}/authorized_keys"

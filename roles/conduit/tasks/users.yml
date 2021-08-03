@@ -4,7 +4,7 @@
 #	Setup users
 #
 
-- name: Create non-volatile home dirs
+- name: users Create non-volatile home dirs
   file:
     dest: /var/config/home
     state: directory
@@ -12,7 +12,7 @@
     owner: root
     group: root
 
-- name: "Set up dirs for root"
+- name: users "Set up dirs for root"
   import_tasks: user_dirs.yml
   vars:
     target_user: "root"
@@ -20,7 +20,7 @@
 #
 #	Create ttn user
 #
-- name: "Set up {{ ttn_user }} user"
+- name: users "Set up {{ ttn_user }} user"
   user:
     name: "{{ ttn_user }}"
     append: yes
@@ -28,7 +28,7 @@
     shell: /bin/bash
     password: "*"
 
-- name: Configure mtadm user
+- name: users Configure mtadm user
   block:
     - import_tasks: user_dirs.yml
     - import_tasks: user_sudo.yml
@@ -39,7 +39,7 @@
 #	Configure mtadm user
 #
 
-- name: Configure mtadm user
+- name: users Configure mtadm user
   block:
     - import_tasks: user_dirs.yml
     - import_tasks: user_sudo.yml

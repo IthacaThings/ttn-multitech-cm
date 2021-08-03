@@ -17,6 +17,12 @@
     sleep: "{{ forwarder_restart_delay }}"
 
 #
+#	Clean up after TTNv3 install
+#
+- name: TTNv3 cleanup
+  include_tasks: ttnv3_cleanup.yml
+
+#
 #	Remind to
 - name: register gateway
   debug:
