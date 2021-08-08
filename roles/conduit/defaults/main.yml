@@ -46,6 +46,16 @@ forwarder_restart_delay: 20
 # https://www.thethingsnetwork.org/forum/t/multitech-ttn-connection-lost-after-bad-connectivity/12355
 autoquit_threshold: 5
 
+# Basic station
+basic_cert_url: https://letsencrypt.org/certs/isrgrootx1.pem
+basic_TC_TIMEOUT: 2s
+basic_euiprefix: "::0"
+basic_log_level: INFO
+basic_log_rotate: 14
+basic_log_size: 10000000
+basic_log_file: /var/log/basic-station.log
+
+
 # Default new gateways to TTNv3
 ttn_version: 3
 

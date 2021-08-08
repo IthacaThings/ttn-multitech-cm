@@ -17,6 +17,15 @@
     sleep: "{{ forwarder_restart_delay }}"
 
 #
+#	Restart the LoRA basic Station
+#
+- name: Restart lora-basic-station
+  service:
+    name: lora-basic-station
+    state: restarted
+    sleep: "{{ forwarder_restart_delay }}"
+
+#
 #	Clean up after TTNv3 install
 #
 - name: TTNv3 cleanup

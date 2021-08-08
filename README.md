@@ -619,31 +619,42 @@ http://www.multitech.net/developer/software/lora/running-basic-station-on-condui
 
 ### Requirements
 
-* Add Let's Encrypt Certificates
+* [X] Ensure we have SPI card
+* [X] Add Let's Encrypt Certificates
   * /var/config/lora/rc.trust
 * Install lora-basic-station (specify version)
   * Installed by default in our image
-* Ensure we have SPI card
-* Create LNS key (we already do)
+* [X] Create LNS key (we already do)
   * /var/config/lora/tc.key
-* /var/config/lora/tc.uri
+* [X] /var/config/lora/tc.uri
   * "wss://{{ router_v3 }}:8887
-* /var/config/lora/tc.trust:
-  * https://letsencrypt.org/certs/isrgrootx1.pem
-* /var/config/lora/station.conf
+* [X ] /var/config/lora/station.conf
   * [MTCDT|http://www.multitech.net/developer/wp-content/uploads/downloads/2020/06/mtcdt-station.conf_.txt]
   * [MTCAP|http://www.multitech.net/developer/wp-content/uploads/downloads/2020/06/mtcap-station.conf_.txt]
 
 * Logging
   * https://lora-developers.semtech.com/resources/tools/lora-basics/lora-basics-for-gateways/
+  * [X] station_conf['station_conf']
+	 * log_level - INFO
+	 * log_size - 100000
+	 * log_rotate - 3
+ * [ ] - gzip old log files
 * Process
-  * lora-basic-station vs ttn-pkt-forwader
-* Configuration
+  * [X] lora-basic-station vs ttn-pkt-forwader
+* [X] Configuration
   * Fetch station.conf in Ansible and edit appropriately?
-  * Need a custom version of lora-basic-station, use a different
-    template for ttn-pkt-forwarder
+  * Need a custom version of lora-basic-station, use a different template for ttn-pkt-forwarder
 * Monitoring (monit)
-  * Changes in log file format
+  * [ ] Changes in log file format
+	* Re-write check_pkgfwdlog or add a flag for Basic station
+* [X] ttnv3 reads local_conf
+* [X] /etc/default/lora-basic-station
+  * ENABLE="yes"
+
+* Bugs with lora-basic-station
+  * [ ] 008000000000FD46 tramsposed to 000000800000FD46
+    * Does this work with CUPS?
+  * [ ] Is logging getting processed correctly?
 
 ### Optional
 
