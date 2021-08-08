@@ -80,7 +80,7 @@
     - Reload facts
     - opkg clean
 
-- include_tasks: ttn_packet_fowarder.yml
+- include_tasks: ttn_packet_forwarder.yml
   when: forwarder_variant != "basic"
 
 - include_tasks: ttn_basic_station.yml

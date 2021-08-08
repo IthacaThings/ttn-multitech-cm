@@ -31,4 +31,10 @@
     state: absent
   delegate_to: localhost
   when: not ansible_check_mode
+
+- name: authorized_keys Fail if we didn't find any keys
+  fail:
+    msg: "No authorized_keys are defined"
+  when: not authorized_keys
+
 ...
