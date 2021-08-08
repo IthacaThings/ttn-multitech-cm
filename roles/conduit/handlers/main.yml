@@ -5,7 +5,7 @@
 #	Make sure init script is run
 #
 - name: update rc
-  shell: "update-rc.d -f ttn-pkt-forwarder remove; update-rc.d ttn-pkt-forwarder defaults 95 30"
+  shell: "for init in ttn-pkt-forwarder lora-basic-station; do update-rc.d -f ${init} remove; test -f /etc/init.d/${init} && update-rc.d ${init} defaults 95 30 || true; done"
   
 #
 #	Restart the packet forwarder

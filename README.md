@@ -638,7 +638,7 @@ http://www.multitech.net/developer/software/lora/running-basic-station-on-condui
 	 * log_level - INFO
 	 * log_size - 100000
 	 * log_rotate - 3
- * [ ] - gzip old log files
+ * [X] - gzip old log files
 * Process
   * [X] lora-basic-station vs ttn-pkt-forwader
 * [X] Configuration

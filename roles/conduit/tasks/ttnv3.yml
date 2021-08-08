@@ -70,6 +70,7 @@
         gw_key: "{{ tc_key_b64.content | b64decode | split | last }}"
       ignore_errors: true
       when: tc_key_b64 is succeeded
+  when: forwarder_variant.startswith("basic")
 
 - name: ttnv3 Test key by fetching config
   uri:

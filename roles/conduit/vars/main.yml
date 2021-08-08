@@ -22,7 +22,7 @@ basic_station_conf_update:
     log_level: "{{ basic_log_level }}"
     log_rotate: "{{ basic_log_rotate }}"
     log_size: "{{ basic_log_size }}"
-    routerid: "<WILL-BE-AUTO-REPLACED-WITH-LORA-EUI>"
+    routerid: "{{ ansible_local.lora.eui }}"
 
 # EUI for use with non-TTN forwarders
 lora_eui: "eui-{{ ansible_local.lora.eui|lower }}"
