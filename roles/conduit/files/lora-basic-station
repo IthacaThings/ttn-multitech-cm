@@ -1,0 +1,166 @@
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:          lora-basic-station
+# Required-Start:    $local_fs $network
+# Required-Stop:     $local_fs $network
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Description:       Run the installed lora-basic-station
+### END INIT INFO
+
+NAME="lora-basic-station"
+ENABLED="yes"
+
+[ -f /etc/default/$NAME ] && source /etc/default/$NAME
+
+run_dir=/var/run/lora
+opt_conf_dir=/opt/lora
+conf_dir=/var/config/lora
+conf_file=$conf_dir/station.conf
+tc_files="tc.uri tc.key tc.trust"
+cups_files="cups.uri cups.key cups.trust"
+
+pkt_fwd=$run_dir/1/station
+pkt_fwd_pidfile=$run_dir/station.pid
+
+port1=/sys/devices/platform/mts-io/ap1
+port2=/sys/devices/platform/mts-io/ap2
+
+lora_mtac_id="MTAC-LORA"
+lora_1_0_hw="MTAC-LORA-1.0"
+lora_1_5_h_hw="MTAC-LORA-1.5"
+lora_2_1_hw="MTAC-LORA-2.1"
+
+lora_mtac_id="MTAC-LORA"
+lora_mtac_id915="MTAC-LORA-915"
+lora_mtac_id868="MTAC-LORA-868"
+lora_mtac_h_id915="MTAC-LORA-H-915"
+lora_mtac_h_id868="MTAC-LORA-H-868"
+
+lora_mtcap_id="MTCAP-LORA"
+lora_mtcap_id868="MTCAP-LORA-868"
+lora_mtcap_id915="MTCAP-LORA-915"
+
+lora_mtac_g_id="MTAC-LORA-G"
+lora_mtac_g16_id868="MTAC-LORA-G16-868"
+lora_mtac_g16_id915="MTAC-LORA-G16-915"
+lora_mtac_g64_id868="MTAC-LORA-G64-868"
+lora_mtac_g64_id915="MTAC-LORA-G64-915"
+
+pkt_fwd_options=""
+
+gps_path="/dev/gps0"
+
+read_lora_hw_info() {
+    lora_id=$(mts-io-sysfs show lora/product-id 2> /dev/null)
+    lora_hw=$(mts-io-sysfs show lora/hw-version 2> /dev/null)
+}
+
+hardware_found() {
+    if [[ "$lora_id" =~ "$lora_mtac_g_id" ]]; then
+        setup_mtcdt_2_1
+    elif [[ "$lora_id" =~ "$lora_mtcap_id" ]]; then
+        setup_mtcap
+    elif [[ "$lora_id" =~ "$lora_mtac_id" ]]; then
+        setup_mtcdt
+    else
+        return 1
+    fi
+    return 0
+}
+
+setup_mtcdt() {
+    if [ -d $port1 ] && [[ $(cat $port1/hw-version) = $lora_hw ]]; then
+        ln -sf /dev/spidev32766.2 /dev/spidev0.0
+    elif [ -d $port2 ] && [[ $(cat $port2/hw-version) = $lora_hw ]]; then
+        ln -sf /dev/spidev32765.2 /dev/spidev0.0
+    fi
+
+    ln -sf /opt/lora/station $pkt_fwd
+}
+
+setup_mtcap() {
+
+    ln -sf /opt/lora/station $pkt_fwd
+}
+
+setup_mtcdt_2_1() {
+    echo LORA-2.1 not supported
+    return 1
+}
+
+do_start() {
+
+    mkdir -p $run_dir/1
+    rm -rf $run_dir/1/*
+
+    read_lora_hw_info
+
+    if hardware_found; then
+        echo "Found $lora_id with $lora_hw hardware. Configuring"
+    else
+        echo "$0: LORA card not detected"
+        exit 1
+    fi
+
+    if ! [ -f $conf_file ]; then
+        echo "$0: $conf_file missing"
+        exit 1
+    fi
+
+    #
+    # copy conf files to the run directory
+    #
+    cp $conf_file $run_dir/1/
+    for file in ${tc_files} ${cups_files}; do
+	test -f "${conf_dir}/${file}" && cp "${conf_dir}/${file}" "${run_dir}/1/"
+    done
+
+    #
+    # start packet forwarder
+    #
+    echo -n "Starting $NAME: "
+
+    /usr/sbin/start-stop-daemon --chdir $run_dir/1 --background --start --make-pidfile \
+        --pidfile $pkt_fwd_pidfile --startas /bin/bash -- -c "exec $pkt_fwd $pkt_fwd_options"
+
+    renice -n -20 -p $(pgrep $(basename $pkt_fwd))
+
+    echo "OK"
+}
+
+
+do_stop() {
+    echo -n "Stopping $NAME: "
+    start-stop-daemon --stop --quiet --oknodo --pidfile $pkt_fwd_pidfile --retry 5
+    rm -f $pkt_fwd_pidfile
+    echo "OK"
+}
+
+
+if [ "$ENABLED" != "yes" ]; then
+    echo "$NAME: disabled in /etc/default"
+    exit
+fi
+
+
+case "$1" in
+    "start")
+    do_start
+        ;;
+    "stop")
+    do_stop
+        ;;
+    "restart")
+        ## Stop the service and regardless of whether it was
+        ## running or not, start it again.
+        do_stop
+        do_start
+        ;;
+    *)
+        ## If no parameters are given, print which are avaiable.
+        echo "Usage: $0 {start|stop|restart}"
+        exit 1
+    ;;
+esac
+

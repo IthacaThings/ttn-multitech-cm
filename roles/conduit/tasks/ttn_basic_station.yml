@@ -34,6 +34,24 @@
     - forwader_version is defined
     - ansible_local.opkg.lora_basic_station is not defined or ansible_local.opkg.lora_basic_station != forwarder_version
 
+# We have a program below because MT posted the data in an invalid format
+- name: ttn_basic_station Fetch and update station.conf
+  block:
+    - local_action: command bin/mt_station_conf --url {{ basic_station_conf_url }}
+      register: station_conf_raw
+    - set_fact:
+        station_conf: "{{ station_conf_raw.stdout | from_json | combine(basic_station_conf_update) }}"
+
+- name: ttn_basic_station Install /var/config/lora/station.conf
+  template:
+    src: station.conf.j2
+    dest: /var/config/lora/station.conf
+    mode: "0644"
+    owner: root
+    group: root
+  notify:
+    - Restart lora-basic-station
+
 - name: ttn_basic_station Download certificate
   local_action: get_url
   args:
@@ -72,24 +90,29 @@
   notify:
     - Restart lora-basic-station
 
-- name: ttn_basic_station Fetch and update station.conf
-  ansible.builtin.uri:
-    url: "{{ basic_station_conf_url }}"
-    return_content: true
-  register: station_conf_raw
-  delegate_to: localhost
+#
+#	Cleanup
+#
 
-- set_fact:
-    station_conf: "{{ station_conf_raw.json | combine(basic_station_conf_update) }}"
-
-- name: ttn_basic_station Install /var/config/lora/station.conf
-  template:
-    src: station.conf.j2
-    dest: /var/config/lora/station.conf
-    mode: "0644"
+- name: ttn_basic_station Install /var/config/lora-basic-station
+  copy:
+    src: "{{ role_path }}/files/lora-basic-station"
+    dest: /var/config/lora/lora-basic-station
+    mode: "0755"
     owner: root
     group: root
   notify:
+    - Restart lora-basic-station
+
+- name: ttn_basic_station /etc/init.d/lora-basic-station to /var/config/lora/lora-basic-station
+  file:
+    dest: /etc/init.d/lora-basic-station
+    state: link
+    src: /var/config/lora/lora-basic-station
+    follow: false
+    force: yes
+  notify:
+    - update rc
     - Restart lora-basic-station
 
 - name: ttn_basic_station Enable basic station

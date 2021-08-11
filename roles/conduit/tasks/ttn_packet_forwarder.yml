@@ -186,11 +186,14 @@
     name: "{{ item }}"
     state: absent
   loop:
+    - /etc/init.d/lora-basic-station
+    - /var/config/lora-basic-station
     - /var/config/lora/config.yml
-    - /var/config/lora/samples
     - /var/config/lora/local_conf.json-opkg
+    - /var/config/lora/samples
+    - /var/config/lora/station.conf
     - /var/config/lora/tc.key
     - /var/config/lora/tc.trust
     - /var/config/lora/tc.uri
-    - /var/config/lora/station.conf
+    - /var/log/basic-station.log*
 ...
