@@ -631,7 +631,6 @@ http://www.multitech.net/developer/software/lora/running-basic-station-on-condui
 * [X ] /var/config/lora/station.conf
   * [MTCDT|http://www.multitech.net/developer/wp-content/uploads/downloads/2020/06/mtcdt-station.conf_.txt]
   * [MTCAP|http://www.multitech.net/developer/wp-content/uploads/downloads/2020/06/mtcap-station.conf_.txt]
-
 * Logging
   * https://lora-developers.semtech.com/resources/tools/lora-basics/lora-basics-for-gateways/
   * [X] station_conf['station_conf']
@@ -641,6 +640,7 @@ http://www.multitech.net/developer/software/lora/running-basic-station-on-condui
  * [X] - gzip old log files
 * Process
   * [X] lora-basic-station vs ttn-pkt-forwader
+  * [X] update-rc.d needed?
 * [X] Configuration
   * Fetch station.conf in Ansible and edit appropriately?
   * Need a custom version of lora-basic-station, use a different template for ttn-pkt-forwarder
@@ -650,17 +650,9 @@ http://www.multitech.net/developer/software/lora/running-basic-station-on-condui
 * [X] ttnv3 reads local_conf
 * [X] /etc/default/lora-basic-station
   * ENABLE="yes"
+* [ ] GPS configuration
 
 * Bugs with lora-basic-station
   * [ ] 008000000000FD46 tramsposed to 000000800000FD46
-    * Does this work with CUPS?
-  * [ ] Is logging getting processed correctly?
-
-### Optional
-
-#### CUPS
-
-* Create Cups key
-  * RIGHT_GATEWAY_INFO, RIGHT_GATEWAY_READ_SECRETS, RIGHT_GATEWAY_SETTINGS_BASIC
-* Add LNS key to general config
-
+	* Fixed in v3.14 branch, waiting for deploy of TTS
+* [ ] Is logging getting processed correctly?
