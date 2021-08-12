@@ -122,7 +122,7 @@ do_start() {
     echo -n "Starting $NAME: "
 
     /usr/sbin/start-stop-daemon --chdir $run_dir/1 --background --start --make-pidfile \
-        --pidfile $pkt_fwd_pidfile --startas /bin/bash -- -c "exec $pkt_fwd $pkt_fwd_options"
+        --pidfile $pkt_fwd_pidfile --startas /bin/bash -- -c "exec $pkt_fwd $pkt_fwd_options &>>{{ basic_log_file }}"
 
     renice -n -20 -p $(pgrep $(basename $pkt_fwd))
 
