@@ -48,9 +48,7 @@ autoquit_threshold: 5
 
 # Basic station
 basic_cert_url: https://letsencrypt.org/certs/isrgrootx1.pem
-basic_TC_TIMEOUT: 2s
-basic_euiprefix: "::0"
-basic_log_level: INFO
+basic_log_level: INFO,S2E:VERBOSE,SYN:DEBUG
 basic_log_rotate: 14
 basic_log_size: 10000000
 basic_log_file: /var/log/basic-station.log

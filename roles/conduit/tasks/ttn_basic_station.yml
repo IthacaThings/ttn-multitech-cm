@@ -37,10 +37,25 @@
 # We have a program below because MT posted the data in an invalid format
 - name: ttn_basic_station Fetch and update station.conf
   block:
-    - local_action: command bin/mt_station_conf --url {{ basic_station_conf_url }}
+    - set_fact:
+        gps_arg: "--gps /dev/{{ gps_device }}"
+      when: have_gps and use_gps
+    - set_fact:
+        gps_arg: ""
+      when: not (have_gps and use_gps)
+    - local_action:
+        module: command
+        args:
+          "bin/mt_station_conf --url {{ basic_station_conf_url }}
+          --routerid {{ ansible_local.lora.eui }}
+          --log-file {{ basic_log_file }}
+          --log-level {{ basic_log_level }}
+          --log-size {{ basic_log_size }}
+          --log-rotate {{ basic_log_rotate }}
+          {{ gps_arg }}"
       register: station_conf_raw
     - set_fact:
-        station_conf: "{{ station_conf_raw.stdout | from_json | combine(basic_station_conf_update) }}"
+        station_conf: "{{ station_conf_raw.stdout | from_json }}"
 
 - name: ttn_basic_station Install /var/config/lora/station.conf
   template:
@@ -95,8 +110,8 @@
 #
 
 - name: ttn_basic_station Install /var/config/lora-basic-station
-  copy:
-    src: "{{ role_path }}/files/lora-basic-station"
+  template:
+    src: lora-basic-station.j2
     dest: /var/config/lora/lora-basic-station
     mode: "0755"
     owner: root

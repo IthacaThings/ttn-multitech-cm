@@ -28,7 +28,7 @@ from __future__ import print_function
 import argparse
 import json
 import logging
-import os
+import re
 import sys
 
 import requests
@@ -36,6 +36,14 @@ import requests.exceptions
 
 def parse_args():
     """ Parse the arguments """
+
+    eui_re = re.compile(r"^(?:eui-)?(?P<eui>[0-9a-fA-FF]{16})$")
+    def eui(string):
+        """ Valiate an EUI """
+        match = eui_re.match(string)
+        if not match:
+            raise ValueError("EUI is not 16 hex digits with optional eui- prefix")
+        return match.group('eui')
 
     parser = argparse.ArgumentParser(description="Fetch MT station.conf and force it to json")
 
@@ -63,6 +71,28 @@ def parse_args():
     group.add_argument("--url",
                        dest="url", required=True,
                        help="URL of the file")
+    group.add_argument("--routerid",
+                       dest="routerid", type=eui, required=True,
+                       help="Router EUI")
+    group.add_argument("--gps",
+                       dest="gps",
+                       help="Path to GPS device")
+    group.add_argument("--fuzzy-pps",
+                       dest="fuzzy_pps", action="store_true",
+                       help="Use fuzzy PPS on GPS")
+    group.add_argument("--log-level",
+                       dest="log_level",
+                       help="Log Level")
+    group.add_argument("--log-rotate",
+                       dest="log_rotate", type=int,
+                       help="Number of log files in rotation")
+    group.add_argument("--log-size",
+                       dest="log_size", type=int,
+                       help="Maximum size of log file")
+    group.add_argument("--log-file",
+                       dest="log_file",
+                       help="Log file name")
+
     options = parser.parse_args()
     if options.debug:
         options.verbose = options.debug
@@ -98,7 +128,25 @@ def main():
     except requests.exceptions.RequestException as error:
         raise
 
-    print(json.dumps(data))
+    for section in ['station_conf','SX1301_conf']:
+        if section not in data:
+            logging.error("Section %s not found in station.conf", section)
+            return 1
+
+    data['station_conf']['routerid'] = options.routerid
+    if options.log_file:
+        data['station_conf']['log_file'] = options.log_file
+    if options.log_level:
+        data['station_conf']['log_level'] = options.log_level
+    if options.log_rotate:
+        data['station_conf']['log_rotate'] = options.log_rotate
+    if options.log_size:
+        data['station_conf']['log_size'] = options.log_size
+    if options.gps:
+        data['station_conf']['gps'] = options.gps
+        data['station_conf']['pps'] = "fuzzy" if options.fuzzy_pps else "gps"
+
+    print(json.dumps(data, indent=4))
 
     return 0
 

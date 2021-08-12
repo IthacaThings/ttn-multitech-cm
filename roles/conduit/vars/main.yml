@@ -14,15 +14,6 @@ forwarder_installed: "{{ forwarder_installed_package }}_{{ forwarder_installed_v
 
 # Basic station stuff
 basic_station_conf_url: "http://www.multitech.net/developer/wp-content/uploads/downloads/2020/06/{{ conduit_type }}-station.conf_.txt"
-basic_station_conf_update:
-  station_conf:
-    TC_TIMEOUT: "{{ basic_TC_TIMEOUT }}"
-    euiprefix: "{{ basic_euiprefix }}"
-    log_file: "{{ basic_log_file }}"
-    log_level: "{{ basic_log_level }}"
-    log_rotate: "{{ basic_log_rotate }}"
-    log_size: "{{ basic_log_size }}"
-    routerid: "{{ ansible_local.lora.eui }}"
 
 # EUI for use with non-TTN forwarders
 lora_eui: "eui-{{ ansible_local.lora.eui|lower }}"
