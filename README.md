@@ -628,7 +628,7 @@ http://www.multitech.net/developer/software/lora/running-basic-station-on-condui
   * /var/config/lora/tc.key
 * [X] /var/config/lora/tc.uri
   * "wss://{{ router_v3 }}:8887
-* [X ] /var/config/lora/station.conf
+* [X] /var/config/lora/station.conf
   * [MTCDT|http://www.multitech.net/developer/wp-content/uploads/downloads/2020/06/mtcdt-station.conf_.txt]
   * [MTCAP|http://www.multitech.net/developer/wp-content/uploads/downloads/2020/06/mtcap-station.conf_.txt]
 * Logging
@@ -645,14 +645,21 @@ http://www.multitech.net/developer/software/lora/running-basic-station-on-condui
   * Fetch station.conf in Ansible and edit appropriately?
   * Need a custom version of lora-basic-station, use a different template for ttn-pkt-forwarder
 * Monitoring (monit)
-  * [ ] Changes in log file format
+  * [X] Changes in log file format
 	* Re-write check_pkgfwdlog or add a flag for Basic station
 * [X] ttnv3 reads local_conf
 * [X] /etc/default/lora-basic-station
-  * ENABLE="yes"
+  * [X] ENABLE="yes"
+  * [X] Log errors on failure
 * [ ] GPS configuration
+  * [ ] GPS Garbage?
+* [ ] Bugs
+  * [ ] Is log rotation getting processed correctly?
 
 * Bugs with lora-basic-station
   * [ ] 008000000000FD46 tramsposed to 000000800000FD46
 	* Fixed in v3.14 branch, waiting for deploy of TTS
-* [ ] Is logging getting processed correctly?
+
+### TODO
+
++ [ ] Break up monit configs by function
