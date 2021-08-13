@@ -45,6 +45,23 @@ def parse_args():
             raise ValueError("EUI is not 16 hex digits with optional eui- prefix")
         return match.group('eui')
 
+    def rotate_size(string):
+        """ Expand size """
+
+        if string.endswith("k"):
+            multiplier = 1000
+        elif string.endswith("M"):
+            multiplier = 1000000
+        elif string.endswith("G"):
+            multiplier = 1000000000
+        else:
+            multiplier = 0
+
+        if multiplier:
+            return int(string[:-1]) * multiplier
+        else:
+            return int(string)
+
     parser = argparse.ArgumentParser(description="Fetch MT station.conf and force it to json")
 
     #	Debugging
@@ -87,7 +104,7 @@ def parse_args():
                        dest="log_rotate", type=int,
                        help="Number of log files in rotation")
     group.add_argument("--log-size",
-                       dest="log_size", type=int,
+                       dest="log_size", type=rotate_size,
                        help="Maximum size of log file")
     group.add_argument("--log-file",
                        dest="log_file",

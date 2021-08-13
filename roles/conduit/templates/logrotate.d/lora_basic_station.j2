@@ -1,9 +1,8 @@
-/var/log/basic-station.log.*[0-9] {
+{{ basic_log_file }}.*[0-9] {
 	daily
 	nocreate
 	missingok
 	compress
-	rotate 7
+	rotate {{ forwarder_logrotate_count }}
 	dataext
-	dateformat
 }

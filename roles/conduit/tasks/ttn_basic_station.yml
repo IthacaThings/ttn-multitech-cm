@@ -50,8 +50,8 @@
           --routerid {{ ansible_local.lora.eui }}
           --log-file {{ basic_log_file }}
           --log-level {{ basic_log_level }}
-          --log-size {{ basic_log_size }}
-          --log-rotate {{ basic_log_rotate }}
+          --log-size {{ forwarder_logrotate_size }}
+          --log-rotate {{ forwarder_logrotate_count }}
           {{ gps_arg }}"
       register: station_conf_raw
     - set_fact:
@@ -153,4 +153,5 @@
     - /var/config/lora/local_conf.json
     - /var/config/lora/ttn-pkt-forwarder
     - /etc/init.d/ttn-pkt-forwarder
+    - /var/log/ttn-pkg-fwd.log*
 ...

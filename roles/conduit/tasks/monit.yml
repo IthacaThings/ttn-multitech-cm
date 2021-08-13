@@ -62,6 +62,7 @@
     group: root
   loop:
     - check_pktfwdlog
+    - check_basiclog
     - check_system_md5
 
 - name: monit Install config files

@@ -5,6 +5,7 @@ forwarder_package: "{{ forwarder_variant }}-packet-forwarder"
 forwarder_package_version: "{{ forwarder_package }}_{{forwarder_version }}"
 forwarder_package_full: "{{forwarder_package_version }}_arm926ejste.ipk"
 forwarder_url: "{{ forwarder_baseurl_ttni }}/{{ forwarder_package_full }}"
+forwarder_logcheck: "{{ 'check_basiclog' if forwarder_variant == 'basic' else 'check_pktfwdlog' }}"
 
 forwarder_installed_package: "{{ 'poly-packet-forwarder' if ansible_local.opkg.poly_packet_forwarder is defined else 'mp-packet-forwarder' if ansible_local.opkg.mp_packet_forwarder is defined else False }}"
 

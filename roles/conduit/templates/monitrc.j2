@@ -15,8 +15,8 @@ set httpd
 
 # Monitor the system
 check system $HOST
-    if loadavg (1min) > 1 then alert
-    if loadavg (5min) > 2 then alert
+    if loadavg (1min) > 2 then alert
+    if loadavg (5min) > 4 then alert
     if memory usage > 25% then alert
 
 # Event Queue
@@ -76,10 +76,11 @@ check filesystem volatile with path /var/volatile
 #
 
 # Check for error conditions in packet forwarder log
-check program check_pktfwdlog with path /usr/local/lib/check_pktfwdlog
+check program {{ forwarder_logcheck }} with path /usr/local/lib/{{ forwarder_logcheck }}
     if status == 1 then exec {{ monit_pktfwd_restart }}
     if status == 2 for 2 cycles then exec {{ monit_pktfwd_restart }}
     if status == 3 then {{ monit_pktfwd_reboot }}
+    if status == 4 then alert
 
 {% if ssh_tunnel_enabled -%}
 # Monitor autossh
