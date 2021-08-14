@@ -4,9 +4,21 @@
 
 echo "Running 15restore"
 
-echo "Configuring ttn-pkt-forwader to start"
-update-rc.d -f ttn-pkt-forwarder remove
-update-rc.d ttn-pkt-forwarder defaults 95 30
+if [ -L /etc/init.d/ttn-pkt-forwarder ]; then
+    echo "Configuring ttn-pkt-forwader to start"
+    update-rc.d -f ttn-pkt-forwarder remove
+    update-rc.d ttn-pkt-forwarder defaults 95 30
+    rm -f /etc/init.d/lora-basic-station
+elif [ -L /etc/init.d/lora-basic-station ]; then
+    echo "Configuring lora-basic-station to start"
+    update-rc.d -f lora-basic-station remove
+    update-rc.d lora-basic-station defaults 95 30
+    sed -i '/^ENABLED/s/no/yes/' /etc/default/lora-basic-station
+    rm -f /etc/init.d/ttn-pkt-forwarder
+fi
+
+echo "Configuring monit to start"
+sed -i '/^ENABLED/s/no/yes/' /etc/default/monit && /etc/init.d/monit start
 
 if [ -f /var/config/restore.init ]; then
     echo "Configuring last stage restore to run once network is available"
