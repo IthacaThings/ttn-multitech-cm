@@ -154,16 +154,14 @@ class LogCheck(object):
 
             # Check for fatal error
             if line_no < 5 and match.group('level') == "ERRO":
-                if match.group('module') == "SYS":
-                    saw_quit = "Last message was quit: '%s'" % line
-                    logging.debug("Found: %s", saw_quit)
+                if match.group('module') == "SYS" and line_no == 1:
+                    logging.debug("Found: %s", line)
+                    return (2, line)
                     continue
                 if match.group('module') in ["AIO", "TCE"]:
                     logging.debug("Found: %s", line)
                     retcode = (4, line)
                     continue
-            elif saw_quit:
-                return 2, saw_quit
 
         return retcode
 
