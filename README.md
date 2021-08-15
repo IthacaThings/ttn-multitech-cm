@@ -659,7 +659,3 @@ http://www.multitech.net/developer/software/lora/running-basic-station-on-condui
 * Bugs with lora-basic-station
   * [ ] 008000000000FD46 tramsposed to 000000800000FD46
 	* Fixed in v3.14 branch, waiting for deploy of TTS
-
-### TODO
-
-+ [ ] /etc/init.d/restore runs at shutdown?

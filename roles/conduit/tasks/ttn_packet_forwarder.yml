@@ -129,12 +129,6 @@
     state=present
   ignore_errors: true
 
-- name: ttn_packet_forwarder Stop the LoRA Basic Station
-  service:
-    name: lora-basic-station
-    state: stopped
-  ignore_errors: true
-
 #
 #	Install the TTN config files
 #

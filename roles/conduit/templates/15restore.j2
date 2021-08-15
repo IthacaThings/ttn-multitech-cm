@@ -6,22 +6,33 @@ echo "Running 15restore"
 
 if [ -L /etc/init.d/ttn-pkt-forwarder ]; then
     echo "Configuring ttn-pkt-forwader to start"
+    sed -i '/^ENABLED=/s/no/yes/' /etc/default/ttn-pkt-forwarer
     update-rc.d -f ttn-pkt-forwarder remove
     update-rc.d ttn-pkt-forwarder defaults 95 30
-    rm -f /etc/init.d/lora-basic-station
+
+    echo "Configuring lora-basic-station not to start"
+    sed -i '/^ENABLED=/s/yes/no/' /etc/default/lora-basic-station
+    update-rc.d -f lora-basic-station remove
 elif [ -L /etc/init.d/lora-basic-station ]; then
     echo "Configuring lora-basic-station to start"
+    sed -i '/^ENABLED=/s/no/yes/' /etc/default/lora-basic-station
     update-rc.d -f lora-basic-station remove
     update-rc.d lora-basic-station defaults 95 30
-    sed -i '/^ENABLED/s/no/yes/' /etc/default/lora-basic-station
-    rm -f /etc/init.d/ttn-pkt-forwarder
+
+    echo "Configuring ttn-pkt-forwarder not to start"
+    if [ -f /etc/default/ttn-pkt-forwarder ]; then
+	sed -i '/^ENABLED=/s/yes/no/' /etc/default/ttn-pkt-forwarder
+    else
+	echo 'ENABLED="no"' > /etc/default/ttn-pkt-forwarder
+    fi
+    update-rc.d -f ttn-pkt-forwarder remove
 fi
 
 echo "Configuring monit to start"
-sed -i '/^ENABLED/s/no/yes/' /etc/default/monit && /etc/init.d/monit start
+sed -i '/^ENABLED=/s/no/yes/' /etc/default/monit && /etc/init.d/monit start
 
-if [ -f /var/config/restore.init ]; then
+if [ -f /var/config/init.d/restore.init ]; then
     echo "Configuring last stage restore to run once network is available"
-    ln -sf /var/config/restore.init /etc/init.d/restore
+    ln -sf /var/config/init.d/restore.init /etc/init.d/restore
     update-rc.d restore defaults 90
 fi

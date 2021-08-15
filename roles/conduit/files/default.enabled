@@ -1,0 +1,171 @@
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:          ttn-pkt-forwarder
+# Required-Start:    $local_fs $network
+# Required-Stop:     $local_fs $network
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Description:       Run the installed TTN packet forwarder
+### END INIT INFO
+
+PATH=/bin:/sbin:/usr/bin:/usr/sbin
+
+# source function library
+. /etc/init.d/functions
+
+NAME="ttn-packet-forwarder"
+ENABLED="yes"
+
+[ -f /etc/default/$NAME ] && source /etc/default/$NAME
+
+conf_dir=/var/config/lora
+pkt_fwd_log=/var/log/lora-pkt-fwd.log
+pkt_fwd_pidfile=/var/run/lora-pkt-fwd.pid
+
+port1=/sys/devices/platform/mts-io/ap1
+port2=/sys/devices/platform/mts-io/ap2
+
+hw_version=$(mts-io-sysfs show hw-version)
+case ${hw_version} in
+    MTCDT-*)
+	lora_prefix="MTAC"
+    ;;
+    MTCAP-*)
+	lora_prefix="MTCAP"
+    ;;
+    *)
+	echo "$0: Unrecognized conduit version: ${hw_version}"
+	exit 1
+	;;
+esac
+
+lora_mt_id="${lora_prefix}-LORA"
+lora_1_0_hw="${lora_prefix}-LORA-1.0"
+lora_1_5_h_hw="${lora_prefix}-LORA-1.5"
+
+progname=$(basename $0)
+
+do_log() {
+    logger -t ${progname} $*
+}
+
+read_card_info() {
+    # product-id of first lora card
+    lora_id=$(mts-io-sysfs show lora/product-id 2> /dev/null)
+    lora_eui=$(mts-io-sysfs show lora/eui 2> /dev/null)
+    # remove all colons
+    lora_eui_raw=${lora_eui//:/}
+    lora_hw=$(mts-io-sysfs show lora/hw-version 2> /dev/null)
+}
+
+card_found() {
+    if [ -d $port1 ] && [[ $(cat $port1/hw-version) = $lora_hw ]]; then
+        ln -sf /dev/spidev32766.2 /dev/spidev0.0
+    elif [ -d $port2 ] && [[ $(cat $port2/hw-version) = $lora_hw ]]; then
+        ln -sf /dev/spidev32765.2 /dev/spidev0.0
+    fi
+
+    if [[ "$lora_id" =~ "$lora_mt_id" ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+find_binary() {
+    read_card_info
+
+    if ! card_found; then
+        echo "$0: MTAC-LORA not detected"
+        exit 1
+    fi
+
+    # Select the packet forwarder to run
+    if [ "$lora_hw" = "$lora_1_0_hw" ] ; then
+	if [ -x /opt/lora/mp_pkt_fwd.usb ]; then
+	    pkt_fwd=/opt/lora/mp_pkt_fwd.usb
+	elif [ -x /opt/lora/poly_pkt_fwd ]; then
+	    pkt_fwd=/opt/lora/poly_pkt_fwd
+	else
+	    echo "$0: No USB packet forwarder found"
+	    exit 1
+	fi
+    elif [ "$lora_hw" = "$lora_1_5_h_hw" ] ; then
+	if [ -x /opt/lora/mp_pkt_fwd.spi ]; then
+	    pkt_fwd=/opt/lora/mp_pkt_fwd.spi
+	else
+	    echo "$0: No SPI packet forwarder found"
+	    exit 1
+	fi
+    fi
+}
+
+do_start() {
+
+    case ${pkt_fwd} in
+	/opt/lora/*)
+	    if [ ! -f $conf_dir/global_conf.json -o ! -f $conf_dir/local_conf.json ] ; then
+		echo "$0: Not configured"
+		exit 1
+	    fi
+	    cmd="-c $conf_dir -l $pkt_fwd_log"
+	;;
+    esac
+
+    echo -n "Starting $NAME: "
+    # start packet forwarder
+    start-stop-daemon --start --background --make-pidfile \
+        --pidfile $pkt_fwd_pidfile --exec $pkt_fwd -- ${cmd}
+    echo "OK"
+}
+
+do_stop() {
+    echo -n "Stopping $NAME: "
+    start-stop-daemon --stop --verbose --oknodo \
+	-x $pkt_fwd --retry=QUIT/20/KILL/5 && \
+	echo "OK" || echo "FAIL"
+    rm -f $pkt_fwd_pidfile
+}
+
+if [ "$ENABLED" != "yes" ]; then
+    echo "$NAME: disabled in /etc/default"
+    exit
+fi
+
+# Find which executable we use
+find_binary
+
+do_log "Running with '${*}' on binary ${pkt_fwd}"
+
+case "$1" in
+    "start")
+        do_start
+	rc=$?
+        ;;
+    "stop")
+        do_stop
+	rc=$?
+        ;;
+    "restart")
+        ## Stop the service and regardless of whether it was
+        ## running or not, start it again.
+        do_stop
+	# Ensure the interface has time to reset
+	sleep {{ forwarder_restart_delay }}
+        do_start
+	rc=$?
+        ;;
+    "status")
+	status ${pkt_fwd}
+	rc=$?
+	;;
+    *)
+        ## If no parameters are given, print which are avaiable.
+        echo "Usage: $0 {start|stop|restart}"
+        exit 1
+        ;;
+esac
+
+do_log "Return ${rc}"
+
+exit ${rc}

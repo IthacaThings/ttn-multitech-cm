@@ -144,14 +144,24 @@
     state: stopped
   ignore_errors: true
 
+- name: ttn_basic_station  Disable ttn-pkt-forwarder
+  lineinfile:
+    dest=/etc/default/ttn-pkt-forwarder
+    regexp="^ENABLED="
+    line='ENABLED="no"'
+    state=present
+  ignore_errors: true
+
 - name: ttn_basic_station Remove some files
   file:
     name: "{{ item }}"
     state: absent
   loop:
+    - /etc/init.d/ttn-pkt-forwarder
+    - /var/config/*.ipk
+    - /var/config/init.d/ttn-pkg-forwarder
     - /var/config/lora/global_conf.json
     - /var/config/lora/local_conf.json
-    - /var/config/lora/ttn-pkt-forwarder
-    - /etc/init.d/ttn-pkt-forwarder
+    - /var/config/lora/samples
     - /var/log/ttn-pkg-fwd.log*
 ...
