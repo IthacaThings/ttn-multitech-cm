@@ -84,26 +84,42 @@
     - restart ttn-pkt-forwarder
     - Reload facts
 
-- name: ttn_packet_forwarder Install /var/config/ttn-pkt-forwarder
+- name: ttn_packet_forwarder Install /var/config/init.d/ttn-pkt-forwarder
   template:
     src: ttn-pkt-forwarder.j2
-    dest: /var/config/lora/ttn-pkt-forwarder
+    dest: /var/config/init.d/ttn-pkt-forwarder
     mode: "0755"
     owner: root
     group: root
   notify:
     - restart ttn-pkt-forwarder
 
-- name: ttn_packet_forwarder Link /etc/init.d/ttn-pkt-forwarder to /var/config/lora/ttn-pkt-forwarder
+- name: ttn_packet_forwarder Link /etc/init.d/ttn-pkt-forwarder to /var/config/init.d/ttn-pkt-forwarder
   file:
     dest: /etc/init.d/ttn-pkt-forwarder
     state: link
-    src: /var/config/lora/ttn-pkt-forwarder
+    src: /var/config/init.d/ttn-pkt-forwarder
     follow: false
     force: yes
   notify:
     - update rc
     - restart ttn-pkt-forwarder
+
+- name: ttn_packet_forwarder Install /etc/default/ttn-pkt-forwarder
+  copy:
+    src: "{{ role_path }}/files/default.enabled"
+    dest: /etc/default/ttn-pkt-forwarder
+    mode: "0755"
+    owner: root
+    group: root
+  notify:
+    - restart ttn-pkt-forwarder
+
+- name: ttn_packet_forwarder Stop the LoRA Basic Station
+  service:
+    name: lora-basic-station
+    state: stopped
+  ignore_errors: true
 
 - name: ttn_packet_forwarder Disable LoRA Basic Station
   lineinfile:
@@ -187,13 +203,11 @@
     state: absent
   loop:
     - /etc/init.d/lora-basic-station
-    - /var/config/lora-basic-station
+    - /var/config/init.d/lora-basic-station
     - /var/config/lora/config.yml
     - /var/config/lora/local_conf.json-opkg
     - /var/config/lora/samples
     - /var/config/lora/station.conf
-    - /var/config/lora/tc.key
-    - /var/config/lora/tc.trust
-    - /var/config/lora/tc.uri
+    - /var/config/lora/tc.*
     - /var/log/basic-station.log*
 ...

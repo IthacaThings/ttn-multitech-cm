@@ -47,11 +47,11 @@
   when:
     - ssh_tunnel_enabled
     
-- name: ssh_tunnel Link /etc/init.d/ssh_tunnel to /var/config/ssh_tunnel.init
+- name: ssh_tunnel Link /etc/init.d/ssh_tunnel to /var/config/init.d/ssh_tunnel.init
   file:
     dest: /etc/init.d/ssh_tunnel
     state: link
-    src: /var/config/ssh_tunnel.init
+    src: /var/config/init.d/ssh_tunnel.init
     force: yes
   notify: restart ssh_tunnel
   when:
