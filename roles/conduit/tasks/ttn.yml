@@ -86,3 +86,18 @@
 - include_tasks: ttn_basic_station.yml
   when: forwarder_variant == "basic"
   
+
+#
+#	Monit
+#
+
+- name: ttn /var/config/monit/monit.d/ttn.monit
+  template:
+    src: ttn.monit.j2
+    dest: /var/config/monit/monit.d/ttn.monit
+    mode: "700"
+    owner: root
+    group: root
+  notify:
+    - Restart monit
+...

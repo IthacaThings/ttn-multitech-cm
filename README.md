@@ -662,4 +662,4 @@ http://www.multitech.net/developer/software/lora/running-basic-station-on-condui
 
 ### TODO
 
-+ [ ] Break up monit configs by function
++ [ ] /etc/init.d/restore runs at shutdown?

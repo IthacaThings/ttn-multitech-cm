@@ -46,3 +46,22 @@
     force: yes
     src: /var/config/ntp.conf
   notify: restart ntpd
+
+#
+#	Monit
+#
+
+- name: networking Calculate some facts monit depends on
+  set_fact:
+    monit_ntpd_pidfile: "{{ '/var/run/ntp.pid' if ansible_local.opkg.ntp is version('4.2.8', '<') else '/var/run/ntpd.pid' }}"
+
+- name: networking /var/config/monit/monit.d/ntp.monit
+  template:
+    src: ntp.monit.j2
+    dest: /var/config/monit/monit.d/ntp.monit
+    mode: "700"
+    owner: root
+    group: root
+  notify:
+    - Restart monit
+...
