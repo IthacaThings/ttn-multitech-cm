@@ -136,4 +136,9 @@
 
 - name: mlinux-upgrade Reload ansible_local
   setup: filter=ansible_local
+
+- name: mlinux-upgrade Fail if upgrade did not take
+  fail:
+    msg: "mlinux-firmware-upgrade did not work. Expected {{mlinux_version }}, got {{ ansible_local.mlinux.version }}"
+  when: mlinux_version != ansible_local.mlinux.version
 ...
