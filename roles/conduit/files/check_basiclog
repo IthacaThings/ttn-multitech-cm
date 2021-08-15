@@ -48,9 +48,9 @@ def parse_args():
     group.add_argument("--mtime",
                        dest="mtime", default=10*60, type=int,
                        help="File must have been updated this many seconds ago")
-    group.add_argument("--downlink-time",
-                       dest="downlink_time", default=2*60, type=int,
-                       help="A downlink message must have been received in this many seconds")
+    group.add_argument("--lookback-time",
+                       dest="lookback_time", default=2*60, type=int,
+                       help="Look back this far in the log file")
 
     # Parse args
     options = parser.parse_args()
@@ -96,7 +96,7 @@ class LogCheck(object):
         self._options = options
         self._time_now = datetime.datetime.now()
         self._time_utcnow = datetime.datetime.utcnow()
-        self._time_downlink = self._time_now - datetime.timedelta(seconds=self._options.downlink_time)
+        self._time_lookback = self._time_now - datetime.timedelta(seconds=self._options.lookback_time)
 
     def pid_check(self):
         """ Check if the process is running """
@@ -135,7 +135,7 @@ class LogCheck(object):
             return 2, "%s has not been updated in %d seconds" % (self._options.logfile,
                                                                  time.time() - stat.st_mtime)
 
-        look_back_to = self._time_utcnow - datetime.timedelta(seconds=self._options.downlink_time)
+        look_back_to = self._time_utcnow - datetime.timedelta(seconds=self._options.lookback_time)
 
         # Read the logfile in reverse
         line_no = 0
@@ -147,21 +147,41 @@ class LogCheck(object):
             match = self._LINE_RE.match(line)
             if not match:
                 continue
+            module = match.group('module')
+            level = match.group('level')
+            msg = match.group('level')
             timestamp = parser.parse(match.group('timestamp'), ignoretz=True)
             logging.info("Found timestamp: '%s'", line)
             if timestamp < look_back_to:
                 break
 
-            # Check for fatal error
-            if line_no < 5 and match.group('level') == "ERRO":
-                if match.group('module') == "SYS" and line_no == 1:
+            # If we see packers, we are good
+            if level == "INFO":
+                # Successful uplink or downlink
+                if module == "S2E" and msg.startswith("TX ") or msg.startswith("RX "):
+                    return retcode
+
+                # Successful connection
+                if module == "TCE" and msg.startswith("Infos: "):
+                    return retcode
+
+                continue
+
+            if level == "ERRO":
+                # Check for fatal error at startup
+                if module == "SYS" and line_no == 1:
                     logging.debug("Found: %s", line)
                     return (2, line)
-                    continue
-                if match.group('module') in ["AIO", "TCE"]:
+
+                # Failed connection
+                if module == "AIO":
                     logging.debug("Found: %s", line)
                     retcode = (4, line)
-                    continue
+                elif module == "TCE":
+                    logging.debug("Found: %s", line)
+                    return (4, line)
+
+                continue
 
         return retcode
 
