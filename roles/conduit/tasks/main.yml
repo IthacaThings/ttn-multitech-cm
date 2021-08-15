@@ -28,6 +28,14 @@
     - ansible
 
 #
+#	Initial setup.  Stuff required before packages install
+#
+- name: main Initial setup
+  import_tasks: setup.yml
+  tags:
+    - always
+
+#
 #  Set up for preserving config during firmware upgrade
 #
 - name: main Preserve config setup

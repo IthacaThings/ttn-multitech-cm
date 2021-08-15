@@ -1,0 +1,18 @@
+---
+#
+#	Set up directories so tasks can install Monit scripts
+#
+
+- name: monit Create persistent directories
+  file:
+    name: "{{ item[0] }}"
+    state: directory
+    mode: "{{ item[1] }}"
+    owner: root
+    group: root
+  notify: Restart monit
+  loop:
+    - [ /var/config/monit, "0700" ]
+    - [ /var/config/monit/monit.d, "0700" ]
+    - [ /var/config/init.d, "0755" ]
+...
