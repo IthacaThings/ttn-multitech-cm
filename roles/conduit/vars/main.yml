@@ -13,9 +13,6 @@ forwarder_installed_version: "{{ ansible_local.opkg.poly_packet_forwarder if ans
 
 forwarder_installed: "{{ forwarder_installed_package }}_{{ forwarder_installed_version }}"
 
-# Basic station stuff
-basic_station_conf_url: "http://www.multitech.net/developer/wp-content/uploads/downloads/2020/06/{{ conduit_type }}-station.conf_.txt"
-
 # EUI for use with non-TTN forwarders
 lora_eui: "eui-{{ ansible_local.lora.eui|lower }}"
 lora_hostname: "{{ hostname if forwarder_variant != 'poly' else lora_eui }}"

@@ -46,7 +46,7 @@
     - local_action:
         module: command
         args:
-          "bin/mt_station_conf --url {{ basic_station_conf_url }}
+          "bin/mt_station_conf --url {{ basic_station_conf_url[conduit_type] }}
           --routerid {{ ansible_local.lora.eui }}
           --log-file {{ basic_log_file }}
           --log-level {{ basic_log_level }}
