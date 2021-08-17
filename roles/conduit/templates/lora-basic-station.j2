@@ -8,6 +8,8 @@
 # Description:       Run the installed lora-basic-station
 ### END INIT INFO
 
+. /etc/init.d/functions
+
 NAME="lora-basic-station"
 ENABLED="yes"
 
@@ -50,6 +52,12 @@ lora_mtac_g64_id915="MTAC-LORA-G64-915"
 pkt_fwd_options=""
 
 gps_path="/dev/gps0"
+
+progname=$(basename $0)
+
+do_log() {
+    logger -t ${progname} $*
+}
 
 read_lora_hw_info() {
     lora_id=$(mts-io-sysfs show lora/product-id 2> /dev/null)
@@ -143,20 +151,28 @@ if [ "$ENABLED" != "yes" ]; then
     exit
 fi
 
+do_log "Running with '${*}' on binary ${pkt_fwd}"
 
 case "$1" in
     "start")
-    do_start
+	do_start
+	rc=$?
         ;;
     "stop")
-    do_stop
+	do_stop
+	rc=$?
         ;;
     "restart")
         ## Stop the service and regardless of whether it was
         ## running or not, start it again.
         do_stop
         do_start
+	rc=$?
         ;;
+    "status")
+	status ${pkt_fwd}
+	rc=$?
+	;;
     *)
         ## If no parameters are given, print which are avaiable.
         echo "Usage: $0 {start|stop|restart}"
@@ -164,3 +180,6 @@ case "$1" in
     ;;
 esac
 
+do_log "Return ${rc}"
+
+exit ${rc}
