@@ -27,7 +27,7 @@
         --antenna-type {{ antenna_type | quote }}
         --antenna-model {{ antenna_model | quote }}
         {{ gateway_owner }}
-        --collaborators '{{ gateway_collaborators | to_json }}'"
+        --collaborators '{{ gateway_collaborators_list | flatten | to_json }}'"
   throttle: 1
   register: register_output
 

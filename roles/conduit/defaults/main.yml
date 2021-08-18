@@ -119,6 +119,9 @@ rtl8192cu_firmware_file: "rtl8192cufw_TMSC.bin"
 rtl8192cu_firmware_path: "rtlwifi/{{ rtl8192cu_firmware_file }}"
 rtl8192cu_firmware_url: "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/{{ rtl8192cu_firmware_path }}"
 
+# Gateway collaborators
+gateway_collaborators: []
+
 # Gateway collaborator rights
 gateway_collaborator_rights:
   - gateway:settings

@@ -561,6 +561,9 @@ class GatewayV3(object):
                 new_orgs.add(col['organization'])
 
         output = []
+        #
+        #	Add new users
+        #
         for user in new_users.difference(old_users):
             cmd = [
                 "gateway",
@@ -568,7 +571,7 @@ class GatewayV3(object):
                 "set",
                 "--gateway-id", self._options.gw_id,
                 "--user-id", user,
-                "--rights-gateway-all"
+                "--right-gateway-all"
             ]
             try:
                 out = check_output(self._options.binaryv3, self._options.noop, cmd)
@@ -576,6 +579,26 @@ class GatewayV3(object):
             except subprocess.CalledProcessError as error:
                 logging.error(error)
 
+        #
+        #	Delete old users
+        #
+        for user in old_users.difference(new_users):
+            cmd = [
+                "gateway",
+                "collaborators",
+                "delete",
+                "--gateway-id", self._options.gw_id,
+                "--user-id", user
+            ]
+            try:
+                out = check_output(self._options.binaryv3, self._options.noop, cmd)
+                output.append(out)
+            except subprocess.CalledProcessError as error:
+                logging.error(error)
+
+        #
+        #	Add new organizations
+        #
         for org in new_orgs.difference(old_orgs):
             cmd = [
                 "gateway",
@@ -583,7 +606,24 @@ class GatewayV3(object):
                 "set",
                 "--gateway-id", self._options.gw_id,
                 "--organization-id", org,
-                "--rights-gateway-all"
+                "--right-gateway-all"
+            ]
+            try:
+                out = check_output(self._options.binaryv3, self._options.noop, cmd)
+                output.append(out)
+            except subprocess.CalledProcessError as error:
+                logging.error(error)
+
+        #
+        #	Add delete old organizations
+        #
+        for org in old_orgs.difference(new_orgs):
+            cmd = [
+                "gateway",
+                "collaborators",
+                "delete",
+                "--gateway-id", self._options.gw_id,
+                "--organization-id", org
             ]
             try:
                 out = check_output(self._options.binaryv3, self._options.noop, cmd)

@@ -27,7 +27,7 @@
         --antenna-type {{ antenna_type | quote }}
         --antenna-model {{ antenna_model | quote }}
         --old_id {{ lora_hostname_delete }}
-        --collaborators '{{ gateway_collaborators | to_json }}'"
+        --collaborators '{{ gateway_collaborators_list | flatten | to_json }}'"
   register: register_output
   notify: register gateway
 
