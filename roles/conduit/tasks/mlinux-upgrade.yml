@@ -108,21 +108,8 @@
   register: flash_upgrade
 
 - name: mlinux-upgrade Reboot
-  shell: "reboot"
-  async: 1
-  poll: 0
-  when: flash_upgrade is changed
-
-- name: mlinux-upgrade Wait for reboot
-  wait_for:
-    host: "{{ ansible_host }}"
-    state: started
-    port: "{{ ansible_port }}"
-    delay: 30 
-    timeout: 1200
-    connect_timeout: 15
-  ignore_errors: true
-  connection: local
+  reboot:
+    post_reboot_delay: 30
   when: flash_upgrade is changed
 
 #
