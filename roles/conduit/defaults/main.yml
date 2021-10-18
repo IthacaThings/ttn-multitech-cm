@@ -116,6 +116,6 @@ use_cellular: false
 cellular_apn: internet
 # Default value for cellular_provider
 # 'gsm' for GSM network, others not tested
-cellular_provider: none
+cellular_provider: null
 
 
