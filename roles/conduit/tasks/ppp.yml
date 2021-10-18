@@ -11,7 +11,7 @@
     remote_src: true
     src: /etc/ppp/ppp_on_boot
     dest: /var/config/ppp/ppp_on_boot
-  when: ppp_on_boot.stat.isdir is defined and ppp_on_boot.stat_isdir == True
+  when: ppp_on_boot.stat.isdir is defined and ppp_on_boot.stat.isdir == True
 
 - name: Make /etc/ppp/ppp_on_boot a link to /var/config/ppp/ppp_on_boot
   file:
@@ -19,7 +19,7 @@
     state: link
     src: /var/config/ppp/ppp_on_boot
     force: true
-  when: ppp_on_boot.stat.isdir is defined and ppp_on_boot.stat_isdir == True
+  when: ppp_on_boot.stat.isdir is defined and ppp_on_boot.stat.isdir == True
 
 - name: Reset APN
   shell: mlinux-set-apn -c
