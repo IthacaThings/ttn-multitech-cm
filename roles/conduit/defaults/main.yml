@@ -4,30 +4,31 @@ ansible_python_interpreter: /usr/bin/python
 
 # Ansible package dependencies
 ansible_depends:
-    - python-core
-    - python-argparse
-    - python-async
-    - python-compression
-    - python-dateutil
-    - python-distutils
-    - python-email
-    - python-html
-    - python-json
-    - python-multiprocessing
-    - python-pkgutil
-    - python-psutil
-    - python-pycurl
-    - python-pyopenssl
-    - python-pyserial
-    - python-pyudev
-    - python-pyusb
-    - python-shell
-    - python-simplejson
-    - python-syslog
-    - python-terminal
-    - python-textutils
-    - python-unixadmin
-    - python-xml
+  - python-core
+  - python-argparse
+  - python-compression
+  - python-dateutil
+  - python-distutils
+  - python-email
+  - python-html
+  - python-json
+  - python-multiprocessing
+  - python-pkgutil
+  - python-psutil
+  - python-pyopenssl
+  - python-pyserial
+  - python-pyudev
+  - python-pyusb
+  - python-shell
+  - python-simplejson
+  - python-syslog
+  - python-terminal
+  - python-textutils
+  - python-unixadmin
+  - python-xml
+ansible_depends_old:
+  - python-async
+  - python-pycurl
 
 # Conduit type
 conduit_type: "{{ ansible_local.conduit.hw_version | regex_replace('-[0-9.]+$') | lower }}"
