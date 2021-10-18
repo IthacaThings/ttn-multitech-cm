@@ -59,7 +59,7 @@
   when: use_cellular == False or cellular_provider is not defined
 
 - name: Set ppp MTU
-  lineinfo:
+  lineinfile:
     path: /etc/ppp/options
     regexp: '^#?mtu'
     line: "mtu {{ ppp0_mtu }}"
