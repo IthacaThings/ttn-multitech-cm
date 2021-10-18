@@ -4,7 +4,6 @@
   stat:
     path: /etc/ppp/ppp_on_boot
   register: ppp_on_boot
-  when: use_cellular == False
 
 - name: Copy /etc/ppp/ppp_on_boot to /var/config/ppp/ppp_on_boot
   copy:
@@ -24,11 +23,12 @@
 - name: Reset APN
   shell: mlinux-set-apn -c
   when:
-    - cellular_apn is not defined
+    - cellular_apn is not defined or use_cellular == False
 
 - name: Set APN
   shell: "mlinux-set_apn {{ cellular_apn }}"
   when:
+    - use_cellular
     - cellular_apn is defined
 
 - name: Set provider
@@ -38,6 +38,7 @@
     line: '$PPPD call {{ cellular_provider }}'
   notify: Start ppp
   when:
+    - use_cellular
     - cellular_provider is defined
 
 - name: Ensure the connection stays up
@@ -47,7 +48,7 @@
     line: 'persist'
   notify: Start ppp
   when:
-    - use_cellular == True
+    - use_cellular
     - cellular_provider is defined
 
 - name: Reset PPP persist option
