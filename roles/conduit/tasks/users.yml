@@ -4,7 +4,7 @@
 #	Setup users
 #
 
-- name: Create non-volatile home dirs
+- name: users Create non-volatile home dirs
   file:
     dest: /var/config/home
     state: directory
@@ -12,7 +12,7 @@
     owner: root
     group: root
 
-- name: "Set up dirs for root"
+- name: users "Set up dirs for root"
   import_tasks: user_dirs.yml
   vars:
     target_user: "root"
@@ -20,32 +20,35 @@
 #
 #	Create ttn user
 #
-- name: "Set up {{ ttn_user }} user"
+- name: users "Set up {{ ttn_user }} user"
   user:
     name: "{{ ttn_user }}"
     append: yes
-    groups: adm,plugdev,sudo
+    groups: adm,dialout,disk,plugdev,sudo
     shell: /bin/bash
     password: "*"
 
-- name: "Set up dirs for {{ ttn_user }}"
-  import_tasks: user_dirs.yml
+- name: users Configure mtadm user
+  block:
+    - import_tasks: user_dirs.yml
+    - import_tasks: user_sudo.yml
   vars:
-    target_user: "{{ ttn_user }}"
+    target_user: ttn
 
-- name: "Allow {{ ttn_user }} to sudo without a password"
-  copy:
-    dest: "/var/config/{{ ttn_user }}.sudo"
-    content: "{{ ttn_user }} ALL=(ALL) NOPASSWD: ALL"
-    mode: "0644"
-    owner: root
-    group: root
-  when: ansible_local.opkg.sudo is defined
+#
+#	Configure mtadm user
+#
 
-- name: "Create a link to /var/config/{{ ttn_user }}.sudo"
-  file:
-    dest: "/etc/sudoers.d/{{ ttn_user }}"
-    state: link
-    src: "/var/config/{{ ttn_user }}.sudo"
-    force: yes
-  when: ansible_local.opkg.sudo is defined
+- name: users Configure mtadm user
+  block:
+    - import_tasks: user_dirs.yml
+    - import_tasks: user_sudo.yml
+    - lineinfile:
+        dest: /etc/pam.d/sshd
+        regex: ^(auth .*)$
+        line: '# \1'
+        backrefs: true
+  vars:
+    target_user: mtadm
+  when:
+    - ansible_local.mlinux.version is version('4', '>=')

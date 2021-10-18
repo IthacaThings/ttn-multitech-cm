@@ -1,0 +1,3 @@
+/etc/timestamp
+/var/config/ntp/ntp.drift
+/var/config/monit/monit.state

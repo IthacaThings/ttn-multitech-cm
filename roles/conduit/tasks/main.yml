@@ -1,9 +1,27 @@
 ---
 
 #
+#	Build the list of authorized keys
+#
+- name: main Build list of authorized keys
+  import_tasks: authorized_keys.yml
+  tags:
+    - always
+
+#
+#	Attempt to bootstrap an unconfigured gateway
+#
+- name: main Bootstrap
+  import_tasks: bootstrap.yml
+  tags:
+    - bootstrap
+    - never
+
+#
+#
 #	Ansible first pass setup
 #
-- name: Ansible setup
+- name: main Ansible setup
   import_tasks: ansible.yml
   tags:
     - setup
@@ -12,9 +30,8 @@
 #
 #  Set up for preserving config during firmware upgrade
 #
-- name: Preserve config setup
+- name: main Preserve config setup
   import_tasks: preserve.yml
-  when: ansible_local.opkg.preserve is defined
   tags:
     - setup
     - preserve
@@ -22,16 +39,17 @@
 #
 #	Update mLinux if required
 #
-- name: Upgrade mlinux
+- name: main Upgrade mlinux
   import_tasks: mlinux-upgrade.yml
   when:
     - mlinux_version is defined
     - mlinux_version != ansible_local.mlinux.version
+    - mlinux_version is version('5.3.0d', '!=') or ansible_local.mlinux.version is version('5.3.0b', '!=')
   tags:
     - setup
     - mlinux
 
-- name: Configure mlinux
+- name: main Configure mlinux
   import_tasks: mlinux.yml
   when:
     - mlinux_version is defined
@@ -42,7 +60,7 @@
 #
 #	Set up logrotate
 #
-- name: Set up logrotate
+- name: main Set up logrotate
   import_tasks: logrotate.yml
   tags:
     - logrotate
@@ -51,7 +69,7 @@
 #
 #	Set up networking
 #
-- name: Setup networking
+- name: main Setup networking
   import_tasks: networking.yml
   tags:
     - networking
@@ -70,23 +88,16 @@
 #
 #	Set hostname
 #
-- name: Set /etc/hostname
-  copy:
-    dest: /etc/hostname
-    content: "{{ hostname }}"
-    mode: "0644"
-    owner: root
-    group: root
-  when: hostname is defined
+- name: main Set hostname
+  import_tasks: hostname.yml
   tags:
     - hostname
     - setup
-  notify: Set hostname
 
 #
 #	Set timezone and time
 #
-- name: Setup time
+- name: main Setup time
   import_tasks: time.yml
   tags:
     - time
@@ -95,7 +106,7 @@
 #
 #	Set up user stuff
 #
-- name: Set up users
+- name: main Set up users
   import_tasks: users.yml
   tags:
     - users
@@ -104,7 +115,7 @@
 #
 #	Secure ssh
 #
-- name: Set up ssh
+- name: main Set up ssh
   import_tasks: sshd.yml
   tags:
     - sshd
@@ -114,7 +125,7 @@
 #	Stop any services we don't want
 #
 
-- name: Stop mosquitto
+- name: main Stop mosquitto
   service: name=mosquitto state=stopped
   when: ansible_local.opkg.mosquitto is defined
   ignore_errors: true
@@ -122,7 +133,7 @@
     - services
     - setup
 
-- name: Disable mosquitto
+- name: main Disable mosquitto
   lineinfile: dest=/etc/default/mosquitto
     regexp="^ENABLED="
     line="ENABLED="no""
@@ -135,7 +146,7 @@
 #
 #	Set up /usr/local tree
 #
-- name: Set up /usr/local tree
+- name: main Set up /usr/local tree
   import_tasks: local.yml
   tags:
     - localtree
@@ -144,27 +155,36 @@
 #
 #	Install and configure TTN packet forwarder
 #
-- name: Set up TTN packet forwarder
+- name: main Set up TTN packet forwarder
   import_tasks: ttn.yml
   tags:
     - ttn
 
 #
-#	Install additional ca-certificates
-#
-
-- name: Additional Certificates
-  import_tasks: certs.yml
-  tags:
-    - ca-certificates
-    - setup
-
-#
 #	Set up ssh_tunnel (autossh)
 #
-- name: Set up ssh_tunnel (autossh)
+- name: main Set up ssh_tunnel (autossh)
   import_tasks: ssh_tunnel.yml
   tags:
     - ssh_tunnel
+    - monit
     - setup
 
+#
+#	Set up monit
+#
+- name: main Set up moniit
+  import_tasks: monit.yml
+  tags:
+    - monit
+    - setup
+
+#
+#	Always update system checksum file last
+#
+- name: main Schedule update of system checksum file
+  command: "true"
+  delegate_to: localhost
+  notify: Update system checksum file
+  tags:
+    - always

@@ -4,7 +4,7 @@
 forwarder_package: "{{ forwarder_variant }}-packet-forwarder"
 forwarder_package_version: "{{ forwarder_package }}_{{forwarder_version }}"
 forwarder_package_full: "{{forwarder_package_version }}_arm926ejste.ipk"
-forwarder_url: "{{ forwarder_baseurl_kersing }}/{{ forwarder_package_full }}"
+forwarder_url: "{{ forwarder_baseurl_ttni }}/{{ forwarder_package_full }}"
 
 forwarder_installed_package: "{{ 'poly-packet-forwarder' if ansible_local.opkg.poly_packet_forwarder is defined else 'mp-packet-forwarder' if ansible_local.opkg.mp_packet_forwarder is defined else False }}"
 
@@ -22,8 +22,8 @@ ssh_tunnel_daemon_args: "-f -M {{ ssh_tunnel_keepalive_base_port }} -o ServerAli
 
 # Is the GPS present?
 have_gps: "{{ gps_device in ansible_local.dev }}"
-set_gps: "{{ 'true' if (use_gps and have_gps) or (use_fake_gps and latitude and longitude) else 'false' }}"
-set_fake_gps: "{{ 'true' if (use_fake_gps and latitude and longitude) and not (use_gps and have_gps) else 'false' }}"
+set_gps: "{{ true if (use_gps and have_gps) or (use_fake_gps and latitude and longitude) else false }}"
+set_fake_gps: "{{ true if ttn_version == 2 and (use_fake_gps and latitude and longitude) and not (use_gps and have_gps) else false }}"
 
 # Accumulate list of authorized keys
 authorized_keys_list:

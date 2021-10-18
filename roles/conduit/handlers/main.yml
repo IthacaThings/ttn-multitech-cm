@@ -2,18 +2,6 @@
 # handlers file for setup
 
 #
-#	Set hostname when /etc/hostsname is updated
-#
-- name: Set hostname
-  shell: "hostname -F /etc/hostname"
-
-#
-#	Run update-ca-certificates
-#
-- name: update-ca-certificates
-  shell: "update-ca-certificates"
-
-#
 #	Make sure init script is run
 #
 - name: update rc
@@ -27,6 +15,12 @@
     name: ttn-pkt-forwarder
     state: restarted
     sleep: "{{ forwarder_restart_delay }}"
+
+#
+#	Clean up after TTNv3 install
+#
+- name: TTNv3 cleanup
+  include_tasks: ttnv3_cleanup.yml
 
 #
 #	Remind to
@@ -47,7 +41,7 @@
 #       Restart ssh_tunnel
 #
 - name: restart ssh_tunnel
-  service: name=ssh_tunnel state=restarted
+  include_tasks: restart_tunnel.yml
 
 #
 #	Restart sshd after config changes
@@ -84,3 +78,27 @@
     name: pppd
     enabled: no
     state: stopped
+
+#
+#	opkg handlers
+#
+- name: opkg clean
+  shell: "opkg clean --autoremove"
+  when: ansible_local.mlinux.version is version('5', '>=')
+
+#
+#	Monit handlers
+#
+- name: Restart monit
+  service: name=monit state=restarted
+
+- name: monit monitor check_pktfwdlog
+  shell: "monit monitor check_pktfwdlog"
+  ignore_errors: true
+
+- name: monit monitor volatile
+  shell: "monit monitor volatile"
+  ignore_errors: true
+
+- name: Update system checksum file
+  include_tasks: update_checksums.yml

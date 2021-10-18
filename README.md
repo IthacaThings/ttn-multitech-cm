@@ -1,5 +1,5 @@
 [appurl]: http://www.thethingsnetwork.org/
-[![The Things Network](https://ttnstaticfile.blob.core.windows.net/static/ttn/media/logo/TheThingsRond.png)][appurl]
+[![The Things Network](https://www.thethingsnetwork.org/spa/public/favicons/favicon-32.png)][appurl]
 
 # Configuration Management of MultiTech Conduits as The Things Network Gateways
 
@@ -34,8 +34,8 @@ changes you need instead of making local changes.
 
 ## mLinux version
 
-This repo has been extensively tested on later versions of mLinux
-3.3.  It is recommended to update conduits to a later version of
+This repo has been extensively tested on later versions of mLinux 3.3
+and 5.3.  It is recommended to update conduits to a later version of
 mLinux before running this repo. It is important to keep your version
 of mLinux up to date to keep up with any security fixes.
 
@@ -64,10 +64,9 @@ configured Ansible with any configuration.
 
 The TTNI custom build of mLinux includes a tool to preserve
 configuration during an mLinux firmware upgrade. This tool will
-eventually be installed on any version of mLinux 3.3 configured via
-this Ansible configuration.
+is also installed by this Ansible configuration.
 
-Ansible Preserves configuration by ensuring all local changes that
+Ansible preserves configuration by ensuring all local changes that
 must be preserved are stored in the /var/config filesystem with
 symlinks from filesystems that are not preserved. The contents of this
 filesystem is normally preserved during a firmware upgrade. In
@@ -77,7 +76,12 @@ boot after a firmware upgrade.
 
 Packages installed in /opt (such as the Kersing packet forwarder) are
 not preserved and are re-installed by Ansible after a firmware
-upgrade. 
+upgrade.
+
+When upgrading to an image that does not contain the preserve script,
+it is necessary to log into the gateway and manually run the restore
+script (/var/config/restore_config).  This repo attempts to log in and
+run that script.
 
 ## Key based authentication
 
@@ -87,6 +91,24 @@ generate an ssh key and how to provide your key for remote
 authentication. It is also recommended that you use ssh-agent to
 forward keys from your local system to the jump host and not keep
 private keys on cloud hosts.
+
+## Commissioning
+
+From version 5.2, official mLinux images require commisioning to
+create login creditionalls before an initial logging into the
+conduit.
+
+The script
+`bin/commission` is intented to perform this function.
+
+Run it as
+
+```bash
+bin/commission --address 192.168.2.1 --password PASSWORD
+```
+
+This will set the password for the `mtadm` user (or specify a user
+with `--username USER` so that you can log in and do initial setup.
 
 ## Jump Host
 
@@ -332,13 +354,15 @@ the home directories for root and the 'ttn' user defined by this repo.
 
 To force a Conduit to mLinux 3.3.7, in *host_vars/**HOST**.yml* set:
 
-```
+```yaml
 mlinux_version: 3.3.7
 ```
 
 and run
 
-```make apply```
+```bash
+make apply
+```
 
 # Syncing with Upstream
 This is necessary when the global configurations change, or if there
@@ -454,6 +478,10 @@ roles/conduit/defaults:ansible_depends
 This can be required when Ansible is updated to require more python
 modules on the target.
 
+#### fetch-logs
+
+Fetch the lora logs from specified targets.  Logs are stored as *logs/ANSIBLE_HOSTNAME*
+
 #### gather
 
 Run a *ping* on all hosts/targets to gather all their facts
@@ -477,3 +505,112 @@ Variables can be defined at three levels:
 
 The available variables are defined in the [Conduit role README](roles/conduit/README.md).
 
+# Migrating to TTNv3
+
+## Required changes
+
+### ttn_version
+
+The `ttn_version` variable defaults to `3`, update any gateways that
+need to stay registered with TTNv2 with `ttn_version: 2` before
+running.
+
+### router_v3
+
+The `router_v3` variable needs to be defined in conduits.yml.  Select
+the proper router for your region.  Available clusters are listed if
+you go to [The Things Network
+Console](https://console.cloud.thethings.network/).
+
+### gateway_collaborators
+
+The `gateway_collaboraators` variable syntax is changed.  The new
+syntax is:
+
+```
+gateway_collaborators:
+  - { username: jchonig }
+  - { username: terrillmoore }
+  - { organization: ttn-ithaca }
+  - { organization: honig-net }
+```
+
+## Installing ttn-lw-cli
+
+Version 3 uses the `ttn-lw-cli` command, which is a little harder to
+install and configure than the `ttnctl` command used by TTN v2.
+
+See the instructions
+[here](https://www.thethingsindustries.com/docs/getting-started/cli/installing-cli/)
+
+### Config file location
+
+If you are using ttn-lw-cli on Linux you are probably using the
+[snap](https://snapcraft.io/) version.
+As of this writting, snaps can not access protected directories, that
+is, directories that contain a component starting with a dot,
+i.e. `~/.config`.
+Nor will `~/.ttn-lw-cli.yml` work.
+As a workaround, ensure the path to your ttn-lw-cli.yml file does not
+include a protected directory.
+Set the environment variable `TTN_LW_CONFIG` to point to this
+configuration file.
+
+Once you set the config file location you can create a config file by
+running the following command:
+
+```bash
+(cd $(dirname $TTN_LW_CONFIG); ttn-lw-cli use nam1.cloud.thethings.network --fetch-ca --config ${TTN_LW_CONFIG} --overwrite)
+```
+
+Change `nam1` to the appropriate region for your location (opening
+https://console.cloud.thethings.network/ in your browser will show you
+the options).
+
+### Authenticating on a remote session
+
+Normally the process to authenticate to ttn-lw-cli is
+
+```bash
+ttn-lw-cli login
+```
+
+This will open a browser window on your system for authentication.
+However, this will not work on a remote ssh session.
+
+If a browser does not open, or can not open a browser because you are
+on a remote system, open, use:
+
+```bash
+ttn-lw-cli login  --callback=false
+```
+
+and you will see:
+
+```
+$ ttn-lw-cli login --callback=false
+INFO	Opening your browser on https://eu1.cloud.thethings.network/oauth/authorize?client_id=cli&redirect_uri=code&response_type=code
+WARN	Could not open your browser, you'll have to go there yourself	{"error": "fork/exec /usr/bin/xdg-open: permission denied"}
+INFO	After logging in and authorizing the CLI, we'll get an access token for future commands.
+INFO	Please paste the authorization code and press enter
+>
+```
+
+Copy the URL from that output and paste it into your browser (note
+that all authentication is done in the eu1 region).
+If you are not logged in to the eu1 region of The Things Network in
+your browser session you will be prompted to login.
+
+You will be presented with an authorization token; click the button to
+copy it to your clipboard and enter it in the following command:
+
+```bash
+ttn-lw-cli login --api-key APIKEY
+```
+
+You now should be logged in.
+
+# TODO
+
+Add option to run basics station on conduit 
+http://www.multitech.net/developer/software/lora/running-basic-station-on-conduit/

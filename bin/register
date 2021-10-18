@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+# XXX - Do we need to register with a specific region for TTNv3?
+# XXX - Can we provide a table of routers per region?
+# XXX - Key for v3
+# XXX - Fix error on get config on v3 gateway that does not exist
+
 """
 MIT License
 
@@ -26,11 +31,18 @@ SOFTWARE.
 
 from __future__ import print_function
 import argparse
+import errno
 import fcntl
 import json
+import logging
+import os
+import pprint
+import random
 import re
 import subprocess
 import sys
+import time
+import yaml
 
 try:
     # For Python 3.0 and later
@@ -43,199 +55,81 @@ except ImportError:
 REGISTER_URL = "https://account.thethingsnetwork.org/users/authorize?client_id=ttnctl&redirect_uri=/oauth/callback/ttnctl&response_type=code"
 REGIONS = {
     "AS1": {
-        "plan": "AS_920_923"
+        "plan": "AS_920_923",
+        "plan_v3": "AS_920_923_TTN_AU"
     },
     "AS2": {
-        "plan": "AS_923_925"
+        "plan": "AS_923_925",
+        "plan_v3": "AS_923_925_TTN_AU"
     },
     "AU": {
-        "plan": "AU_915_928"
+        "plan": "AU_915_928",
+        "plan_v3": "AU_915_928_FSB_2"
     },
     "EU": {
-        "plan": "EU_863_870"
+        "plan": "EU_863_870",
+        "plan_v3": "EU_863_870_TTN"
     },
     "IN": {
-        "plan": "IN_865_867"
+        "plan": "IN_865_867",
+        "plan_v3": "IN_865_867",
     },
     "KR": {
-        "plan": "KR_920_923"
+        "plan": "KR_920_923",
+        "plan_v3": "KR_920_923_TTN"
+    },
+    "RU": {
+        "plan": "RU_864_870",
+        "plan_v3": "RU_864_870_TTN"
     },
     "US": {
-        "plan": "US_902_928"
+        "plan": "US_902_928",
+        "plan_v3": "US_902_928_FSB_2"
     },
 }
 
-#
-#	Gateway list
-#
-class Gateway(object):
-    """Class to hold Gateway info"""
+class GatewayV2(object):
+    """ TTN v2 Gateway """
 
-    info_re = re.compile(r"^\s+(?P<key>[A-za-z ]+):\s(?P<value>.*)\s*$")
+    _INFO_RE = re.compile(r"^\s+(?P<key>[A-za-z ]+):\s(?P<value>.*)\s*$")
 
-    def __init__(self,
-                 options,
-                 gw_id,
-                 frequency_plan=None,
-                 latitude=None,
-                 longitude=None,
-                 router=None):
-        """"""
-        self.options = options
-        self.gw_id = gw_id
-        self.activated = None
-        self.key = None
-        self.frequency_plan = frequency_plan
-        self.latitude = float(latitude) if latitude else latitude
-        self.longitude = float(longitude) if longitude else longitude
-        self.router = router
-        self.registered = False
-        self.description = None
-        self.brand = None
-        self.model = None
-        self.antenna_type = None
-        self.antenna_model = None
+    def __init__(self, options):
+        self._options = options
+        self._key = None
+        self._data = self._get_json()
+        self._collaborators = []
 
-    def __repr__(self):
-        return "%s: %s %s %f, %f %s" % (self.gw_id,
-                                        self.activated,
-                                        self.frequency_plan,
-                                        self.latitude,
-                                        self.longitude,
-                                        self.router)
+    def __str__(self):
 
-    def register(self, frequency_plan, latitude, longitude):
-        """ Register the gateway """
+        if self._data:
+            return pprint.pformat(self._data)
 
-        retcode = 0
-        cmd = ["gateway", "register", self.gw_id, frequency_plan, '%f,%f' % (latitude, longitude)]
-        cmd.append("--router-id")	# Router for register/edit
-        cmd.append(self.options.router)
-        if self.options.noop:
-            output = "NOOP: %s " % " ".join(cmd)
-        else:
-            try:
-                output = check_output(self.options, cmd)
-                self.registered = True
-            except subprocess.CalledProcessError as error:
-                retcode = error.returncode
-                output = error.output
+        return self._options.gw_id
 
-        return [retcode, output]
+    @property
+    def json(self):
+        """ Dump data as json for parsing """
 
-    def delete(self):
-        """ Delete this gateway """
+        return json.dumps({
+            "key": self._key,
+            "info": self._data
+        }, indent=4)
 
-        retcode = 0
-        cmd = ["gateway", "delete", self.gw_id]
-        if self.options.noop:
-            output = "NOOP: %s " % " ".join(cmd)
-        else:
-            try:
-                output = check_output(self.options, cmd)
-                self.registered = True
-            except subprocess.CalledProcessError as error:
-                retcode = error.returncode
-                output = error.output
+    def exists(self):
+        """ Does this gateway exist """
 
-        return [retcode, output]
+        return self._data is not None
 
-    def collaborators(self):
-        """ Set collaborators """
-
-        output = []
-        for col in self.options.collaborators:
-            changes = []
-            changes.append(col.get('username'))
-            rights = col.get('rights')
-            if rights:
-                changes.append(rights)
-
-            cmd = ["gateway", "collaborators", "add", self.gw_id] + changes
-            if self.options.noop:
-                output.append("NOOP: %s " % " ".join(cmd))
-            else:
-                try:
-                    out = check_output(self.options, cmd)
-                    output.append(out)
-                except subprocess.CalledProcessError as error:
-                    return [error.returncode, error.output]
-
-        return [0, '\n'.join(output)]
-
-
-    def edit(self, frequency_plan, latitude, longitude, router):
-        """ Change registration if something is different """
-
-        self.get_info()
-        changes = []
-        if self.frequency_plan != frequency_plan:
-            changes.append("--frequency-plan")
-            changes.append(frequency_plan)
-        if self.latitude != latitude or self.longitude != longitude:
-            changes.append("--location")
-            changes.append("%f,%f" % (latitude, longitude))
-        if router and self.router != router:
-            changes.append("--router-id")	# Router to configure
-            changes.append(router)
-            changes.append("--router")		# Router for register/edit
-            changes.append(router)
-        if self.options.description and self.description != self.options.description:
-            changes.append("--description")
-            changes.append(self.options.description)
-        if self.options.brand and self.brand != self.options.brand:
-            changes.append("--brand")
-            changes.append(self.options.brand)
-        if self.options.model and self.model != self.options.model:
-            changes.append("--model")
-            changes.append(self.options.model)
-        if self.options.antenna_type and self.antenna_type != self.options.antenna_type:
-            changes.append("--antenna-type")
-            changes.append(self.options.antenna_type)
-        if self.options.antenna_model and self.antenna_model != self.options.antenna_model:
-            changes.append("--antenna-model")
-            changes.append(self.options.antenna_model)
-
-        if not changes:
-            return [0, "No changes required"]
-
-        cmd = ["gateway", "edit", self.gw_id] + changes
-        if self.options.noop:
-            output = "NOOP: %s " % " ".join(cmd)
-        else:
-            try:
-                output = check_output(self.options, cmd)
-                self.frequency_plan = frequency_plan
-                self.latitude = latitude
-                self.longitude = longitude
-                retcode = 0
-            except subprocess.CalledProcessError as error:
-                retcode = error.returncode
-                output = error.output
-
-        return [retcode, output]
-
-    def get_json(self):
-        """ Get the JSON info """
-
-        url = "https://account.thethingsnetwork.org/gateways/%s" % self.gw_id
-        try:
-            request = Request(url)
-            request.add_header("Key", self.key)
-            response = urlopen(request)
-        except URLError as err:
-            sys.exit("Error loading %s: %s" % (url, err))
-
-        return json.loads(response.read())
-
-    def get_info(self):
+    def _get_info(self):
         """ Get additional info via 'info' subcommand """
 
-        cmd = ["gateway", "info", self.gw_id]
+        collaborators = None
+
+        cmd = ["gateway", "info", self._options.gw_id]
         try:
-            lines = check_output(self.options, cmd)
+            lines = check_output(self._options.binary, False, cmd)
         except subprocess.CalledProcessError as error:
-            print(error.output, file=sys.stderr, end="")
+            logging.error(error.output)
 
         for line in lines.split("\n"):
             if line.strip() == "":
@@ -244,86 +138,491 @@ class Gateway(object):
             if line.strip().find("Found gateway") != -1:
                 continue
 
-            if line.strip() == "Collaborators:":
-                break
+            # Collaborators is YAML
+            if line.rstrip() == "Collaborators:":
+                collaborators = []
+                continue
+            if collaborators is not None:
+                collaborators.append(line.rstrip())
+                continue
 
-            match = self.info_re.match(line)
+            match = self._INFO_RE.match(line)
             if not match:
                 continue
 
-            if match.group('key') == "Router":
-                self.router = match.group('value')
-            elif match.group('key') == "Access Key":
-                self.key = match.group('value')
-            elif match.group('key') == "Description":
-                self.description = match.group('value')
-            elif match.group('key') == "Brand":
-                self.brand = match.group('value')
-            elif match.group('key') == "Model":
-                self.model = match.group('value')
-            elif match.group('key') == "AntennaType":
-                self.antenna_type = match.group('value')
-            elif match.group('key') == "AntennaModel":
-                self.antenna_model = match.group('value')
+            if match.group('key') == "Access Key":
+                self._key = match.group('value')
 
-def ttn_gateway_list(options):
-    """Return a dict of Gateways"""
+        if collaborators:
+            self._collaborators = yaml.load("\n".join(collaborators), yaml.SafeLoader)
 
-#        ID              Activated       Frequency Plan  Coordinates
-    header_re = re.compile(r"^\s+ID")
-#1       ttn-ith-test    false           AU_915_928      (42.517288, -76.710183, %!f(int=0))
-    line_re = re.compile(r"^\d+\s+([a-z0-9-]+)\s+(true|false)\s+((AU|EU|IN|KR|US|AS)_\d{3}_\d{3})\s+\((-?\d+\.\d+),\s+(-?\d+.\d+),.*$")
+    def _get_json(self):
+        """ Get the JSON info """
 
-    gateways = dict()
+        logging.debug("GatewayV2.get_json()")
 
-    retcode = 0
-    cmd = ["gateway", "list"]
-    try:
-        lines = check_output(options, cmd)
-    except subprocess.CalledProcessError as error:
-        retcode = error.returncode
-        print(error.output, file=sys.stderr, end="")
-        return None
+        if not self._key:
+            self._get_info()
 
-    for line in lines.split("\n"):
-        if header_re.match(line):
-            continue
-        match = line_re.match(line)
-        if not match:
-            continue
-        gateway = Gateway(options,
-                          match.group(1),
-                          match.group(3),
-                          match.group(5),
-                          match.group(6),
-                          None)
-        gateway.activated = bool(match.group(2))
-        gateways[gateway.gw_id] = gateway
+        url = "https://account.thethingsnetwork.org/gateways/%s" % self._options.gw_id
+        try:
+            request = Request(url)
+            request.add_header("Key", self._key)
+            response = urlopen(request)
+            data = json.loads(response.read())
+        except (ValueError, URLError) as err:
+            logging.debug("Error loading %s: %s", url, err)
+            return None
 
-    return gateways
+        return data
 
-def check_output(options, command):
+    def register(self):
+        """ Register the gateway """
+
+        cmd = [
+            "gateway",
+            "register",
+            self._options.gw_id,
+            self._options.region['plan']
+        ]
+        if self._options.latitude and self._options.longitue:
+            cmd.append('%f,%f' % (self._options.latitude, self._options.longitude))
+        cmd.extend(["--router-id", self._options.router])
+
+        try:
+            output = check_output(self._options.binary, self._options.noop, cmd)
+            logging.debug(output)
+        except subprocess.CalledProcessError as error:
+            logging.warning(error)
+            return False
+
+        self._data = self._get_json()
+
+        return True
+
+    @property
+    def frequency_plan(self):
+        return self._data.get('frequency_plan')
+
+    @property
+    def router(self):
+        return self._data.get('router',{}).get('id')
+
+    @property
+    def latitude(self):
+        latitude = self._data.get('antenna_location', {}).get('latitude')
+        return float(latitude) if latitude else None
+
+    @property
+    def longitude(self):
+        longitude = self._data.get('antenna_location', {}).get('longitude')
+        return float(longitude) if longitude else None
+
+    @property
+    def altitude(self):
+        altitude = self._data.get('antenna_location', {}).get('altitude')
+        return int(altitude) if altitude else None
+
+    @property
+    def description(self):
+        return self._data.get('attributes', {}).get('description')
+
+    @property
+    def brand(self):
+        return self._data.get('attributes', {}).get('brand')
+
+    @property
+    def model(self):
+        return self._data.get('attributes', {}).get('model')
+
+    @property
+    def antenna_type(self):
+        return self._data.get('attributes', {}).get('antenna_type')
+
+    @property
+    def antenna_model(self):
+        return self._data.get('attributes', {}).get('antenna_model')
+
+    @property
+    def user_id(self):
+        return self._data.get('owner', {}).get('username')
+
+    @property
+    def owner_public(self):
+        return "gateway:owner" in self._data.get('public_rights', {})
+
+    @property
+    def location_public(self):
+        return "gateway:location" in self._data.get('public_rights', {})
+
+    @property
+    def status_public(self):
+        return "gateway:status" in self._data.get('public_rights', {})
+
+    def update(self):
+        """ Change registration if something is different """
+
+        logging.debug("GatewayV2.update()")
+
+        frequency_plan = REGIONS[self._options.region]['plan']
+
+        changes = []
+        if self.frequency_plan != frequency_plan:
+            changes.extend(["--frequency-plan", frequency_plan])
+        if self.latitude != self._options.latitude or self.longitude != self._options.longitude:
+            changes.extend(["--location", "%f,%f" % (self._options.latitude,
+                                                     self._options.longitude)])
+        if self._options.router and self.router != self._options.router:
+            changes.extend(["--router-id", self._options.router])
+            changes.extend(["--router", self._options.router])
+        if self._options.description and self.description != self._options.description:
+            changes.extend(["--description", self._options.description])
+        if self._options.brand and self.brand != self._options.brand:
+            changes.extend(["--brand", self._options.brand])
+        if self._options.model and self.model != self._options.model:
+            changes.extend(["--model", self._options.model])
+        if self._options.antenna_type and self.antenna_type != self._options.antenna_type:
+            changes.extend(["--antenna-type", self._options.antenna_type])
+        if self._options.antenna_model and self.antenna_model != self._options.antenna_model:
+            changes.extend(["--antenna-model", self._options.antenna_model])
+        if self.owner_public != self._options.owner_public:
+            changes.append("--owner-public" if self._options.owner_public else "--owner-private")
+        if self.location_public != self._options.location_public:
+            changes.append("--location-public" if self._options.location_public else "--location-private")
+        if self.status_public != self._options.status_public:
+            changes.append("--status-public" if self._options.status_public else "--status-private")
+
+        if not changes:
+            return
+
+        cmd = ["gateway", "edit", self._options.gw_id] + changes
+        try:
+            check_output(self._options.binary, self._options.noop, cmd)
+        except subprocess.CalledProcessError as error:
+            logging.error(error.output)
+            sys.exit(1)
+
+        # XXX - Merge response instead of getting fresh data?
+
+        self._data = self._get_json()
+
+    def collaborators(self):
+        """ Update colaborators """
+
+        logging.debug("GatewayV2.collaborators()")
+
+        cols = {}
+        for col in self._collaborators:
+            cols[col['Username']] = {x.strip() for x in col.get('Rights').split(", ")}
+
+        output = []
+        for col in self._options.collaborators:
+            changes = []
+            username = col.get('username')
+            if not username:
+                # Ignore organizations
+                continue
+            if username not in cols:
+                changes.append(username)
+                rights = {x.strip() for x in col.get('rights', "").split(", ")}
+                if rights != {''}:
+                    changes.append(rights)
+
+            if not changes:
+                continue
+            cmd = ["gateway", "collaborators", "add", self._options.gw_id] + changes
+            try:
+                out = check_output(self._options.binary, self._options.noop, cmd)
+                output.append(out)
+            except subprocess.CalledProcessError as error:
+                logging.error(error)
+
+class GatewayV3(object):
+    """ TTN v3 Gateway """
+
+    def __init__(self, options):
+        self._options = options
+        self._data = self._get_config()
+        self._collaborators = None
+
+    def __str__(self):
+        if self._data:
+            return pprint.pformat(self._data)
+
+        return self._options.gw_id
+
+    @property
+    def json(self):
+        """ Dump data as json for parsing """
+
+        return json.dumps(self._data, indent=4)
+
+    def exists(self):
+        """ Does this gateway exist """
+
+        return self._data is not None
+
+    def _get_config(self):
+        """ Get the gateway config """
+
+        cmd = ["gateways", "get", "--all", self._options.gw_id]
+
+        try:
+            output = check_output(self._options.binaryv3, False, cmd)
+            data = json.loads(output)
+        except subprocess.CalledProcessError as error:
+            logging.debug("Error running %s: %s", " ".join(cmd), error)
+            return None
+
+        return data
+
+    def _get_collaborators(self):
+        """ Get the gateway collaborators """
+
+        cmd = ["gateways", "collaborators", "list", self._options.gw_id]
+
+        try:
+            output = check_output(self._options.binaryv3, False, cmd)
+            data = json.loads(output)
+        except subprocess.CalledProcessError as error:
+            logging.debug("Error running %s: %s", " ".join(cmd), error)
+            return None
+
+        return data
+
+    @property
+    def frequency_plan(self):
+        return self._data.get('frequency_plan_id')
+
+    @property
+    def eui(self):
+        return self._data.get('ids', {}).get('eui')
+
+    @property
+    def router(self):
+        return self._data.get('gateway_server_address')
+
+    @property
+    def latitude(self):
+        latitude = self._data.get('antennas', [])[0].get('location', {}).get('latitude')
+        return float(latitude) if latitude else None
+
+    @property
+    def longitude(self):
+        longitude = self._data.get('antennas', [])[0].get('location', {}).get('longitude')
+        return float(longitude) if longitude else None
+
+    @property
+    def altitude(self):
+        altitude = self._data.get('antennas', [])[0].get('location', {}).get('altitude')
+        return int(altitude) if altitude else None
+
+    @property
+    def name(self):
+        return self._data.get('name')
+
+    @property
+    def brand(self):
+        return self._data.get('version_ids', {}).get('brand_id')
+
+    @property
+    def model(self):
+        return self._data.get('version_ids', {}).get('model_id')
+
+    @property
+    def location_public(self):
+        return self._data.get('location_public', False)
+
+    @property
+    def status_public(self):
+        return self._data.get('status_public', False)
+
+    @property
+    def update_location_from_status(self):
+        return self._data.get('update_location_from_status', False)
+
+    def register(self):
+        """ Register the gateway """
+
+        if not self._options.gw_eui:
+            logging.error("--eui is required for v3")
+            sys.exit(1)
+
+        if not self._options.organization_id and not self._options.user_id:
+            logging.error("--user-id or --organization-id must be specified")
+            sys.exit(1)
+
+        cmd = [
+            "gateways",
+            "register", self._options.gw_id,
+            "--gateway-eui", self._options.gw_eui,
+            "--frequency-plan-id", REGIONS[self._options.region]['plan_v3'],
+            "--enforce-duty-cycle",
+            "--location_public=%s" % json.dumps(self._options.location_public),
+            "--status_public=%s" % json.dumps(self._options.status_public),
+        ]
+        cmd.extend(["--gateway-server-address", self._options.router])
+        if self._options.organization_id:
+            cmd.extend(["--organization-id", self._options.organization_id])
+        if self._options.user_id:
+            cmd.extend(["--user-id", self._options.user_id])
+        if self._options.description:
+            cmd.extend(["--name", self._options.description])
+        if self._options.latitude:
+            cmd.extend(["--antenna.location.latitude", str(self._options.latitude)])
+        if self._options.longitude:
+            cmd.extend(["--antenna.location.longitude", str(self._options.longitude)])
+        if self._options.altitude:
+            cmd.extend(["--antenna.location.altitude", str(self._options.altitude)])
+        if self._options.brand:
+            cmd.extend(["--version-ids.brand-id", self._options.brand.lower()])
+        if self._options.model:
+            cmd.extend(["--version-ids.model-id", self._options.model.lower()])
+
+        try:
+            output = check_output(self._options.binaryv3, self._options.noop, cmd)
+            logging.debug(output)
+        except subprocess.CalledProcessError as error:
+            logging.warning("Registering gateway: %s", error)
+            return False
+
+        self._data = self._get_config()
+
+        return True
+
+    def update(self):
+        """ Update configuration """
+
+        frequency_plan = REGIONS[self._options.region]['plan_v3']
+
+        changes = []
+        if self.frequency_plan != frequency_plan:
+            changes.extend(["--frequency-plan-id", frequency_plan])
+        if self._options.gw_eui and self.eui != self._options.gw_eui:
+            changes.extend(["--gateway-eui", self._options.gw_eui])
+        if self._options.router and self.router != self._options.router:
+            changes.extend(["--gateway-server-address", self._options.router])
+        if self._options.latitude and self.latitude != self._options.latitude:
+            changes.extend(["--antenna.location.latitude", str(self._options.latitude)])
+        if self._options.longitude and self.longitude != self._options.longitude:
+            changes.extend(["--antenna.location.longitude", str(self._options.longitude)])
+        if self._options.altitude and self.altitude != self._options.altitude:
+            changes.extend(["--antenna.location.altitude", str(self._options.altitude)])
+        if self._options.description and self.name != self._options.description:
+            changes.extend(["--name", self._options.description])
+        if self._options.brand and self.brand.lower() != self._options.brand.lower():
+            changes.extend(["--version-ids.brand-id", self._options.brand.lower()])
+        if self._options.model and self.model.lower() != self._options.model.lower():
+            changes.extend(["--version-ids.model-id", self._options.model.lower()])
+        if self.location_public != self._options.location_public:
+            changes.append("--location_public=%s" % json.dumps(self._options.location_public))
+        if self.status_public != self._options.status_public:
+            changes.append("--status_public=%s" % json.dumps(self._options.status_public))
+        if self.update_location_from_status != self._options.update_location_from_status:
+            changes.append("--update_location_from_status=%s" %
+                           json.dumps(self._options.update_location_from_status))
+
+        if not changes:
+            return
+
+        cmd = ["gateway", "set", "--gateway-id", self._options.gw_id] + changes
+        try:
+            check_output(self._options.binaryv3, self._options.noop, cmd)
+        except subprocess.CalledProcessError as error:
+            logging.error(error.output)
+            sys.exit(1)
+
+        self._data = self._get_config()
+
+    def collaborators(self):
+        """ Update colaborators """
+
+        # XXX - This ignores rights
+
+        logging.debug("GatewayV3.collaborators()")
+
+        if self._collaborators is None:
+            self._collaborators = self._get_collaborators()
+
+        old_users = set()
+        old_orgs = set()
+        for col in self._collaborators:
+            if "organization_ids" in col['ids']:
+                old_orgs.add(col['ids']['organization_ids']['organization_id'])
+            if "user_ids" in col['ids']:
+                old_users.add(col['ids']['user_ids']['user_id'])
+
+        new_users = set()
+        new_orgs = set()
+        for col in self._options.collaborators:
+            if 'username' in col:
+                new_users.add(col['username'])
+            if 'organization' in col:
+                new_orgs.add(col['organization'])
+
+        output = []
+        for user in new_users.difference(old_users):
+            cmd = [
+                "gateway",
+                "collaborators",
+                "set",
+                "--gateway-id", self._options.gw_id,
+                "--user-id", user,
+                "--rights-gateway-all"
+            ]
+            try:
+                out = check_output(self._options.binaryv3, self._options.noop, cmd)
+                output.append(out)
+            except subprocess.CalledProcessError as error:
+                logging.error(error)
+
+        for org in new_orgs.difference(old_orgs):
+            cmd = [
+                "gateway",
+                "collaborators",
+                "set",
+                "--gateway-id", self._options.gw_id,
+                "--organization-id", org,
+                "--rights-gateway-all"
+            ]
+            try:
+                out = check_output(self._options.binaryv3, self._options.noop, cmd)
+                output.append(out)
+            except subprocess.CalledProcessError as error:
+                logging.error(error)
+
+def check_output(binary, noop, command):
     """ Python version independent version of subprocess.check_output """
 
     cmd = list()
-    cmd.append(options.binary)
+    cmd.append(binary)
     cmd.extend(command)
 
-    if options.debug:
-        print("DBG: %s" % " ".join(cmd), file=sys.stderr)
+    logging.debug("DBG: %s", " ".join(cmd))
 
-    if sys.version_info[0] < 3:
-        output = subprocess.check_output(cmd)
+    if noop:
+        return None
+
+    if sys.version_info.major < 3 \
+       or (sys.version_info.major == 3 and sys.version_info.minor < 7):
+        output = subprocess.check_output(cmd).decode()
     else:
         output = subprocess.check_output(cmd, text=True)
 
-    if options.debug:
-        print("DBG: %s" % "\nDBG: ".join(output.split("\n")), file=sys.stderr)
+    logging.debug("DBG: %s", "\nDBG: ".join(output.split("\n")))
 
     return output
 
 def parse_args():
     """ Parse the arguments """
+
+    eui_re = re.compile(r"^(?:eui-)?(?P<eui>[0-9a-fA-FF]{16})$")
+    def eui(string):
+        """ Valiate an EUI """
+        match = eui_re.match(string)
+        if not match:
+            raise ValueError("EUI is not 16 hex digits with optional eui- prefix")
+        return match.group('eui')
 
     parser = argparse.ArgumentParser(description="Register or re-regiter a Conduit with TTN")
 
@@ -351,6 +650,12 @@ def parse_args():
     group.add_argument("--id",
                        dest="gw_id", required=True,
                        help="Gateway ID")
+    group.add_argument("--eui",
+                       dest="gw_eui", type=eui,
+                       help="Gateway EUI")
+    group.add_argument("--ttnv3", "--v3",
+                       dest="ttn_v3", default=False, action='store_true',
+                       help="Register with TTN v3 insteadd of TTN v2")
     group.add_argument("--description",
                        dest="description",
                        help="Description of the Gateway")
@@ -374,30 +679,65 @@ def parse_args():
                        choices=list(REGIONS.keys()),
                        help="Frequency region, one of %s" % ",".join(list(REGIONS.keys())))
     group.add_argument("--router", "--router-id",
-                       dest="router",
-                       choices=["",
-                                "switch-router",
-                                "ttn-router-asia-se",
-                                "ttn-router-brazil",
-                                "ttn-router-eu",
-                                "ttn-router-us-west"],
-                       default="ttn-router-us-west",
+                       dest="router", required=True,
                        help="TTN router to use")
     group.add_argument("--latitude",
-                       dest="latitude", type=float, required=True,
+                       dest="latitude", type=float,
                        help="Latitude of Conduit")
     group.add_argument("--longitude",
-                       dest="longitude", type=float, required=True,
+                       dest="longitude", type=float,
                        help="Longitude of Conduit")
+    group.add_argument("--altitude",
+                       dest="altitude", type=int,
+                       help="Altitude of the conduit (in meters)")
     group.add_argument("--collaborators",
-                       dest="collaborators", type=json.loads,
+                       dest="collaborators", type=json.loads, default=[],
                        help="Collaborators in JSON format")
+    group.add_argument("--update-location-from-status",
+                       dest="update_location_from_status", action="store_true",
+                       help="Update gateway location from gateway status messages")
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--owner-public",
+                       dest="owner_public", default=True, action="store_true",
+                       help="Make the owner public")
+    group.add_argument("--owner-private",
+                       dest="owner_public", action="store_false",
+                       help="Make the owner private")
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--location-public",
+                       dest="location_public", default=True, action="store_true",
+                       help="Make the location public")
+    group.add_argument("--location-private",
+                       dest="location_public", action="store_false",
+                       help="Make the location private")
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--status-public",
+                       dest="status_public", default=True, action="store_true",
+                       help="Make the status public")
+    group.add_argument("--status-private",
+                       dest="status_public", action="store_false",
+                       help="Make the status public")
+
+    # Owner info (v3)
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--organization-id",
+                       dest="organization_id",
+                       help="Organization ID to own the gateway")
+    group.add_argument("--user-id",
+                       dest="user_id",
+                       help="User ID to own the gateway")
 
     #   Other options
     group = parser.add_argument_group("Other options")
     group.add_argument("--binary",
                        dest="binary", default="bin/ttnctl",
-                       help="Path to binary")
+                       help="Path to ttnctl binary")
+    group.add_argument("--binaryv3",
+                       dest="binaryv3", default="ttn-lw-cli",
+                       help="Path to ttn-lw-cli binary")
     group.add_argument("--json",
                        dest="json", default=False,
                        action='store_true',
@@ -411,6 +751,28 @@ def parse_args():
 
     return options
 
+def delete_gateway(options, old_id):
+    """ Delete this gateway """
+
+    cmd = ["gateway", "delete", old_id]
+    try:
+        check_output(options.binary, options.noop, cmd)
+    except subprocess.CalledProcessError as error:
+        logging.warning(error.output)
+
+def init_logging(options):
+    """ Set up logging """
+
+    logger = logging.getLogger()
+    logger.handlers = []
+    logger.addHandler(logging.StreamHandler())
+    if options.debug:
+        logger.setLevel('DEBUG')
+    elif options.verbose:
+        logger.setLevel('INFO')
+    else:
+        logger.setLevel('WARNING')
+
 #
 #
 #
@@ -419,70 +781,44 @@ def main():
     """ Figure out what we should do """
 
     options = parse_args()
+    init_logging(options)
 
-    # Find ttncli binary
-    if options.debug:
-        print("DBG: binary: %s" % options.binary, file=sys.stderr)
+    if options.ttn_v3:
+        gateway = GatewayV3(options)
+    else:
+        gateway = GatewayV2(options)
 
-    # Translate region into frequency plan
-    frequency_plan = REGIONS[options.region].get('plan')
+    logging.debug("Gateway: %s", gateway)
 
-    if options.debug:
-        print("DBG: ID: %s Frequency Plan: %s Location: %f, %f Router: %s" % (
-            options.gw_id,
-            frequency_plan,
-            options.latitude,
-            options.longitude,
-            options.router),
-              file=sys.stderr)
+    with open(os.path.abspath(sys.argv[0]), "r") as filep:
+        while True:
+            try:
+                fcntl.flock(filep, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except IOError as error:
+                # raise on unrelated IOErrors
+                if error.errno != errno.EAGAIN:
+                    raise
+                time.sleep(random.uniform(0, 2))
 
-    try:
-        filep = open(options.binary)
-        fcntl.flock(filep, fcntl.LOCK_EX)
-    except IOError:
-        sys.exit("Unable to open or lock %s" % options.binary)
+        # Register the gateway if it does not exist
+        if not gateway.exists():
+            if not gateway.register() or not gateway.exists():
+                return 1
 
-    gateways = ttn_gateway_list(options)
-    if gateways is None:
-        sys.exit("Go to %s to get an access code" % REGISTER_URL)
+        # Update parameters or set ones that register doesn't support
+        gateway.update()
 
-    if options.old_id:
-        try:
-            retcode, output = gateways[options.old_id].delete()
-            if retcode != 0:
-                if output.find("Gateway with ID %s does not exist" % options.old_id) != -1:
-                    print("Deletion of %s failed: %s" % (options.old_id, output), file=sys.stderr)
-        except KeyError:
-            pass
+        # Set or update colaborators
+        gateway.collaborators()
 
-    retcode = 0
-    if options.gw_id not in gateways:
-        gateway = Gateway(options, options.gw_id)
-        gateways[options.gw_id] = gateway
-        retcode, output = gateway.register(frequency_plan,
-                                           options.latitude,
-                                           options.longitude)
-    if retcode == 0:
-        retcode, output = gateways[options.gw_id].edit(frequency_plan,
-                                                       options.latitude,
-                                                       options.longitude,
-                                                       options.router)
-    if retcode == 0 and options.collaborators:
-        retcode, output = gateways[options.gw_id].collaborators()
-    if retcode != 0:
-        print("Registration failed: %s" % output, file=sys.stderr)
-    elif options.verbose:
-        print(output, file=sys.stderr)
+        if not options.ttn_v3 and options.old_id:
+            delete_gateway(options, options.old_id)
 
-    if options.json:
-        gateway = gateways[options.gw_id]
-        info = {
-            "key": gateway.key,
-            "info": gateway.get_json()
-        }
-        print(json.dumps(info, indent=4))
+        if options.json:
+            print(gateway.json)
 
-    return retcode
+    return 0
 
 if __name__ == "__main__":
     try:

@@ -4,7 +4,7 @@
 #	mlinux setup
 #
 
-- name: /etc/opkg/mlinux-feed.conf
+- name: mlinux /etc/opkg/mlinux-feed.conf
   template:
     src: mlinux-feed.conf.j2
     dest: "/etc/opkg/mlinux-feed.conf"
@@ -13,7 +13,20 @@
     group: root
   register: mlinux_feed
 
-- name: Update opkg cache
+- name: mlinux /etc/opkg/ttni-feed.conf
+  template:
+    src: ttni-feed.conf.j2
+    dest: "/etc/opkg/ttni-feed.conf"
+    mode: "0644"
+    owner: root
+    group: root
+  register: ttni_feed
+
+- name: mlinux Update opkg cache
   shell: "opkg update"
-  when: mlinux_feed is changed
+  register: result
+  when: mlinux_feed is changed or ttni_feed is changed
+  until: result is succeeded
+  retries: 10
+  delay: 10
   notify: Reload facts

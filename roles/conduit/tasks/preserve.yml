@@ -1,5 +1,31 @@
----    
-- name: Create restore dir
+---
+
+- name: preserve Figure out if we need to ignore certificates on older versions
+  set_fact:
+    validate_certs: "{{ ansible_local.mlinux.version is version('3.3.24', '>') }}"
+
+- name: preserve Fetch preserve script
+  get_url:
+    url: "{{ mlinux_ttni_preserve_root[ansible_distribution_major_version] }}/preserve_config"
+    validate_certs: "{{ validate_certs }}"
+    dest: /etc/init.d/preserve_config
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: preserve Enable Preserve service
+  command: update-rc.d preserve_config start 39 0 6 .
+
+- name: preserve Save a copy of the restore script
+  get_url:
+    url: "{{ mlinux_ttni_preserve_root[ansible_distribution_major_version] }}/restore_config"
+    validate_certs: "{{ validate_certs }}"
+    dest: /var/config/restore_config
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: preserve Create restore dir
   file:
     dest: /var/config/restore.d
     state: directory
@@ -7,7 +33,7 @@
     owner: root
     group: root
 
-- name: Install restore scripts
+- name: preserve Install restore scripts
   template:
     src: "{{ item }}.j2"
     dest: "/var/config/restore.d/{{ item }}"
@@ -18,7 +44,7 @@
     - 05restore
     - 15restore
 
-- name: Install restore initscript
+- name: preserve Install restore initscript
   template:
     src: restore.init.j2
     dest: "/var/config/restore.init"
@@ -26,7 +52,7 @@
     owner: root
     group: root
 
-- name: Mark restore as completed
+- name: preserve Mark restore as completed
   file:
     name: /var/lib/restore.done
     state: touch

@@ -1,17 +1,17 @@
 ---
 
-- name: Set the timezone
+- name: time Set the timezone
   file:
     name: /etc/localtime
     state: link
     force: yes
     src: "/usr/share/zoneinfo/{{ timezone }}"
 
-- name: Set time from ntp server
+- name: time Set time from ntp server
   shell: "ntpdate -bu {{ ntp_servers[0] }} && hwclock -wu"
   ignore_errors: yes
 
-- name: Install ntp packages
+- name: time Install ntp packages
   opkg:
     name: ntp
     state: installed
@@ -19,9 +19,11 @@
   with_items:
     - ntp
     - ntp-utils
-  notify: Reload facts
+  notify:
+    - Reload facts
+    - opkg clean
 
-- name: Create /var/config/ntp
+- name: time Create /var/config/ntp
   file:
     name: /var/config/ntp
     state: directory
@@ -29,7 +31,7 @@
     owner: ntp
     group: ntp
 
-- name: /var/config/ntp.conf
+- name: time /var/config/ntp.conf
   template:
     src: ntp.conf.j2
     dest: /var/config/ntp.conf
@@ -37,7 +39,7 @@
     owner: root
     group: root
 
-- name: /etc/ntp.conf
+- name: time /etc/ntp.conf
   file:
     name: /etc/ntp.conf
     state: link

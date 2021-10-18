@@ -1,0 +1,234 @@
+#!/usr/bin/env python
+
+from __future__ import print_function
+
+import argparse
+import datetime
+import logging
+from logging.handlers import SysLogHandler
+import os
+import psutil
+import re
+import sys
+import time
+
+from dateutil import parser
+
+def parse_args():
+    """ What do we need to do """
+
+    parser = argparse.ArgumentParser(description="Check for errors in TTN packet forward log")
+
+    #	Debugging
+    group = parser.add_argument_group("Debugging options")
+    group.add_argument("-d", "--debug",
+                       dest="debug", default=False,
+                       action='store_true',
+                       help="print debugging messages")
+    group.add_argument("--nodebug",
+                       dest="debug",
+                       action='store_false',
+                       help="print debugging messages")
+    group.add_argument("-v", "--verbose",
+                       dest="verbose", default=False,
+                       action='store_true',
+                       help="print verbose messages")
+    group.add_argument("-n", "--noop",
+                       dest="noop", default=False,
+                       action='store_true',
+                       help="Don't send notifications, just list what we are going to do")
+
+    group = parser.add_argument_group("Options")
+    group.add_argument("--logfile",
+                       dest="logfile", default="/var/log/lora-pkt-fwd.log",
+                       help="Location of the log file")
+    group.add_argument("--pidfile",
+                       dest="pidfile", default="/var/run/lora-pkt-fwd.pid",
+                       help="Location of the PID file")
+    group.add_argument("--mtime",
+                       dest="mtime", default=10*60, type=int,
+                       help="File must have been updated this many seconds ago")
+    group.add_argument("--downlink-time",
+                       dest="downlink_time", default=2*60, type=int,
+                       help="A downlink message must have been received in this many seconds")
+
+    # Parse args
+    options = parser.parse_args()
+
+    # --test implies --verbose
+    if options.noop:
+        options.debug = True
+
+    # Init Logging
+    init_logging(options)
+
+    return options
+
+def init_logging(options):
+    """ Set up logging """
+
+    logger = logging.getLogger()
+    logger.handlers = []
+    syslog_format = '%s[%%(process)s]: %%(message)s' % (os.path.basename(sys.argv[0]))
+    syslog_handler = SysLogHandler(address="/dev/log",
+                                   facility=SysLogHandler.LOG_DAEMON)
+    syslog_handler.setFormatter(logging.Formatter(syslog_format))
+    if not sys.stdout.isatty():
+        logger.addHandler(syslog_handler)
+    else:
+        logger.addHandler(logging.StreamHandler(stream=sys.stdout))
+
+    if options.debug:
+        logger.setLevel('DEBUG')
+    elif options.verbose:
+        logger.setLevel('INFO')
+    else:
+        logger.setLevel('WARNING')
+
+class LogCheck(object):
+    """ Perform check on the logfile """
+
+    _BANNER_RE = re.compile(r"^(?P<time>\d\d:\d\d:\d\d)\s+\*\*\* Multi Protocol Packet Forwarder for Lora Gateway \*\*\*")
+    _EXITED_RE = re.compile(r"^(?P<time>\d\d:\d\d:\d\d)\s+INFO: Exiting packet forwarder program")
+    _FAILED_RE = re.compile(r"^(?P<time>\d\d:\d\d:\d\d)\s+ERROR: \[main\] failed to start the concentrator")
+    _FATAL_RE = re.compile(r"^ERROR: FAIL TO CONNECT BOARD")
+    _DOWNLINK_RE = re.compile(r"(?P<time>\d\d:\d\d:\d\d)\s+(PULL_ACK received in|INFO: \[TTN\] send status success for)")
+    _TIMESTAMP_RE = re.compile(r"##### (?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} GMT) #####$")
+
+    def __init__(self, options):
+
+        self._options = options
+        self._time_now = datetime.datetime.now()
+        self._time_utcnow = datetime.datetime.utcnow()
+        self._time_downlink = self._time_now - datetime.timedelta(seconds=self._options.downlink_time)
+
+    def pid_check(self):
+        """ Check if the process is running """
+
+        try:
+            lora_pid = None
+            with open(self._options.pidfile, "r") as filep:
+                line = filep.read().strip()
+                lora_pid = int(line)
+            logging.debug("Read %s: '%s': %d", self._options.pidfile, line, lora_pid)
+            if lora_pid is not None:
+                return psutil.pid_exists(lora_pid)
+        except (IOError, ValueError, TypeError) as error:
+            logging.debug("Read PID from %s: %s", self._options.pidfile, error)
+            return False
+
+        return False
+
+    def check(self):
+        """ Perform the checks """
+
+        retcode = (0, "OK")
+
+        if not self.pid_check():
+            retcode = (1, "Packet forwarder is not running")
+        logging.info("pid_check: %d %s" % retcode)
+
+        try:
+            stat = os.stat(self._options.logfile)
+        except OSError:
+            return 2, "%s does not exist" % self._options.logfile
+        logging.info("Logfile exists")
+
+        # Check that file is being updated
+        if time.time() - stat.st_mtime > self._options.mtime:
+            return 2, "%s has not been updated in %d seconds" % (self._options.logfile,
+                                                                 time.time() - stat.st_mtime)
+
+        look_back_to = self._time_utcnow - datetime.timedelta(seconds=self._options.downlink_time)
+
+        # Read the logfile in reverse
+        line_no = 0
+        saw_downlink = False
+        saw_quit = None
+        for line in self._readlines_reverse(self._options.logfile):
+            line_no += 1
+            logging.debug("%d: %s", line_no, line)
+
+            # Check for fatal error
+            if line_no < 5:
+                if self._FATAL_RE.match(line):
+                    return 3, "Fatal error, reboot needed: '%s'" % line
+                if self._EXITED_RE.match(line):
+                    saw_quit = "Last message was quit: '%s'" % line
+                    logging.debug("Found: %s", saw_quit)
+                    continue
+                if self._FAILED_RE.match(line):
+                    saw_quit = "Packet fowarder failed to start: '%s'" % line
+                    logging.debug("Found: %s", saw_quit)
+                    continue
+            elif saw_quit:
+                return 2, saw_quit
+
+            match = self._TIMESTAMP_RE.match(line)
+            if match:
+                timestamp = parser.parse(match.group('timestamp'), ignoretz=True)
+                logging.info("Found timestamp: '%s'", line)
+                if timestamp < look_back_to:
+                    break
+
+            # If we see a restart banner, indicate it needs time to restart
+            match = self._BANNER_RE.match(line)
+            if match:
+                logging.info("Found restart banner: '%s'", line)
+                return 2, "Found restart at %s" % match.group('time')
+
+            # Check that we are receiving downlink messages
+            match = self._DOWNLINK_RE.match(line)
+            if match:
+                logging.info("Found downlink at %s: '%s'",
+                             match.group('time'),
+                             line)
+                msg_time = parser.parse(match.group('time'))
+                if msg_time < self._time_downlink:
+                    return 1, "Last downlink message at %s, more than %s seconds ago" % (
+                        msg_time.isoformat(),
+                        self._options.downlink_time
+                    )
+                saw_downlink = True
+                break
+
+        if not saw_downlink:
+            return 1, "No downlink messages found in last %s seconds" % self._options.downlink_time
+
+        return retcode
+
+    #
+    #	This may not work in python 3
+    #
+    @staticmethod
+    def _readlines_reverse(filename):
+        with open(filename, "rb") as qfile:
+            qfile.seek(0, os.SEEK_END)
+            position = qfile.tell()
+            line = ''
+            while position >= 0:
+                qfile.seek(position)
+                next_char = qfile.read(1).decode('Latin1')
+                if next_char == "\n":
+                    yield line[::-1]
+                    line = ''
+                else:
+                    line += next_char
+                position -= 1
+            yield line[::-1]
+
+def main():
+    """It all happens here"""
+
+    options = parse_args()
+
+    ret_code, response = LogCheck(options).check()
+
+    logging.warning("Check returns %d, %s", ret_code, response)
+
+    print("%s" % response)
+    sys.exit(ret_code)
+
+if __name__ == "__main__":
+    main()
+    sys.exit(0)

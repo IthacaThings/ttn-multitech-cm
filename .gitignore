@@ -6,3 +6,6 @@
 /catalog/
 /.ttn_org
 /hosts
+/logs
+/mlinux-firmware-upgrade.*/
+#*
