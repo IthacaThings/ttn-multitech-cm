@@ -26,7 +26,7 @@
     - cellular_apn is not defined or use_cellular == False
 
 - name: Set APN
-  shell: "mlinux-set_apn {{ cellular_apn }}"
+  shell: "mlinux-set-apn {{ cellular_apn }}"
   when:
     - use_cellular
     - cellular_apn is defined
