@@ -20,5 +20,5 @@ echo "${0}: Installing required packages"
 opkg install {{ (ansible_depends + ansible_depends_old) | join(' ') }} libmpsse monit ntp ntp-utils
 
 echo ${0}: "Removing myself"
-rm /etc/init.d/restore
+rm -f /etc/init.d/restore
 update-rc.d $(basename ${0}) remove
