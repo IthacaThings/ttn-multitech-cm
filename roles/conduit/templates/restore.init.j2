@@ -19,6 +19,9 @@ opkg remove mosquitto lora-network-server lora-packet-forwarder
 echo "${0}: Installing required packages"
 opkg install {{ (ansible_depends + ansible_depends_old) | join(' ') }} libmpsse monit ntp ntp-utils
 
+echo "${0}: Leaving a crumb for Ansible"
+date -u >{{ mlinux_restore_init_crumb }}
+
 echo ${0}: "Removing myself"
 rm -f /etc/init.d/restore
 update-rc.d $(basename ${0}) remove
