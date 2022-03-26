@@ -8,7 +8,9 @@
 # Description:       Finish recovery after reflash
 ### END INIT INFO
 
-test "${1}" -eq "start" || exit 0
+echo "${0}: ${*}"
+
+test -z "${1}" -o "${1}" == "start" || exit 0
 
 echo "${0}: Updating opkg database"
 opkg update
@@ -18,6 +20,15 @@ opkg remove mosquitto lora-network-server lora-packet-forwarder
 
 echo "${0}: Installing required packages"
 opkg install {{ (ansible_depends + ansible_depends_old) | join(' ') }} libmpsse monit ntp ntp-utils
+
+echo "${0}: Configuring monit to start"
+if [ -f /var/config/monit/monitrc ]; then
+    rm -f /etc/monitrc; ln -s /var/config/monit/monitrc /etc/
+fi
+if [ -f /var/config/monit/monit.d ]; then
+    rmdir /etc/monit.d; ln -s /var/config/monit/monit.d /etc/
+fi
+sed -i '/^ENABLED=/s/no/yes/' /etc/default/monit && /etc/init.d/monit start
 
 echo "${0}: Leaving a crumb for Ansible"
 date -u >{{ mlinux_restore_init_crumb }}

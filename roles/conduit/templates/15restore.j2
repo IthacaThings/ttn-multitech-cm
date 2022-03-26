@@ -28,11 +28,10 @@ elif [ -L /etc/init.d/lora-basic-station ]; then
     update-rc.d -f ttn-pkt-forwarder remove
 fi
 
-echo "Configuring monit to start"
-sed -i '/^ENABLED=/s/no/yes/' /etc/default/monit && /etc/init.d/monit start
-
 if [ -f /var/config/init.d/restore.init ]; then
     echo "Configuring last stage restore to run once network is available"
     ln -sf /var/config/init.d/restore.init /etc/init.d/restore
     update-rc.d restore defaults 90
 fi
+
+echo "Finished 15restore"
