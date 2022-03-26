@@ -2,7 +2,6 @@
 
 # XXX - Do we need to register with a specific region for TTNv3?
 # XXX - Can we provide a table of routers per region?
-# XXX - Key for v3
 # XXX - Fix error on get config on v3 gateway that does not exist
 
 """
@@ -55,287 +54,30 @@ except ImportError:
 REGISTER_URL = "https://account.thethingsnetwork.org/users/authorize?client_id=ttnctl&redirect_uri=/oauth/callback/ttnctl&response_type=code"
 REGIONS = {
     "AS1": {
-        "plan": "AS_920_923",
-        "plan_v3": "AS_920_923_TTN_AU"
+        "plan": "AS_920_923_TTN_AU"
     },
     "AS2": {
-        "plan": "AS_923_925",
-        "plan_v3": "AS_923_925_TTN_AU"
+        "plan": "AS_923_925_TTN_AU"
     },
     "AU": {
-        "plan": "AU_915_928",
-        "plan_v3": "AU_915_928_FSB_2"
+        "plan": "AU_915_928_FSB_2"
     },
     "EU": {
-        "plan": "EU_863_870",
-        "plan_v3": "EU_863_870_TTN"
+        "plan": "EU_863_870_TTN"
     },
     "IN": {
         "plan": "IN_865_867",
-        "plan_v3": "IN_865_867",
     },
     "KR": {
-        "plan": "KR_920_923",
-        "plan_v3": "KR_920_923_TTN"
+        "plan": "KR_920_923_TTN"
     },
     "RU": {
-        "plan": "RU_864_870",
-        "plan_v3": "RU_864_870_TTN"
+        "plan": "RU_864_870_TTN"
     },
     "US": {
-        "plan": "US_902_928",
-        "plan_v3": "US_902_928_FSB_2"
+        "plan": "US_902_928_FSB_2"
     },
 }
-
-class GatewayV2(object):
-    """ TTN v2 Gateway """
-
-    _INFO_RE = re.compile(r"^\s+(?P<key>[A-za-z ]+):\s(?P<value>.*)\s*$")
-
-    def __init__(self, options):
-        self._options = options
-        self._key = None
-        self._data = self._get_json()
-        self._collaborators = []
-
-    def __str__(self):
-
-        if self._data:
-            return pprint.pformat(self._data)
-
-        return self._options.gw_id
-
-    @property
-    def json(self):
-        """ Dump data as json for parsing """
-
-        return json.dumps({
-            "key": self._key,
-            "info": self._data
-        }, indent=4)
-
-    def exists(self):
-        """ Does this gateway exist """
-
-        return self._data is not None
-
-    def _get_info(self):
-        """ Get additional info via 'info' subcommand """
-
-        collaborators = None
-
-        cmd = ["gateway", "info", self._options.gw_id]
-        try:
-            lines = check_output(self._options.binary, False, cmd)
-        except subprocess.CalledProcessError as error:
-            logging.error(error.output)
-
-        for line in lines.split("\n"):
-            if line.strip() == "":
-                continue
-
-            if line.strip().find("Found gateway") != -1:
-                continue
-
-            # Collaborators is YAML
-            if line.rstrip() == "Collaborators:":
-                collaborators = []
-                continue
-            if collaborators is not None:
-                collaborators.append(line.rstrip())
-                continue
-
-            match = self._INFO_RE.match(line)
-            if not match:
-                continue
-
-            if match.group('key') == "Access Key":
-                self._key = match.group('value')
-
-        if collaborators:
-            self._collaborators = yaml.load("\n".join(collaborators), yaml.SafeLoader)
-
-    def _get_json(self):
-        """ Get the JSON info """
-
-        logging.debug("GatewayV2.get_json()")
-
-        if not self._key:
-            self._get_info()
-
-        url = "https://account.thethingsnetwork.org/gateways/%s" % self._options.gw_id
-        try:
-            request = Request(url)
-            request.add_header("Key", self._key)
-            response = urlopen(request)
-            data = json.loads(response.read())
-        except (ValueError, URLError) as err:
-            logging.debug("Error loading %s: %s", url, err)
-            return None
-
-        return data
-
-    def register(self):
-        """ Register the gateway """
-
-        cmd = [
-            "gateway",
-            "register",
-            self._options.gw_id,
-            self._options.region['plan']
-        ]
-        if self._options.latitude and self._options.longitue:
-            cmd.append('%f,%f' % (self._options.latitude, self._options.longitude))
-        cmd.extend(["--router-id", self._options.router])
-
-        try:
-            output = check_output(self._options.binary, self._options.noop, cmd)
-            logging.debug(output)
-        except subprocess.CalledProcessError as error:
-            logging.warning(error)
-            return False
-
-        self._data = self._get_json()
-
-        return True
-
-    @property
-    def frequency_plan(self):
-        return self._data.get('frequency_plan')
-
-    @property
-    def router(self):
-        return self._data.get('router',{}).get('id')
-
-    @property
-    def latitude(self):
-        latitude = self._data.get('antenna_location', {}).get('latitude')
-        return float(latitude) if latitude else None
-
-    @property
-    def longitude(self):
-        longitude = self._data.get('antenna_location', {}).get('longitude')
-        return float(longitude) if longitude else None
-
-    @property
-    def altitude(self):
-        altitude = self._data.get('antenna_location', {}).get('altitude')
-        return int(altitude) if altitude else None
-
-    @property
-    def description(self):
-        return self._data.get('attributes', {}).get('description')
-
-    @property
-    def brand(self):
-        return self._data.get('attributes', {}).get('brand')
-
-    @property
-    def model(self):
-        return self._data.get('attributes', {}).get('model')
-
-    @property
-    def antenna_type(self):
-        return self._data.get('attributes', {}).get('antenna_type')
-
-    @property
-    def antenna_model(self):
-        return self._data.get('attributes', {}).get('antenna_model')
-
-    @property
-    def user_id(self):
-        return self._data.get('owner', {}).get('username')
-
-    @property
-    def owner_public(self):
-        return "gateway:owner" in self._data.get('public_rights', {})
-
-    @property
-    def location_public(self):
-        return "gateway:location" in self._data.get('public_rights', {})
-
-    @property
-    def status_public(self):
-        return "gateway:status" in self._data.get('public_rights', {})
-
-    def update(self):
-        """ Change registration if something is different """
-
-        logging.debug("GatewayV2.update()")
-
-        frequency_plan = REGIONS[self._options.region]['plan']
-
-        changes = []
-        if self.frequency_plan != frequency_plan:
-            changes.extend(["--frequency-plan", frequency_plan])
-        if self.latitude != self._options.latitude or self.longitude != self._options.longitude:
-            changes.extend(["--location", "%f,%f" % (self._options.latitude,
-                                                     self._options.longitude)])
-        if self._options.router and self.router != self._options.router:
-            changes.extend(["--router-id", self._options.router])
-            changes.extend(["--router", self._options.router])
-        if self._options.description and self.description != self._options.description:
-            changes.extend(["--description", self._options.description])
-        if self._options.brand and self.brand != self._options.brand:
-            changes.extend(["--brand", self._options.brand])
-        if self._options.model and self.model != self._options.model:
-            changes.extend(["--model", self._options.model])
-        if self._options.antenna_type and self.antenna_type != self._options.antenna_type:
-            changes.extend(["--antenna-type", self._options.antenna_type])
-        if self._options.antenna_model and self.antenna_model != self._options.antenna_model:
-            changes.extend(["--antenna-model", self._options.antenna_model])
-        if self.owner_public != self._options.owner_public:
-            changes.append("--owner-public" if self._options.owner_public else "--owner-private")
-        if self.location_public != self._options.location_public:
-            changes.append("--location-public" if self._options.location_public else "--location-private")
-        if self.status_public != self._options.status_public:
-            changes.append("--status-public" if self._options.status_public else "--status-private")
-
-        if not changes:
-            return
-
-        cmd = ["gateway", "edit", self._options.gw_id] + changes
-        try:
-            check_output(self._options.binary, self._options.noop, cmd)
-        except subprocess.CalledProcessError as error:
-            logging.error(error.output)
-            sys.exit(1)
-
-        # XXX - Merge response instead of getting fresh data?
-
-        self._data = self._get_json()
-
-    def collaborators(self):
-        """ Update colaborators """
-
-        logging.debug("GatewayV2.collaborators()")
-
-        cols = {}
-        for col in self._collaborators:
-            cols[col['Username']] = {x.strip() for x in col.get('Rights').split(", ")}
-
-        output = []
-        for col in self._options.collaborators:
-            changes = []
-            username = col.get('username')
-            if not username:
-                # Ignore organizations
-                continue
-            if username not in cols:
-                changes.append(username)
-                rights = {x.strip() for x in col.get('rights', "").split(", ")}
-                if rights != {''}:
-                    changes.append(rights)
-
-            if not changes:
-                continue
-            cmd = ["gateway", "collaborators", "add", self._options.gw_id] + changes
-            try:
-                out = check_output(self._options.binary, self._options.noop, cmd)
-                output.append(out)
-            except subprocess.CalledProcessError as error:
-                logging.error(error)
 
 class GatewayV3(object):
     """ TTN v3 Gateway """
@@ -368,7 +110,7 @@ class GatewayV3(object):
         cmd = ["gateways", "get", "--all", self._options.gw_id]
 
         try:
-            output = check_output(self._options.binaryv3, False, cmd)
+            output = check_output(self._options.binary, False, cmd)
             data = json.loads(output)
         except subprocess.CalledProcessError as error:
             logging.debug("Error running %s: %s", " ".join(cmd), error)
@@ -382,7 +124,7 @@ class GatewayV3(object):
         cmd = ["gateways", "collaborators", "list", self._options.gw_id]
 
         try:
-            output = check_output(self._options.binaryv3, False, cmd)
+            output = check_output(self._options.binary, False, cmd)
             data = json.loads(output)
         except subprocess.CalledProcessError as error:
             logging.debug("Error running %s: %s", " ".join(cmd), error)
@@ -456,7 +198,7 @@ class GatewayV3(object):
             "gateways",
             "register", self._options.gw_id,
             "--gateway-eui", self._options.gw_eui,
-            "--frequency-plan-id", REGIONS[self._options.region]['plan_v3'],
+            "--frequency-plan-id", REGIONS[self._options.region]['plan'],
             "--enforce-duty-cycle",
             "--location_public=%s" % json.dumps(self._options.location_public),
             "--status_public=%s" % json.dumps(self._options.status_public),
@@ -480,7 +222,7 @@ class GatewayV3(object):
             cmd.extend(["--version-ids.model-id", self._options.model.lower()])
 
         try:
-            output = check_output(self._options.binaryv3, self._options.noop, cmd)
+            output = check_output(self._options.binary, self._options.noop, cmd)
             logging.debug(output)
         except subprocess.CalledProcessError as error:
             logging.warning("Registering gateway: %s", error)
@@ -493,7 +235,7 @@ class GatewayV3(object):
     def update(self):
         """ Update configuration """
 
-        frequency_plan = REGIONS[self._options.region]['plan_v3']
+        frequency_plan = REGIONS[self._options.region]['plan']
 
         changes = []
         if self.frequency_plan != frequency_plan:
@@ -527,7 +269,7 @@ class GatewayV3(object):
 
         cmd = ["gateway", "set", "--gateway-id", self._options.gw_id] + changes
         try:
-            check_output(self._options.binaryv3, self._options.noop, cmd)
+            check_output(self._options.binary, self._options.noop, cmd)
         except subprocess.CalledProcessError as error:
             logging.error(error.output)
             sys.exit(1)
@@ -574,7 +316,7 @@ class GatewayV3(object):
                 "--right-gateway-all"
             ]
             try:
-                out = check_output(self._options.binaryv3, self._options.noop, cmd)
+                out = check_output(self._options.binary, self._options.noop, cmd)
                 output.append(out)
             except subprocess.CalledProcessError as error:
                 logging.error(error)
@@ -591,7 +333,7 @@ class GatewayV3(object):
                 "--user-id", user
             ]
             try:
-                out = check_output(self._options.binaryv3, self._options.noop, cmd)
+                out = check_output(self._options.binary, self._options.noop, cmd)
                 output.append(out)
             except subprocess.CalledProcessError as error:
                 logging.error(error)
@@ -609,7 +351,7 @@ class GatewayV3(object):
                 "--right-gateway-all"
             ]
             try:
-                out = check_output(self._options.binaryv3, self._options.noop, cmd)
+                out = check_output(self._options.binary, self._options.noop, cmd)
                 output.append(out)
             except subprocess.CalledProcessError as error:
                 logging.error(error)
@@ -626,7 +368,7 @@ class GatewayV3(object):
                 "--organization-id", org
             ]
             try:
-                out = check_output(self._options.binaryv3, self._options.noop, cmd)
+                out = check_output(self._options.binary, self._options.noop, cmd)
                 output.append(out)
             except subprocess.CalledProcessError as error:
                 logging.error(error)
@@ -693,9 +435,6 @@ def parse_args():
     group.add_argument("--eui",
                        dest="gw_eui", type=eui,
                        help="Gateway EUI")
-    group.add_argument("--ttnv3", "--v3",
-                       dest="ttn_v3", default=False, action='store_true',
-                       help="Register with TTN v3 insteadd of TTN v2")
     group.add_argument("--description",
                        dest="description",
                        help="Description of the Gateway")
@@ -773,10 +512,7 @@ def parse_args():
     #   Other options
     group = parser.add_argument_group("Other options")
     group.add_argument("--binary",
-                       dest="binary", default="bin/ttnctl",
-                       help="Path to ttnctl binary")
-    group.add_argument("--binaryv3",
-                       dest="binaryv3", default="ttn-lw-cli",
+                       dest="binary", default="ttn-lw-cli",
                        help="Path to ttn-lw-cli binary")
     group.add_argument("--json",
                        dest="json", default=False,
@@ -823,10 +559,7 @@ def main():
     options = parse_args()
     init_logging(options)
 
-    if options.ttn_v3:
-        gateway = GatewayV3(options)
-    else:
-        gateway = GatewayV2(options)
+    gateway = GatewayV3(options)
 
     logging.debug("Gateway: %s", gateway)
 
@@ -851,9 +584,6 @@ def main():
 
         # Set or update colaborators
         gateway.collaborators()
-
-        if not options.ttn_v3 and options.old_id:
-            delete_gateway(options, options.old_id)
 
         if options.json:
             print(gateway.json)

@@ -9,7 +9,6 @@
     module: command
     args:
       "bin/register
-        --v3
         --json
         --id {{ lora_hostname }} 
         --eui {{ ansible_local.lora.eui }}

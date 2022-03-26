@@ -27,6 +27,12 @@
     - setup
     - ansible
 
+- name: main Fail if certain info is missing
+  fail:
+    msg: "Required information is missing"
+  when:
+    - "'mlinux' not in ansible_local or ansible_local.mlinux|length == 0"
+    
 #
 #	Initial setup.  Stuff required before packages install
 #

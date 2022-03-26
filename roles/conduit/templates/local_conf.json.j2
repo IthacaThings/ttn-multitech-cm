@@ -5,14 +5,9 @@
         "gateway_ID": "{{ ansible_local.lora.eui }}",
         "contact_email": "{{ contact_email }}", 
         "gps": {{ set_gps | to_json }},
-        "fake_gps": {{ set_fake_gps | to_json }},
+        "fake_gps": {{ false | to_json }},
 {% if use_gps and have_gps %}
         "gps_tty_path": "/dev/{{ gps_device }}",
-{% endif %}
-{% if set_fake_gps %}
-        "ref_latitude": {{ latitude }},
-        "ref_longitude": {{ longitude }},
-        "ref_altitude": {{ altitude if altitude else -1 }},
 {% endif %}
 {% if forwarder_variant == "mp" %}
 	"servers": [
@@ -20,11 +15,7 @@
 		"serv_type": "ttn",
 		"serv_gw_id": "{{ lora_hostname }}",
 		"serv_gw_key": "{{ gw_key }}",
-{% if ttn_version == 3 %}
 		"server_address": "{{ gw_router }}:1881",
-{% else %}
-		"server_address": "{{ gw_router }}",
-{% endif %}
 		"serv_enabled": true
             }
 	],

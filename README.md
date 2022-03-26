@@ -509,12 +509,6 @@ The available variables are defined in the [Conduit role README](roles/conduit/R
 
 ## Required changes
 
-### ttn_version
-
-The `ttn_version` variable defaults to `3`, update any gateways that
-need to stay registered with TTNv2 with `ttn_version: 2` before
-running.
-
 ### router_v3
 
 The `router_v3` variable needs to be defined in conduits.yml.  Select

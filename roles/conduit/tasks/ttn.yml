@@ -33,23 +33,7 @@
     - forwarder_variant == "basic"
     - ansible_local.lora.product_id is match("MTAC-LORA-(915|868)")
 
-- name: ttn Check that we are using TTN v3 with Basic Station
-  fail:
-    msg: "TTN v3 required for Basic Station"
-  when:
-    - forwarder_variant == "basic"
-    - ttn_version == 2
-
-- name: ttn Validate TTN version
-  fail:
-    msg: "Invalid TTN version: '{{ ttn_version }}'"
-  when: ttn_version != 2 and ttn_version != 3
-
-- include_tasks: ttnv2.yml
-  when: ttn_version == 2
-
 - include_tasks: ttnv3.yml
-  when: ttn_version == 3
 
 - name: ttn Lora dir
   file:
