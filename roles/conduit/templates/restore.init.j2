@@ -17,7 +17,7 @@ echo "${0}: Removing packages we do not want"
 opkg remove mosquitto lora-network-server lora-packet-forwarder
 
 echo "${0}: Installing required packages"
-opkg install {{ ansible_depends | join(' ') }} ntp ntp-utils libmpsse
+opkg install {{ (ansible_depends + ansible_depends_old) | join(' ') }} libmpsse monit ntp ntp-utils
 
 echo ${0}: "Removing myself"
 rm /etc/init.d/restore
