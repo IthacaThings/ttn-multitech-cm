@@ -6,7 +6,7 @@
 #	Visit subdirs
 #
 # Subdirs we should visit
-SUBDIRS = bin
+SUBDIRS = 
 
 all::
 	for dir in ${SUBDIRS}; do \
