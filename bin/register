@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # XXX - Do we need to register with a specific region for TTNv3?
 # XXX - Can we provide a table of routers per region?
