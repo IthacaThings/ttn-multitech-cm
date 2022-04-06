@@ -142,6 +142,8 @@ def main():
         data = response.json()
     except ValueError:
         data = json.loads(response.content.decode('utf-8-sig'))
+    except requests.exceptions.HTTPError as error:
+        sys.exit(error)
     except requests.exceptions.RequestException as error:
         raise
 
