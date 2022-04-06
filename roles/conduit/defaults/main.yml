@@ -52,9 +52,9 @@ autoquit_threshold: 5
 # Basic station
 # Basic station stuff
 basic_station_conf_url:
-  mtcdt: "http://www.multitech.net/developer/wp-content/uploads/downloads/2021/08/mtcdt-station.conf_.txt"
-  mtcap: "http://www.multitech.net/developer/wp-content/uploads/downloads/2020/06/mtcap-station.conf_.txt"
-  mtcap2: "http://www.multitech.net/developer/wp-content/uploads/downloads/2021/08/mtcap2station.conf_.txt"
+  mtcdt: "http://www.multitech.net/developer/wp-content/uploads/2021/08/mtcdt-station.conf_.txt"
+  mtcap: "http://www.multitech.net/developer/wp-content/uploads/2020/06/mtcap-station.conf_.txt"
+  mtcap2: "http://www.multitech.net/developer/wp-content/uploads/2021/08/mtcap2station.conf_.txt"
 
 basic_cert_url: https://letsencrypt.org/certs/isrgrootx1.pem
 basic_log_level: INFO,S2E:VERBOSE
