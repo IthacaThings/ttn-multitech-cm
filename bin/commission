@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 MIT License
@@ -27,9 +27,11 @@ SOFTWARE.
 from __future__ import print_function
 import argparse
 import logging
-import json
-
+import sys
+import urllib3
 import requests
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 def parse_args():
     """ Parse the arguments """
@@ -58,7 +60,7 @@ def parse_args():
     #	Options
     group = parser.add_argument_group("Configuration options")
     group.add_argument("--username", "--user", "-U",
-                       dest="username", default="ttn",
+                       dest="username", default="mtadm",
                        help="Username to set")
     group.add_argument("--password", "--pass", "-P",
                        dest="password", required=True,
@@ -94,33 +96,47 @@ def main():
     """ Figure out what we should do """
 
     options = parse_args()
+    init_logging(options)
 
     session = requests.Session()
-    
-    url = "https://{options.address}/api/commisioning".format(options)
+
+    url = "https://{options.address}/api/commissioning".format(options=options)
 
     # Get the aasID
     try:
+        logging.debug("Requesting aasID: %s", url)
         response = session.get(url, verify=False)
-        logging.debug("DEBUG: Reponse: %s", response.json)
         response.raise_for_status()
         result = response.json()
+        logging.debug("DEBUG: Reponse: %s", result)
     except requests.exceptions.RequestException as error:
         sys.exit(error)
 
     # Set the username, set the passwordd, then cofirm the password
+    data = {
+        "username": options.username,
+        "aasID": "",
+    }
     for password in ["", options.password, options.password]:
+        data["aasAnswer"] = password
+        if "result" in result and "aasID" in result["result"]:
+            data["aasID"] = result["result"]["aasID"]
         try:
+            logging.debug("Sending %s", data)
             response = session.post(url,
-                                    data = {
-                                        "username": options.username,
-                                        "aasID": result.get("aasID"),
-                                        "aasAnswer": password,
-                                    },
-                                    verify = False)
+                                    json=data,
+                                    verify=False)
             logging.debug("DEBUG: Reponse: %s", response.json())
             response.raise_for_status()
             result = response.json()
+
+            if "result" in result and "aasType" in result["result"]:
+                aas_type = result["result"]["aasType"]
+                aas_msg = result["result"]["aasMsg"]
+                if aas_type == "error":
+                    sys.exit(aas_msg)
+                if aas_type == "info":
+                    logging.warning(aas_msg)
         except requests.exceptions.RequestException as error:
             sys.exit(error)
 
