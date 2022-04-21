@@ -1,0 +1,8 @@
+check network "{{ monit_ppp_if }}" with interface "{{ monit_ppp_if }}"
+#    if failed link then restart
+    if changed link capacity then alert
+
+check process pppd PIDFILE {{ monit_ppp_pidfile }}
+    if does not exist for 1 cycles then restart
+    start program = {{ monit_ppp_start }}
+    stop program = {{ monit_ppp_stop }}

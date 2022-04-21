@@ -91,6 +91,16 @@
     - setup
 
 #
+#	Set up PPP
+#
+- name: main Setup ppp
+  import_tasks: ppp.yml
+  tags:
+    - networking
+    - ppp
+    - setup
+
+#
 #	Set hostname
 #
 - name: main Set hostname

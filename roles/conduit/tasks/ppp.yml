@@ -1,0 +1,129 @@
+---
+
+#
+#	Setup /var/config/ppp/ppp_on_boot
+#
+#	This should have no effect if cellular is not configured
+#
+
+- name: ppp Get stat info about /etc/ppp/ppp_on_boot
+  stat:
+    path: /etc/ppp/ppp_on_boot
+  register: ppp_on_boot
+
+- name: ppp Copy /etc/ppp/ppp_on_boot to /var/config/ppp/ppp_on_boot
+  copy:
+    remote_src: true
+    src: /etc/ppp/ppp_on_boot
+    dest: /var/config/ppp/ppp_on_boot
+  when: ppp_on_boot.stat.islnk is defined and not ppp_on_boot.stat.islnk
+
+- name: ppp Make /etc/ppp/ppp_on_boot a link to /var/config/ppp/ppp_on_boot
+  file:
+    dest: /etc/ppp/ppp_on_boot
+    state: link
+    src: /var/config/ppp/ppp_on_boot
+    force: true
+  when: ppp_on_boot.stat.islnk is defined and not ppp_on_boot.stat.islnk
+
+- name: ppp Make /var/config/ppp/ppp_on_boot executable
+  file:
+    dst: /var/config/ppp/ppp_on_boot
+    mode: "755"
+  notify: Start ppp
+  when:
+    - use_cellular
+    - cellular_provider is defined
+  
+#
+#	Set or reset APN
+#
+
+- name: ppp Reset APN
+  shell: mlinux-set-apn -c
+  when:
+    - cellular_apn is not defined or use_cellular == False
+
+- name: ppp Set APN
+  shell: "mlinux-set-apn -- {{ cellular_apn }}"
+  when:
+    - use_cellular
+    - cellular_apn is defined
+
+- name: ppp Set provider
+  lineinfile:
+    path: /etc/ppp/ppp_on_boot
+    regexp: '^\$PPPD call '
+    line: '$PPPD call {{ cellular_provider }}'
+  notify: Start ppp
+  when:
+    - use_cellular
+    - cellular_provider is defined
+
+#
+#	Set PPP configuration options
+#
+
+- name: ppp Ensure the connection stays up
+  lineinfile:
+    path: /etc/ppp/options
+    regexp: '^#?persist'
+    line: 'persist'
+  notify: Start ppp
+  when:
+    - use_cellular
+    - cellular_provider is defined
+
+- name: ppp Ensure unlimited connection attempts
+  lineinfile:
+    path: /etc/ppp/options
+    regexp: '^#?maxfail'
+    line: 'maxfail 0'
+  notify: Start ppp
+  when:
+    - use_cellular
+    - cellular_provider is defined
+
+- name: ppp Reset PPP persist option
+  lineinfile:
+    path: /etc/ppp/options
+    regexp: '^#?persist'
+    line: '#persist'
+  notify: Stop ppp
+  when: use_cellular == False or cellular_provider is not defined
+
+- name: ppp Set ppp MTU
+  lineinfile:
+    path: /etc/ppp/options
+    regexp: '^#?mtu'
+    line: "mtu {{ ppp0_mtu }}"
+    insertafter: '^#?persist'
+  notify: Start ppp
+  when:
+    - cellular_provider is defined
+    - ppp0_mtu is defined
+
+#
+#	Monit
+#
+- name: ppp /var/config/monit/monit.d/ppp.monit
+  template:
+    src: ppp.monit.j2
+    dest: /var/config/monit/monit.d/ppp.monit
+    mode: "700"
+    owner: root
+    group: root
+  notify:
+    - Restart monit
+  when:
+    - use_cellular
+    - cellular_apn is defined
+
+- name: ppp Remove /var/config/monit/monit.d/ppp.monit
+  file:
+    path: /var/config/monit/monit.d/ppp/monit
+    state: absent
+  notify:
+    - Restart monit
+  when: use_cellular == False or cellular_provider is not defined
+    

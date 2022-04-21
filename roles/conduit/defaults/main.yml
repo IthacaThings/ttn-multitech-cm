@@ -102,6 +102,7 @@ static_nameservers:
 # See http://changelog.complete.org/archives/9335-ssh-suddenly-stops-communicating-with-some-hosts
 eth0_mtu: 1100
 wlan0_mtu: 1100
+ppp0_mtu: 1100
 
 # By default the DHCP client sends three packets over three seconds
 # and then gives up.  Change this so it will keep going forever (90
@@ -134,6 +135,16 @@ gateway_collaborator_rights:
 # Use GPS if present
 use_gps: false
 gps_device: ttyXRUSB2
+
+# Cellular modem
+
+# True to enable a cellular modem
+use_cellular: false
+# This gets set with the APN to connect to.  Sometimes needs to be "broadband"
+cellular_apn: internet
+# Default value for cellular_provider
+# 'gsm' for GSM network, others not tested
+cellular_provider: gsm
 
 #
 # Monitoring - Configuration of monit
@@ -172,3 +183,10 @@ monit_config_test: "usage > 15%"
 monit_volatile_test: "usage > 75%"
 monit_volatile_action: 'exec "/sbin/reboot"'
 monit_volatile_period: "60 cycles"
+
+# PPP
+monit_ppp_if: "ppp0"
+monit_ppp_pidfile: "/var/run/{{ monit_ppp_if }}.pid"
+monit_ppp_initscript: "ppp"
+monit_ppp_start: '"/etc/init.d/{{ monit_ppp_initscript }} start" with timeout 15 seconds'
+monit_ppp_stop: '"/etc/init.d/{{ monit_ppp_initscript }} stop"'

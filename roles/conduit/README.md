@@ -60,6 +60,12 @@ Role Variables
 	<dd>Command to start an ssh tunnel, usually /usr/local/bin/ssh_tunnel</dd>
 	<dt>ssh_tunnel_remote_port</dt>
 	<dd>Port on the tunnel server to use to contact this host.  Must be unique for each Conduit</dd>
+	<dt>use_cellular</dt>
+	<dd>Use a cellular modem</dt>
+	<dt>cellular_apn</dt>
+	<dd>Enable ppp and have it connect to this cellular APN</dd>
+	<dt>cellular_provider</dt>
+	<dd>The cellular provider to use, defaults to *gsm*</dd>
 </dl>
 
 Dependencies
