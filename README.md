@@ -649,10 +649,10 @@ http://www.multitech.net/developer/software/lora/running-basic-station-on-condui
   * [ ] GPS Garbage?
 * [ ] Bugs
   * [ ] Is log rotation getting processed correctly?
-  * [ ] Does lora-basic-station notice interface changes and handle
+  * [X] Does lora-basic-station notice interface changes and handle
         them properly
-	* Or does it need to be restarted by udhcpd?
+	* [X] Or does it need to be restarted by udhcpd?
 
 * Bugs with lora-basic-station
-  * [ ] 008000000000FD46 tramsposed to 000000800000FD46
+  * [X] 008000000000FD46 tramsposed to 000000800000FD46
 	* Fixed in v3.14 branch, waiting for deploy of TTS
