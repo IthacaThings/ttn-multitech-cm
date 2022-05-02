@@ -2,6 +2,10 @@
     "_comment": "GENERATED VIA ANSIBLE, DO NOT EDIT!",
     "gateway_conf": {
         "autoquit_threshold": {{ autoquit_threshold }},
+{% if use_cellular %}
+        "keepalive_interval": {{ cellular_keepalive_internval }},
+        "send_interval": {{ cellular_send_interval }},
+{% endif %}
         "gateway_ID": "{{ ansible_local.lora.eui }}",
         "contact_email": "{{ contact_email }}", 
         "gps": {{ set_gps | to_json }},

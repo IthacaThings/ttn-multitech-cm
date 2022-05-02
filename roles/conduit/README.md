@@ -66,6 +66,10 @@ Role Variables
 	<dd>Enable ppp and have it connect to this cellular APN</dd>
 	<dt>cellular_provider</dt>
 	<dd>The cellular provider to use, defaults to *gsm*</dd>
+    <dt>cellular_send_interval</dt>
+	<dd>The LoRA send interval when using cellular</dd>
+    <dt>cellular_keepalive_interval</dt>
+	<dd>The LoRA keepalive interval when using cellular</dd>
 </dl>
 
 Dependencies
