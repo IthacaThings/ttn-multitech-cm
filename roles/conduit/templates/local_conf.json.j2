@@ -3,7 +3,7 @@
     "gateway_conf": {
         "autoquit_threshold": {{ autoquit_threshold }},
 {% if use_cellular %}
-        "keepalive_interval": {{ cellular_keepalive_internval }},
+        "keepalive_interval": {{ cellular_keepalive_interval }},
         "send_interval": {{ cellular_send_interval }},
 {% endif %}
         "gateway_ID": "{{ ansible_local.lora.eui }}",
