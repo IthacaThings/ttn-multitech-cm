@@ -28,7 +28,7 @@
 
 - name: ppp Make /var/config/ppp/ppp_on_boot executable
   file:
-    dst: /var/config/ppp/ppp_on_boot
+    name: /var/config/ppp/ppp_on_boot
     mode: "755"
   notify: Start ppp
   when:
