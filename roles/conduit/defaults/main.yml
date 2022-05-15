@@ -134,7 +134,7 @@ gateway_collaborator_rights:
 
 # Use GPS if present
 use_gps: false
-gps_device: ttyXRUSB2
+gps_device: "{{ 'ttyXRUSB2' if mlinux_version is version('4', '<') else 'gps0' }}"
 
 # Cellular modem
 
