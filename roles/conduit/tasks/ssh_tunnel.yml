@@ -26,9 +26,9 @@
   when: 
     - ssh_tunnel_enabled
 
-- name: ssh_tunnel /var/config/ssh_tunnel.init
+- name: ssh_tunnel /var/config/init.d/ssh_tunnel
   copy:
-    dest: /var/config/ssh_tunnel.init
+    dest: /var/config/init.d/ssh_tunnel
     src: ssh_tunnel.initd
     mode: "0755"
     owner: root
@@ -69,7 +69,7 @@
     state: absent
   with_items:
     - /var/config/ssh_tunnel.default
-    - /var/config/ssh_tunnel.init
+    - /var/config/init.d/ssh_tunnel
     - /etc/default/ssh_tunnel
     - /etc/init.d/ssh_tunnel
   when:
