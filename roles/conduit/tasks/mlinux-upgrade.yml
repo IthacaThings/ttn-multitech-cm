@@ -93,10 +93,14 @@
     group: root
   when: ansible_local.opkg.preserve is not defined
 
+  # Only copy mlinux-firmware-upgrade if it does not exist
+  # Our copy has -n to validate an image, but it is old
+  # the new version does not support -n but supports newer hardware
 - name: mlinux-upgrade Copy over mlinux-firmware-upgrade script
   copy:
     dest: "/usr/sbin/mlinux-firmware-upgrade"
     src: mlinux-firmware-upgrade
+    force: no
     mode: "0755"
     owner: root
     group: root
