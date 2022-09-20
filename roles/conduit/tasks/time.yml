@@ -48,6 +48,43 @@
   notify: restart ntpd
 
 #
+#	 /etc/devault/ntp
+#
+
+- name: time Ensure /var/config/default/ntpd.default exists
+  copy:
+    src: /etc/default/ntpd.default
+    dest: /var/config/default/ntpd.default
+    remote_src: yes
+    force: no
+  notify:
+    - Update system checksum file
+
+- name: time Link /etc/default/ntpd to /var/config/default/ntpd.default
+  file:
+    dest: /etc/default/ntpd
+    state: link
+    src: /var/config/default/ntpd.default
+    force: yes
+  notify:
+    - restart ntpd
+    - Update system checksum file
+
+- name: time Do we want SET_SYSTEM_CLOCK?
+  set_fact:
+    set_system_clock: "{{ 0 if use_cellular and cellular_apn is defined else 1 }}"
+
+- name: time Prevent ntpd from hanging on boot when net is down
+  lineinfile:
+    dest: /var/config/default/ntpd.default
+    regexp: "^SET_SYSTEM_CLOCK="
+    line: "SET_SYSTEM_CLOCK={{ set_system_clock }}"
+    state: present
+  notify:
+    - restart ntpd
+    - Update system checksum file
+
+#
 #	Monit
 #
 
