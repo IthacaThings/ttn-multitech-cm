@@ -14,7 +14,9 @@
   notify:
     - Reload facts
     - opkg clean
-  loop: "{{ ansible_depends }}"
+  loop:
+    - "{{ ansible_depends }}"
+    - "{{ ansible_depends_old }}"
 
 - name: ansible /var/config/ansible
   file:

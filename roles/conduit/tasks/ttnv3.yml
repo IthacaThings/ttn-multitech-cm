@@ -9,7 +9,6 @@
     module: command
     args:
       "bin/register
-        --v3
         --json
         --id {{ lora_hostname }} 
         --eui {{ ansible_local.lora.eui }}
@@ -27,7 +26,8 @@
         --antenna-type {{ antenna_type | quote }}
         --antenna-model {{ antenna_model | quote }}
         {{ gateway_owner }}
-        --collaborators '{{ gateway_collaborators | to_json }}'"
+        --collaborators '{{ gateway_collaborators_list | flatten | to_json }}'"
+  throttle: 1
   register: register_output
 
 - name: ttnv3 Set the gateway_info fact
@@ -40,27 +40,37 @@
     gw_router: "{{ gateway_info.gateway_server_address }}"
   when: forwarder_variant == 'mp'
 
-- name: ttnv3 Read local_conf from gateway
-  slurp:
-    src: /var/config/lora/local_conf.json
-  register: local_conf_b64
-  ignore_errors: true
+- name: ttnv3 Read local_conf and parse out gw_key
+  block:
+    - slurp:
+        src: /var/config/lora/local_conf.json
+      register: local_conf_b64
+      ignore_errors: true
+    - set_fact:
+        local_conf: "{{ local_conf_b64.content | b64decode | from_json }}"
+      ignore_errors: true
+      when: local_conf_b64 is succeeded
+    - set_fact:
+        gw_key: "{{ local_conf.gateway_conf.servers[0].serv_gw_key }}"
+      when:
+        - local_conf is defined
+        - "'gateway_conf' in local_conf"
+        - "'servers' in local_conf.gateway_conf"
+        - "'serv_gw_key' in local_conf.gateway_conf.servers[0]"
+        - local_conf.gateway_conf.servers[0].serv_gw_key.startswith("NNSXS.")
+  when: forwarder_variant != "basic"
 
-- name: ttnv3 Parse local_conf
-  set_fact:
-    local_conf: "{{ local_conf_b64.content | b64decode | from_json }}"
-  ignore_errors: true
-  when: local_conf_b64 is succeeded
-
-- name: ttnv3 Extract gw_key
-  set_fact:
-    gw_key: "{{ local_conf.gateway_conf.servers[0].serv_gw_key }}"
-  when:
-    - local_conf is defined
-    - "'gateway_conf' in local_conf"
-    - "'servers' in local_conf.gateway_conf"
-    - "'serv_gw_key' in local_conf.gateway_conf.servers[0]"
-    - local_conf.gateway_conf.servers[0].serv_gw_key.startswith("NNSXS.")
+- name: ttnv3 Read tc.key and parse out gw_key
+  block:
+    - slurp:
+        src: /var/config/lora/tc.key
+      register: tc_key_b64
+      ignore_errors: true
+    - set_fact:
+        gw_key: "{{ tc_key_b64.content | b64decode | split | last }}"
+      ignore_errors: true
+      when: tc_key_b64 is succeeded
+  when: forwarder_variant.startswith("basic")
 
 - name: ttnv3 Test key by fetching config
   uri:
@@ -80,12 +90,13 @@
     - gw_key is defined
     - get_config is succeeded
 
-- name: ttnv3 Generate a key  
+- name: ttnv3 Generate a key if we do not have one
   local_action:
     module: shell
     args:
       "ttn-lw-cli gateway api-keys create {{ lora_hostname }} --name link --right-gateway-link"
   register: key_data_json
+  throttle: 1
   notify: TTNv3 cleanup
   when: gw_key is not defined or get_config is not succeeded
 
@@ -98,18 +109,18 @@
         gw_key_id: "{{ key_data.id }}"
   when: gw_key is not defined and key_data_json is success
 
-- name: ttnv3 Get the config file
-  uri:
-    url: "https://{{ router_v3 }}/api/v3/gcs/gateways/{{ lora_hostname }}/semtechudp/global_conf.json"
-    method: GET
-    headers:
-      Authorization: "Bearer {{ gw_key }}"
-  register: get_config
-  delegate_to: 127.0.0.1
-  when: global_conf is not defined
-
-- name: ttnv3 Extract global.conf
-  set_fact:
-    global_conf: "{{ get_config.json }}"
-  when: global_conf is not defined
+- name: ttnv3 Get the packet forwarder global config file
+  block:
+  - uri:
+      url: "https://{{ router_v3 }}/api/v3/gcs/gateways/{{ lora_hostname }}/semtechudp/global_conf.json"
+      method: GET
+      headers:
+        Authorization: "Bearer {{ gw_key }}"
+    register: get_config
+    delegate_to: 127.0.0.1
+  - set_fact:
+      global_conf: "{{ get_config.json }}"
+  when:
+    - global_conf is not defined
+    - forwarder_variant != 'basic'
 ...

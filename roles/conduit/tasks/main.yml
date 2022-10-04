@@ -27,6 +27,20 @@
     - setup
     - ansible
 
+- name: main Fail if certain info is missing
+  fail:
+    msg: "Required information is missing"
+  when:
+    - "'mlinux' not in ansible_local or ansible_local.mlinux|length == 0"
+    
+#
+#	Initial setup.  Stuff required before packages install
+#
+- name: main Initial setup
+  import_tasks: setup.yml
+  tags:
+    - always
+
 #
 #  Set up for preserving config during firmware upgrade
 #
@@ -35,6 +49,7 @@
   tags:
     - setup
     - preserve
+    - mlinux
 
 #
 #	Update mLinux if required
@@ -73,6 +88,16 @@
   import_tasks: networking.yml
   tags:
     - networking
+    - setup
+
+#
+#	Set up PPP
+#
+- name: main Setup ppp
+  import_tasks: ppp.yml
+  tags:
+    - networking
+    - ppp
     - setup
 
 #

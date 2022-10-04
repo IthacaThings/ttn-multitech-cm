@@ -36,7 +36,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 def parse_args():
     """ Parse the arguments """
 
-    parser = argparse.ArgumentParser(description="Register or re-regiter a Conduit with TTN")
+    parser = argparse.ArgumentParser(description="Commision a Multitech Conduit (set initial username and password)")
 
     #	Debugging
     group = parser.add_argument_group("Debugging options")

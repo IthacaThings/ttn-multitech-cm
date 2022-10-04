@@ -5,7 +5,7 @@
 #	Make sure init script is run
 #
 - name: update rc
-  shell: "update-rc.d -f ttn-pkt-forwarder remove; update-rc.d ttn-pkt-forwarder defaults 95 30"
+  shell: "for init in ttn-pkt-forwarder lora-basic-station; do update-rc.d -f ${init} remove; test -f /etc/init.d/${init} && update-rc.d ${init} defaults 95 30 || true; done"
   
 #
 #	Restart the packet forwarder
@@ -13,6 +13,15 @@
 - name: restart ttn-pkt-forwarder
   service:
     name: ttn-pkt-forwarder
+    state: restarted
+    sleep: "{{ forwarder_restart_delay }}"
+
+#
+#	Restart the LoRA basic Station
+#
+- name: Restart lora-basic-station
+  service:
+    name: lora-basic-station
     state: restarted
     sleep: "{{ forwarder_restart_delay }}"
 
@@ -63,6 +72,21 @@
 #
 - name: Reload facts
   include_tasks: reload_facts.yml
+
+#
+#	ppp
+#
+- name: Start ppp
+  service:
+    name: ppp
+    enabled: yes
+    state: restarted
+
+- name: Stop ppp
+  service:
+    name: pppd
+    enabled: no
+    state: stopped
 
 #
 #	opkg handlers

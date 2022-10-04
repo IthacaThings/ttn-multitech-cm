@@ -30,8 +30,7 @@ EOF
 
     # Install ansible dependencies
     opkg update
-    opkg install {{ ansible_depends | join(' ') }} ntp ntp-utils libmpsse
-
+    opkg install {{ ansible_depends + ansible_depends_old | join(' ') }} libmpsse monit ntp ntp-utils
     test -d /var/config/ansible && ln -s /var/config/ansible /etc/ansible
 fi
 

@@ -1,0 +1,167 @@
+---
+
+# XXX - Should we just fetch the package ourselves?
+
+# XXX - TODO - Switch version and test this code
+
+- name: ttn_basic_station Stop lora-basic if we are updating it
+  service:
+    name: lora-basic-station
+    state: stopped
+  ignore_errors: true
+  when:
+    - forwader_version is defined
+    - ansible_local.opkg.lora_basic_station is defined and ansible_local.opkg.lora_basic_station != forwarder_version
+
+- name: ttn_basic_station Uninstall old version of lora_basic_station
+  opkg:
+    name: lora_basic_station
+    state: absent
+    force: remove
+  notify:
+    - Restart lora-basic-station
+  when:
+    - forwader_version is defined
+    - ansible_local.opkg.lora_basic_station is not defined or ansible_local.opkg.lora_basic_station != forwarder_version
+
+- name: ttn_basic_station Install the desired version of lora_basic_station  
+  opkg:
+    name: "lora_basic_station=={{ forwarder_version }}"
+    state: present
+  notify:
+    - Restart lora-basic-station
+  when:
+    - forwader_version is defined
+    - ansible_local.opkg.lora_basic_station is not defined or ansible_local.opkg.lora_basic_station != forwarder_version
+
+# We have a program below because MT posted the data in an invalid format
+- name: ttn_basic_station Fetch and update station.conf
+  block:
+    - set_fact:
+        gps_arg: "--gps /dev/{{ gps_device }}"
+      when: have_gps and use_gps
+    - set_fact:
+        gps_arg: ""
+      when: not (have_gps and use_gps)
+    - local_action:
+        module: command
+        args:
+          "bin/mt_station_conf --url {{ basic_station_conf_url[conduit_type] }}
+          --routerid {{ ansible_local.lora.eui }}
+          --log-file {{ basic_log_file }}
+          --log-level {{ basic_log_level }}
+          --log-size {{ forwarder_logrotate_size }}
+          --log-rotate {{ forwarder_logrotate_count }}
+          {{ gps_arg }}"
+      register: station_conf_raw
+    - set_fact:
+        station_conf: "{{ station_conf_raw.stdout | from_json }}"
+
+- name: ttn_basic_station Install /var/config/lora/station.conf
+  template:
+    src: station.conf.j2
+    dest: /var/config/lora/station.conf
+    mode: "0644"
+    owner: root
+    group: root
+  notify:
+    - Restart lora-basic-station
+
+- name: ttn_basic_station Download certificate
+  local_action: get_url
+  args:
+    url: "{{ basic_cert_url }}"
+    dest: "{{ role_path }}/files"
+
+- name: ttn_basic_station Install certificate /var/config/lora/tc.trust
+  copy:
+    src: "{{ role_path }}/files/{{ basic_cert_url | basename }}"
+    dest: "/var/config/lora/tc.trust"
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - Restart lora-basic-station
+
+- name: ttn_basic_station Install gateway key /var/config/lora/tc.key
+  template:
+    src: tc.key.j2
+    dest: /var/config/lora/tc.key
+    newline_sequence: '\r\n'
+    mode: "0600"
+    owner: root
+    group: root
+  notify:
+    - Restart lora-basic-station
+
+- name: ttn_basic_station Install uri file /var/config/lora/tc.uri
+  template:
+    src: tc.uri.j2
+    dest: /var/config/lora/tc.uri
+    newline_sequence: '\r\n'
+    mode: "0644"
+    owner: root
+    group: root
+  notify:
+    - Restart lora-basic-station
+
+#
+#	Cleanup
+#
+
+- name: ttn_basic_station Install /var/config/lora-basic-station
+  template:
+    src: lora-basic-station.j2
+    dest: /var/config/init.d/lora-basic-station
+    mode: "0755"
+    owner: root
+    group: root
+  notify:
+    - Restart lora-basic-station
+
+- name: ttn_basic_station /etc/init.d/lora-basic-station to /var/config/lora/lora-basic-station
+  file:
+    dest: /etc/init.d/lora-basic-station
+    state: link
+    src: /var/config/init.d/lora-basic-station
+    follow: false
+    force: yes
+  notify:
+    - update rc
+    - Restart lora-basic-station
+
+- name: ttn_basic_station Enable basic station
+  lineinfile: dest=/etc/default/lora-basic-station
+    regexp="^ENABLED="
+    line='ENABLED="yes"'
+    state=present
+  notify:
+    - Restart lora-basic-station
+
+- name: ttn_basic_station Stop the packet fowarder
+  service:
+    name: ttn-pkt-forwarder
+    state: stopped
+  ignore_errors: true
+
+- name: ttn_basic_station  Disable ttn-pkt-forwarder
+  lineinfile:
+    dest=/etc/default/ttn-pkt-forwarder
+    regexp="^ENABLED="
+    line='ENABLED="no"'
+    state=present
+  ignore_errors: true
+
+- name: ttn_basic_station Remove some files
+  file:
+    name: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/init.d/ttn-pkt-forwarder
+    - /var/config/*.ipk
+    - /var/config/init.d/ttn-pkg-forwarder
+    - /var/config/lora/global_conf.json
+    - /var/config/lora/local_conf.json
+    - /var/config/lora/samples
+    - /var/log/ttn-pkg-fwd.log*
+...

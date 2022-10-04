@@ -1,16 +1,21 @@
 #!/bin/sh
 
+message () {
+    logger -s -t $(basename ${0}) -p daemon.info -- ${*}
+}
+
 # Restart services when we get an address
 
-[ -z "$1" ] && echo "Error: should be called from udhcpc" && exit 1
+[ -z "$1" ] && message "Error: should be called from udhcpc" && exit 1
 
 case "$1" in
     deconfig)
         ;;
 
     bound)
-	echo "$0: New IP address $ip on $interface, restarting services"
+	message "New IP address $ip on $interface, restarting services"
 	test -x /etc/init.d/ttn-pkt-forwarder && /etc/init.d/ttn-pkt-forwarder restart
+	test -x /etc/init.d/lora-basic-station && /etc/init.d/lora-basic-station restart
 	test -x /etc/init.d/ssh_tunnel && /etc/init.d/ssh_tunnel restart
 	;;
 

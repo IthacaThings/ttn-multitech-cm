@@ -91,3 +91,16 @@
     src: /var/config/ifup_restart
     state: link
     force: yes
+
+#
+#	Monit
+#
+- name: networking /var/config/monit/monit.d/networking.monit
+  template:
+    src: networking.monit.j2
+    dest: /var/config/monit/monit.d/networking.monit
+    mode: "700"
+    owner: root
+    group: root
+  notify:
+    - Restart monit

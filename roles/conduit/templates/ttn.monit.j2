@@ -1,0 +1,6 @@
+# Check for error conditions in packet forwarder log
+check program {{ forwarder_logcheck }} with path /usr/local/lib/{{ forwarder_logcheck }}
+    if status == 1 then exec {{ monit_pktfwd_restart }}
+    if status == 2 for 4 cycles then exec {{ monit_pktfwd_restart }}
+    if status == 3 then {{ monit_pktfwd_reboot }}
+    if status == 4 then alert

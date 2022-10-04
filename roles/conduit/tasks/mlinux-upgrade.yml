@@ -93,10 +93,14 @@
     group: root
   when: ansible_local.opkg.preserve is not defined
 
+  # Only copy mlinux-firmware-upgrade if it does not exist
+  # Our copy has -n to validate an image, but it is old
+  # the new version does not support -n but supports newer hardware
 - name: mlinux-upgrade Copy over mlinux-firmware-upgrade script
   copy:
     dest: "/usr/sbin/mlinux-firmware-upgrade"
     src: mlinux-firmware-upgrade
+    force: no
     mode: "0755"
     owner: root
     group: root
@@ -108,21 +112,9 @@
   register: flash_upgrade
 
 - name: mlinux-upgrade Reboot
-  shell: "reboot"
-  async: 1
-  poll: 0
-  when: flash_upgrade is changed
-
-- name: mlinux-upgrade Wait for reboot
-  wait_for:
-    host: "{{ ansible_host }}"
-    state: started
-    port: "{{ ansible_port }}"
-    delay: 30 
-    timeout: 1200
-    connect_timeout: 15
-  ignore_errors: true
-  connection: local
+  reboot:
+    post_reboot_delay: 30
+    test_command: "test -f {{ mlinux_restore_init_crumb }}"
   when: flash_upgrade is changed
 
 #
@@ -136,4 +128,9 @@
 
 - name: mlinux-upgrade Reload ansible_local
   setup: filter=ansible_local
+
+- name: mlinux-upgrade Fail if upgrade did not take
+  fail:
+    msg: "mlinux-firmware-upgrade did not work. Expected {{mlinux_version }}, got {{ ansible_local.mlinux.version }}"
+  when: "'mlinux' not in ansible_local or mlinux_version != ansible_local.mlinux.version"
 ...

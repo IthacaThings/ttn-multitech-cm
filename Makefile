@@ -6,7 +6,7 @@
 #	Visit subdirs
 #
 # Subdirs we should visit
-SUBDIRS = bin
+SUBDIRS = 
 
 all::
 	for dir in ${SUBDIRS}; do \
@@ -95,6 +95,7 @@ ANSIBLE_DEPENDS_COMMON = python-core \
 	python-compression \
 	python-dateutil \
 	python-distutils \
+	python-email \
 	python-html \
 	python-json \
 	python-multiprocessing \
