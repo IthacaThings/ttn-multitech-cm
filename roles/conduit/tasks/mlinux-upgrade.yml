@@ -105,17 +105,11 @@
     owner: root
     group: root
 
-- name: mlinux-upgrade Prep flash upgrade
-  shell:
-    cmd: "/usr/sbin/mlinux-firmware-upgrade -N {{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
-    chdir: //var/volatile
-  register: flash_upgrade
-
-- name: mlinux-upgrade Reboot
+- name: mlinux-upgrade Do flash upgrade and reboot
   reboot:
+    reboot_command: "/usr/sbin/mlinux-firmware-upgrade {{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
     post_reboot_delay: 30
     test_command: "test -f {{ mlinux_restore_init_crumb }}"
-  when: flash_upgrade is changed
 
 #
 #	Recover state
