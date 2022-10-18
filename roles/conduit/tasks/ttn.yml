@@ -21,10 +21,11 @@
 
 - name: ttn Check if using correct packet forwarder
   fail:
-    msg: "Must use mp_packet_forwarder with SPI versions of lora cards"
+    msg: "Must use mp_packet_forwarder or basic station with SPI versions of LoRa cards"
   when:
     - ansible_local.lora.hw_version != "MTAC-LORA-1.0"
-    - forwarder_variant != "mp" and forwarder_variant != "basic"
+    - forwarder_variant != "mp"
+    - forwarder_variant != "basic"
 
 - name: ttn Check that we have an SPI card if using Basic Station
   fail:
