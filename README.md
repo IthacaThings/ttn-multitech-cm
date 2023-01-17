@@ -92,6 +92,17 @@ authentication. It is also recommended that you use ssh-agent to
 forward keys from your local system to the jump host and not keep
 private keys on cloud hosts.
 
+If you are using RSA keys and you have an older OS on the Conduit but
+are using a newer OS (and OpenSSH version) on your host system (Ubuntu
+22.04 and later and macOS Ventura and later), you may run into a
+problem where RSA keys do not work. This is due to OpenSSH retiring
+the RSA key exchange algorithm due to security concerns.
+
+To enable access to these Conduits, add `-o PubkeyAcceptedAlgorithms=+ssh-rsa`
+to the end of the `ssh_args` in `ansible.cfg`. This should be
+considered a short-term fix, moving to elliptical curve keys is much
+more secure.
+
 ## Commissioning
 
 From version 5.2, official mLinux images require commisioning to
