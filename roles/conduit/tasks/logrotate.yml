@@ -5,7 +5,7 @@
 #
 
 - name: logrotate | Install logrotate
-  opkg: 
+  opkg:
     state: installed
     pkg: "logrotate"
   when:
@@ -39,7 +39,7 @@
     name: /etc/logrotate.d
     state: absent
   when: logrotate_d.stat.isdir is defined and logrotate_d.stat.isdir == True
-  
+
 - name: logrotate | Point /etc/logrotate.d at /var/config/logrotate.d
   file:
     name: /etc/logrotate.d
@@ -47,4 +47,3 @@
     force: yes
     src: /var/config/logrotate.d
   when: logrotate_d.stat.isdir is defined and logrotate_d.stat.isdir == True
-

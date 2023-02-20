@@ -34,7 +34,7 @@
   when:
     - use_cellular
     - cellular_provider is defined
-  
+
 #
 #	Set or reset APN
 #
@@ -126,4 +126,3 @@
   notify:
     - Restart monit
   when: use_cellular == False or cellular_provider is not defined
-    

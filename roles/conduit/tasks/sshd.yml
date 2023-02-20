@@ -8,7 +8,7 @@
 - name: sshd | Move /etc/ssh/sshd_config to /var/config/ssh if a file
   command: mv /etc/ssh/sshd_config /var/config/ssh
   when: sshd_config.stat.islnk is defined and not sshd_config.stat.islnk
-    
+
 - name: sshd | Link /etc/ssh/sshd_config to /var/config/ssh/sshd_config
   file:
     dest: /etc/ssh/sshd_config

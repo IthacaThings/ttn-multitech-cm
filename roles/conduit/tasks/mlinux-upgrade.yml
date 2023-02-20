@@ -37,7 +37,7 @@
     checksum_algorithm: md5
     path: "{{ role_path }}/files/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
   register: mlinux_upgrade_stat
-  
+
 - name: mlinux-upgrade | Remove bad copy of {{ mlinux_upgrade_bin }}_{{ mlinux_version }}
   local_action: file
   args:

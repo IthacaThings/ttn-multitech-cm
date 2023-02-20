@@ -23,7 +23,7 @@
     owner: root
     group: root
   notify: restart ssh_tunnel
-  when: 
+  when:
     - ssh_tunnel_enabled
 
 - name: ssh_tunnel | /var/config/init.d/ssh_tunnel
@@ -46,7 +46,7 @@
   notify: restart ssh_tunnel
   when:
     - ssh_tunnel_enabled
-    
+
 - name: ssh_tunnel | Link /etc/init.d/ssh_tunnel to /var/config/init.d/ssh_tunnel
   file:
     dest: /etc/init.d/ssh_tunnel
@@ -62,7 +62,7 @@
   ignore_errors: true
   when:
     - not ssh_tunnel_enabled
-   
+
 - name: ssh_tunnel | Clean up ssh_tunnel if not enabled
   file:
     dest: "{{ item }}"

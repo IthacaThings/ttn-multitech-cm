@@ -24,7 +24,7 @@
     - forwader_version is defined
     - ansible_local.opkg.lora_basic_station is not defined or ansible_local.opkg.lora_basic_station != forwarder_version
 
-- name: ttn_basic_station | Install the desired version of lora_basic_station  
+- name: ttn_basic_station | Install the desired version of lora_basic_station
   opkg:
     name: "lora_basic_station=={{ forwarder_version }}"
     state: present

@@ -7,7 +7,7 @@
 #	Install dependencies
 #
 - name: ttn_packet_forwarder | Install depedencies for packet forwarder
-  opkg: 
+  opkg:
     state: installed
     pkg: "{{ item }}"
   when: (ansible_local is not defined) or (ansible_local.opkg is not defined) or (item not in ansible_local.opkg.keys())

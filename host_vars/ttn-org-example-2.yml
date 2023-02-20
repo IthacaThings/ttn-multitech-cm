@@ -25,7 +25,7 @@ ansible_port: 22
 #static_domain:   example.com
 #static_nameservers:
 #  - 192.168.1.4
-#  - 192.168.1.5  
+#  - 192.168.1.5
 
 # To configure wireless the following setup is required.  Wireless
 # LANs usually use DHCP, but you can provide a static address in the

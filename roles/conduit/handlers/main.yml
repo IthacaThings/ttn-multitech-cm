@@ -6,7 +6,7 @@
 #
 - name: update rc
   shell: "for init in ttn-pkt-forwarder lora-basic-station; do update-rc.d -f ${init} remove; test -f /etc/init.d/${init} && update-rc.d ${init} defaults 95 30 || true; done"
-  
+
 #
 #	Restart the packet forwarder
 #
@@ -37,7 +37,7 @@
   debug:
     msg: "Please go to https://console.thethingsnetwork.org/gateways
  and update the antenna Altitude and Placement your gateways.  The
- API does not allow these parameters to be set" 
+ API does not allow these parameters to be set"
   run_once: true
 
 #
@@ -61,7 +61,7 @@
   ignore_errors: true
 
 #
-#	Remind 
+#	Remind
 #
 - name: interface reboot
   debug:

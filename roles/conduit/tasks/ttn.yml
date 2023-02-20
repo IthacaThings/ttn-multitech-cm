@@ -15,7 +15,7 @@
 - name: ttn | Check if using correct card for the region
   fail:
     msg: "Lora card {{ ansible_local.lora.product_id }} and region {{ region }} mismatch"
-  when: 
+  when:
     - ( ansible_local.lora.product_id is match("MTAC-LORA-(H-)?915") and region is match("EU|IN") ) or ( ansible_local.lora.product_id is match("MTAC-LORA-(H-)?868") and region is match("US|AU|AS1|AS2|KR") )
     - radio_mismatch is not defined
 
@@ -73,7 +73,6 @@
 - name: ttn | ttn_basic_station
   include_tasks: ttn_basic_station.yml
   when: forwarder_variant == "basic"
-  
 
 #
 #	Monit

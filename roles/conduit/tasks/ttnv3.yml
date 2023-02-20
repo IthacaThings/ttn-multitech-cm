@@ -10,7 +10,7 @@
     args:
       "bin/register
         --json
-        --id {{ lora_hostname }} 
+        --id {{ lora_hostname }}
         --eui {{ ansible_local.lora.eui }}
         --region {{ region }}
         {{ '--latitude ' + latitude|string if latitude is defined and latitude else '' }}
