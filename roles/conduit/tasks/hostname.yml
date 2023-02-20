@@ -14,7 +14,7 @@
     dest: /etc/hostname
     state: link
     src: /var/config/hostname
-    force: yes
+    force: true
 
 - name: hostname | Set hostname file
   ansible.builtin.copy:

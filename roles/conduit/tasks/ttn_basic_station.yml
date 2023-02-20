@@ -128,7 +128,7 @@
     state: link
     src: /var/config/init.d/lora-basic-station
     follow: false
-    force: yes
+    force: true
   notify:
     - update rc
     - Restart lora-basic-station

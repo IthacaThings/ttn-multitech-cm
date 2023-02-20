@@ -12,8 +12,8 @@
 - name: authorized_keys | Merge our authorized keys into temporary file
   delegate_to: 127.0.0.1
   ansible.posix.authorized_key:
-    manage_dir: no
-    exclusive: no
+    manage_dir: false
+    exclusive: false
     user: "{{ ansible_user }}"
     path: "{{ tempfile.path }}"
     key: "{{ item }}"

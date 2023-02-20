@@ -8,7 +8,7 @@
   community.general.opkg:
     state: installed
     pkg: "{{ item }}"
-    update_cache: yes
+    update_cache: true
   ignore_errors: true
   when: ansible_local is not defined or ansible_local.opkg is not defined or item|regex_replace('-','_') not in ansible_local.opkg.keys()
   notify:

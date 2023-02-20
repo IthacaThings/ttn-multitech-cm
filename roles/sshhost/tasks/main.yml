@@ -11,7 +11,7 @@
 - name: main | "Set up {{ ssh_tunnel_gateway_user_on_jumphost }} user"
   ansible.builtin.user:
     name: "{{ ssh_tunnel_gateway_user_on_jumphost }}"
-    append: yes
+    append: true
     shell: /bin/bash
     password: "*"
   tags: users

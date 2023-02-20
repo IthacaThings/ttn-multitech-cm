@@ -23,7 +23,7 @@
 - name: users | "Set up {{ ttn_user }} user"
   ansible.builtin.user:
     name: "{{ ttn_user }}"
-    append: yes
+    append: true
     groups: adm,dialout,disk,plugdev,sudo
     shell: /bin/bash
     password: "*"

@@ -24,7 +24,7 @@
   ansible.builtin.file:
     name: /etc/resolv.conf
     state: link
-    force: yes
+    force: true
     src: /var/run/resolv.conf
   when:
     - eth0_type is not defined or eth0_type != 'static'
@@ -83,14 +83,14 @@
     dest: /etc/udhcpc.d/60restart
     src: /var/config/udhcpc_restart
     state: link
-    force: yes
+    force: true
 
 - name: networking | Link /etc/network/if-up.d/restart
   ansible.builtin.file:
     dest: /etc/network/if-up.d/restart
     src: /var/config/ifup_restart
     state: link
-    force: yes
+    force: true
 
 #
 # Monit

@@ -14,7 +14,7 @@
     dest: "/etc/sudoers.d/{{ target_user }}"
     state: link
     src: "/var/config/{{ target_user }}.sudo"
-    force: yes
+    force: true
   when: ansible_local.opkg.sudo is defined
 
 ...

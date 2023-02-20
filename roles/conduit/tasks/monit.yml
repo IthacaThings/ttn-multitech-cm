@@ -37,7 +37,7 @@
     src: /var/config/monit/.monit.id
     state: link
     force: true
-    follow: no
+    follow: false
 
 #
 # Event Queue

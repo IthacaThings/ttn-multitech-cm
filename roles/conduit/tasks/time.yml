@@ -4,12 +4,12 @@
   ansible.builtin.file:
     name: /etc/localtime
     state: link
-    force: yes
+    force: true
     src: "/usr/share/zoneinfo/{{ timezone }}"
 
 - name: time | Set time from ntp server
   ansible.builtin.shell: "ntpdate -bu {{ ntp_servers[0] }} && hwclock -wu"
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: time | Install ntp packages
   community.general.opkg:
@@ -43,7 +43,7 @@
   ansible.builtin.file:
     name: /etc/ntp.conf
     state: link
-    force: yes
+    force: true
     src: /var/config/ntp.conf
   notify: restart ntpd
 
@@ -55,8 +55,8 @@
   ansible.builtin.copy:
     src: /etc/default/ntpd.default
     dest: /var/config/default/ntpd.default
-    remote_src: yes
-    force: no
+    remote_src: true
+    force: false
   notify:
     - Update system checksum file
 
@@ -65,7 +65,7 @@
     dest: /etc/default/ntpd
     state: link
     src: /var/config/default/ntpd.default
-    force: yes
+    force: true
   notify:
     - restart ntpd
     - Update system checksum file

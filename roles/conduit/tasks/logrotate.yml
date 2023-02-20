@@ -44,6 +44,6 @@
   ansible.builtin.file:
     name: /etc/logrotate.d
     state: link
-    force: yes
+    force: true
     src: /var/config/logrotate.d
   when: logrotate_d.stat.isdir is defined and logrotate_d.stat.isdir == True

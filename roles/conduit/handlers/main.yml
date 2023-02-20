@@ -83,13 +83,13 @@
 - name: Start ppp
   ansible.builtin.service:
     name: ppp
-    enabled: yes
+    enabled: true
     state: restarted
 
 - name: Stop ppp
   ansible.builtin.service:
     name: pppd
-    enabled: no
+    enabled: false
     state: stopped
 
 #

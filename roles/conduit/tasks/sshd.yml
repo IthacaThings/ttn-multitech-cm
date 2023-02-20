@@ -14,7 +14,7 @@
     dest: /etc/ssh/sshd_config
     state: link
     src: /var/config/ssh/sshd_config
-    force: yes
+    force: true
 
 - name: sshd | Disallow password authentication
   ansible.builtin.lineinfile:

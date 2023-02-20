@@ -59,7 +59,7 @@
 
 - name: user_dirs | "Install {{ target_user }} authorized keys"
   ansible.posix.authorized_key:
-    manage_dir: no
+    manage_dir: false
     path: "{{ ttn_newsshdir }}/authorized_keys"
     user: "{{ target_user }}"
     key: "{{ authorized_keys | join('\n') }}"

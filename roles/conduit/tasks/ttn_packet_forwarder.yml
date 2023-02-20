@@ -62,7 +62,7 @@
 - name: ttn_packet_forwarder | Unmonitor packet forwarder if changes are being made
   ansible.builtin.shell: "monit unmonitor check_pktfwdlog"
   notify: monit monitor check_pktfwdlog
-  ignore_errors: yes
+  ignore_errors: true
   when:
     - forwarder_installed != forwarder_package_version
 
@@ -71,7 +71,7 @@
     name: ttn-pkt-forwarder
     state: stopped
   when: forwarder_installed != forwarder_package_version
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: ttn_packet_forwarder | Remove all existing packet-forwarder packages
   ansible.builtin.shell: "opkg remove poly-packet-forwarder mp-packet-forwarder ttn-packet-forwarder"
@@ -102,7 +102,7 @@
     state: link
     src: /var/config/init.d/ttn-pkt-forwarder
     follow: false
-    force: yes
+    force: true
   notify:
     - update rc
     - restart ttn-pkt-forwarder

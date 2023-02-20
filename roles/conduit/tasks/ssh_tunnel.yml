@@ -42,7 +42,7 @@
     dest: /etc/default/ssh_tunnel
     state: link
     src: /var/config/ssh_tunnel.default
-    force: yes
+    force: true
   notify: restart ssh_tunnel
   when:
     - ssh_tunnel_enabled
@@ -52,7 +52,7 @@
     dest: /etc/init.d/ssh_tunnel
     state: link
     src: /var/config/init.d/ssh_tunnel
-    force: yes
+    force: true
   notify: restart ssh_tunnel
   when:
     - ssh_tunnel_enabled

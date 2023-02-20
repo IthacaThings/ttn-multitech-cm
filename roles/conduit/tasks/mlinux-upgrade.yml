@@ -7,7 +7,7 @@
   delegate_to: 127.0.0.1
   ansible.builtin.uri:
     url: "{{ mlinux_url }}/md5sum.txt"
-    return_content: yes
+    return_content: true
     timeout: 120
   ignore_errors: true
   register: checksum_data
@@ -16,7 +16,7 @@
   delegate_to: 127.0.0.1
   ansible.builtin.uri:
     url: "{{ mlinux_url }}/md5sums.txt"
-    return_content: yes
+    return_content: true
     timeout: 120
   ignore_errors: true
   register: checksum_data
@@ -63,7 +63,7 @@
 - name: mlinux-upgrade | Unmonitor space usage on /var/volatile
   ansible.builtin.shell: "monit unmonitor volatile"
   notify: monit monitor volatile
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: mlinux-upgrade | Remove some temp files from a failed upgrade
   ansible.builtin.file:
@@ -81,7 +81,7 @@
     mode: "0600"
     owner: root
     group: root
-    unsafe_writes: yes
+    unsafe_writes: true
 
 - name: mlinux-upgrade | Copy over setup script
   ansible.builtin.template:
@@ -99,7 +99,7 @@
   ansible.builtin.copy:
     dest: "/usr/sbin/mlinux-firmware-upgrade"
     src: mlinux-firmware-upgrade
-    force: no
+    force: false
     mode: "0755"
     owner: root
     group: root
