@@ -18,11 +18,7 @@
     mode: "0755"
     owner: root
     group: root
-  with_flattened:
-    - bin
-    - lib
-    - sbin
-    - share
+  loop: "{{ ['bin','lib','sbin','share']|flatten }}"
 
 - name: local Get stat info about /usr/local
   stat:
@@ -44,4 +40,3 @@
     name: /usr/local
     state: link
     src: /var/config/local
-
