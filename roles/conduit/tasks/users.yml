@@ -29,19 +29,23 @@
     password: "*"
 
 - name: users | Configure mtadm user
+  vars:
+    target_user: ttn
   block:
     - name: users | ttn dirs
       ansible.builtin.import_tasks: user_dirs.yml
     - name: users | ttn sudo
       ansible.builtin.import_tasks: user_sudo.yml
-  vars:
-    target_user: ttn
 
 #
 # Configure mtadm user
 #
 
 - name: users | Configure mtadm user
+  when:
+    - ansible_local.mlinux.version is version('4', '>=')
+  vars:
+    target_user: mtadm
   block:
     - name: users | mtadm dirs
       ansible.builtin.import_tasks: user_dirs.yml
@@ -53,7 +57,3 @@
         regex: ^(auth .*)$
         line: '# \1'
         backrefs: true
-  vars:
-    target_user: mtadm
-  when:
-    - ansible_local.mlinux.version is version('4', '>=')

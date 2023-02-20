@@ -144,6 +144,7 @@
   notify: restart ttn-pkt-forwarder
 
 - name: ttn_packet_forwarder | Packet Forwarder configuration (before 3.0.25)
+  when: forwarder_variant != "mp" or forwarder_version is version('3.0.25', '<')
   block:
     - name: ttn_packet_forwarder | Install node.js
       community.general.opkg:
@@ -172,9 +173,9 @@
         mode: "0644"
         owner: root
         group: root
-  when: forwarder_variant != "mp" or forwarder_version is version('3.0.25', '<')
 
 - name: ttn_packet_forwarder | Packet Forwarder configuration (3.0.25 and later)
+  when: forwarder_variant == "mp" and forwarder_version is version('3.0.25', '>=')
   block:
     - name: ttn_packet_forwarder | Remove node.js
       community.general.opkg:
@@ -198,7 +199,6 @@
       ansible.builtin.file:
         dest: /var/config/lora/ttn_global_conf.json
         state: absent
-  when: forwarder_variant == "mp" and forwarder_version is version('3.0.25', '>=')
 
 - name: ttn_packet_forwarder | Remove some files
   ansible.builtin.file:

@@ -21,6 +21,7 @@
   register: config_monit_id
 
 - name: monit | Move .monit.id to /var/config/monit if source exists and dest does not
+  when: not config_monit_id.stat.exists
   block:
     - name: monit | Find /home/root/.monit.id
       ansible.builtin.stat:
@@ -29,7 +30,6 @@
     - name: monit | Move /home/root/.monit.id
       ansible.builtin.command: mv /home/root/.monit.id /var/config/monit
       when: monit_id.stat.exists and not monit_id.stat.islnk
-  when: not config_monit_id.stat.exists
 
 - name: monit | Link /home/root/.monit.id to /var/config/monit/.monit.id
   ansible.builtin.file:

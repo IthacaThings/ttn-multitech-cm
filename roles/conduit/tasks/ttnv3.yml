@@ -40,6 +40,7 @@
   when: forwarder_variant == 'mp'
 
 - name: ttnv3 | Read local_conf and parse out gw_key
+  when: forwarder_variant != "basic"
   block:
     - name: ttnv3 | slurp local_config.json
       ansible.builtin.slurp:
@@ -60,9 +61,9 @@
         - "'servers' in local_conf.gateway_conf"
         - "'serv_gw_key' in local_conf.gateway_conf.servers[0]"
         - local_conf.gateway_conf.servers[0].serv_gw_key.startswith("NNSXS.")
-  when: forwarder_variant != "basic"
 
 - name: ttnv3 | Read tc.key and parse out gw_key
+  when: forwarder_variant.startswith("basic")
   block:
     - name: ttnv3 | slurp tc.key
       ansible.builtin.slurp:
@@ -74,7 +75,6 @@
         gw_key: "{{ tc_key_b64.content | b64decode | split | last }}"
       ignore_errors: true
       when: tc_key_b64 is succeeded
-  when: forwarder_variant.startswith("basic")
 
 - name: ttnv3 | Test key by fetching config
   delegate_to: 127.0.0.1
@@ -103,6 +103,7 @@
   when: gw_key is not defined or get_config is not succeeded
 
 - name: ttnv3 | Extract the key and key_id
+  when: gw_key is not defined and key_data_json is success
   block:
     - name: ttnv3 | key_data
       ansible.builtin.set_fact:
@@ -111,9 +112,11 @@
       ansible.builtin.set_fact:
         gw_key: "{{ key_data.key }}"
         gw_key_id: "{{ key_data.id }}"
-  when: gw_key is not defined and key_data_json is success
 
 - name: ttnv3 | Get the packet forwarder global config file
+  when:
+    - global_conf is not defined
+    - forwarder_variant != 'basic'
   block:
     - name: ttnv3 | fetch global_conf.json
       delegate_to: 127.0.0.1
@@ -126,7 +129,4 @@
     - name: ttnv3 | global_conf
       ansible.builtin.set_fact:
         global_conf: "{{ get_config.json }}"
-  when:
-    - global_conf is not defined
-    - forwarder_variant != 'basic'
 ...
