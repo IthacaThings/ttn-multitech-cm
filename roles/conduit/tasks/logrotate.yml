@@ -12,7 +12,7 @@
     - ansible_local.opkg.logrotate is not defined
   notify:
     - Reload facts
-    - opkg clean
+    - Opkg clean
 
 - name: logrotate | /var/config/logrotate.d
   ansible.builtin.file:

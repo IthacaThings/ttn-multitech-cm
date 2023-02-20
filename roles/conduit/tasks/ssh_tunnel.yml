@@ -13,7 +13,7 @@
     - autossh
   notify:
     - Reload facts
-    - opkg clean
+    - Opkg clean
 
 - name: ssh_tunnel | /var/config/ssh_tunnel.default
   ansible.builtin.template:
@@ -22,7 +22,7 @@
     mode: "0755"
     owner: root
     group: root
-  notify: restart ssh_tunnel
+  notify: Restart ssh_tunnel
   when:
     - ssh_tunnel_enabled
 
@@ -33,7 +33,7 @@
     mode: "0755"
     owner: root
     group: root
-  notify: restart ssh_tunnel
+  notify: Restart ssh_tunnel
   when:
     - ssh_tunnel_enabled
 
@@ -43,7 +43,7 @@
     state: link
     src: /var/config/ssh_tunnel.default
     force: true
-  notify: restart ssh_tunnel
+  notify: Restart ssh_tunnel
   when:
     - ssh_tunnel_enabled
 
@@ -53,7 +53,7 @@
     state: link
     src: /var/config/init.d/ssh_tunnel
     force: true
-  notify: restart ssh_tunnel
+  notify: Restart ssh_tunnel
   when:
     - ssh_tunnel_enabled
 

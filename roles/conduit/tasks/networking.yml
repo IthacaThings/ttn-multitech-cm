@@ -46,7 +46,7 @@
     mode: "0644"
     owner: root
     group: root
-  notify: interface reboot
+  notify: Interface reboot
   when:
     - eth0_type is defined or wlan0_type is defined
 

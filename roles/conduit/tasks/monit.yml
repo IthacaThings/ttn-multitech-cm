@@ -9,7 +9,7 @@
     - monit
   notify:
     - Reload facts
-    - opkg clean
+    - Opkg clean
 
 #
 # /var/config/monit/.monit.id

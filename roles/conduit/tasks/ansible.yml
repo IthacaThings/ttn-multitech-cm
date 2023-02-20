@@ -13,7 +13,7 @@
   when: ansible_local is not defined or ansible_local.opkg is not defined or item|regex_replace('-','_') not in ansible_local.opkg.keys()
   notify:
     - Reload facts
-    - opkg clean
+    - Opkg clean
   loop:
     - "{{ ansible_depends }}"
     - "{{ ansible_depends_old }}"

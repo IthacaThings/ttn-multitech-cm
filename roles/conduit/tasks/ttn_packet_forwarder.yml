@@ -15,7 +15,7 @@
     - libmpsse
   notify:
     - Reload facts
-    - opkg clean
+    - Opkg clean
 
 #
 # Make sure we have package for correct version
@@ -63,7 +63,7 @@
 
 - name: ttn_packet_forwarder | Unmonitor packet forwarder if changes are being made
   ansible.builtin.command: "monit unmonitor check_pktfwdlog" # noqa: ignore-errors
-  notify: monit monitor check_pktfwdlog
+  notify: Monit monitor check_pktfwdlog
   ignore_errors: true
   changed_when: true
   when:
@@ -88,7 +88,7 @@
   changed_when: true
   when: forwarder_installed != forwarder_package_version
   notify:
-    - restart ttn-pkt-forwarder
+    - Restart ttn-pkt-forwarder
     - Reload facts
 
 - name: ttn_packet_forwarder | Install /var/config/init.d/ttn-pkt-forwarder
@@ -99,7 +99,7 @@
     owner: root
     group: root
   notify:
-    - restart ttn-pkt-forwarder
+    - Restart ttn-pkt-forwarder
 
 - name: ttn_packet_forwarder | Link /etc/init.d/ttn-pkt-forwarder to /var/config/init.d/ttn-pkt-forwarder
   ansible.builtin.file:
@@ -109,8 +109,8 @@
     follow: false
     force: true
   notify:
-    - update rc
-    - restart ttn-pkt-forwarder
+    - Update rc
+    - Restart ttn-pkt-forwarder
 
 - name: ttn_packet_forwarder | Install /etc/default/ttn-pkt-forwarder
   ansible.builtin.copy:
@@ -120,7 +120,7 @@
     owner: root
     group: root
   notify:
-    - restart ttn-pkt-forwarder
+    - Restart ttn-pkt-forwarder
 
 - name: ttn_packet_forwarder | Stop the LoRA Basic Station
   ansible.builtin.service: # noqa: ignore-errors
@@ -146,7 +146,7 @@
     mode: "0644"
     owner: root
     group: root
-  notify: restart ttn-pkt-forwarder
+  notify: Restart ttn-pkt-forwarder
 
 - name: ttn_packet_forwarder | Packet Forwarder configuration (before 3.0.25)
   when: forwarder_variant != "mp" or forwarder_version is version('3.0.25', '<')
@@ -160,19 +160,19 @@
         - nodejs
       notify:
         - Reload facts
-        - opkg clean
-    - name: ttn_packet_forwarder | ttn_global_conf.json.j2
+        - Opkg clean
+    - name: ttn_packet_forwarder | Template ttn_global_conf.json.j2
       ansible.builtin.template:
         src: global_conf.json.j2
         dest: /var/config/lora/ttn_global_conf.json
         mode: "0644"
         owner: root
         group: root
-    - name: ttn_packet_forwarder | merge.js
+    - name: ttn_packet_forwarder | Run merge.js
       ansible.builtin.command: node /opt/lora/merge.js /var/config/lora/ttn_global_conf.json /var/config/lora/multitech_overrides.json /var/config/lora/global_conf.json
       changed_when: true
-      notify: restart ttn-pkt-forwarder
-    - name: ttn_packet_forwarder | global_conf.json.j2
+      notify: Restart ttn-pkt-forwarder
+    - name: ttn_packet_forwarder | Template global_conf.json.j2
       ansible.builtin.template:
         src: global_conf.json.j2
         dest: /var/config/lora/global_conf.json
@@ -192,15 +192,15 @@
         - nodejs
       notify:
         - Reload facts
-        - opkg clean
-    - name: ttn_packet_forwarder | global_conf.json.j2
+        - Opkg clean
+    - name: ttn_packet_forwarder | Template global_conf.json.j2
       ansible.builtin.template:
         src: global_conf.json.j2
         dest: /var/config/lora/global_conf.json
         mode: "0644"
         owner: root
         group: root
-      notify: restart ttn-pkt-forwarder
+      notify: Restart ttn-pkt-forwarder
     - name: ttn_packet_forwarder | Remove ttn_global_conf.json
       ansible.builtin.file:
         dest: /var/config/lora/ttn_global_conf.json

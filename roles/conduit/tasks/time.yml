@@ -22,7 +22,7 @@
     - ntp-utils
   notify:
     - Reload facts
-    - opkg clean
+    - Opkg clean
 
 - name: time | Create /var/config/ntp
   ansible.builtin.file:
@@ -46,7 +46,7 @@
     state: link
     force: true
     src: /var/config/ntp.conf
-  notify: restart ntpd
+  notify: Restart ntpd
 
 #
 #  /etc/devault/ntp
@@ -69,7 +69,7 @@
     src: /var/config/default/ntpd.default
     force: true
   notify:
-    - restart ntpd
+    - Restart ntpd
     - Update system checksum file
 
 - name: time | Do we want SET_SYSTEM_CLOCK?
@@ -83,7 +83,7 @@
     line: "SET_SYSTEM_CLOCK={{ set_system_clock }}"
     state: present
   notify:
-    - restart ntpd
+    - Restart ntpd
     - Update system checksum file
 
 #

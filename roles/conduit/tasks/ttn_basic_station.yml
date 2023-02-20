@@ -37,15 +37,15 @@
 # We have a program below because MT posted the data in an invalid format
 - name: ttn_basic_station | Fetch and update station.conf
   block:
-    - name: ttn_basic_station | gps_arg
+    - name: ttn_basic_station | Fact gps_arg
       ansible.builtin.set_fact:
         gps_arg: "--gps /dev/{{ gps_device }}"
       when: have_gps and use_gps
-    - name: ttn_basic_station | gps_arg
+    - name: ttn_basic_station | Fact gps_arg
       ansible.builtin.set_fact:
         gps_arg: ""
       when: not (have_gps and use_gps)
-    - name: ttn_basic_station | mt_station_conf
+    - name: ttn_basic_station | Fact mt_station_conf
       delegate_to: 127.0.0.1
       ansible.builtin.command: |
         bin/mt_station_conf --url {{ basic_station_conf_url[conduit_type] }}
@@ -57,7 +57,7 @@
          {{ gps_arg }}
       changed_when: true
       register: station_conf_raw
-    - name: ttn_basic_station | station_conf
+    - name: ttn_basic_station | Fact station_conf
       ansible.builtin.set_fact:
         station_conf: "{{ station_conf_raw.stdout | from_json }}"
 
@@ -132,7 +132,7 @@
     follow: false
     force: true
   notify:
-    - update rc
+    - Update rc
     - Restart lora-basic-station
 
 - name: ttn_basic_station | Enable basic station

@@ -32,9 +32,9 @@
   vars:
     target_user: ttn
   block:
-    - name: users | ttn dirs
+    - name: users | Import ttn dirs
       ansible.builtin.import_tasks: user_dirs.yml
-    - name: users | ttn sudo
+    - name: users | Import ttn sudo
       ansible.builtin.import_tasks: user_sudo.yml
 
 #
@@ -47,9 +47,9 @@
   vars:
     target_user: mtadm
   block:
-    - name: users | mtadm dirs
+    - name: users | Import mtadm dirs
       ansible.builtin.import_tasks: user_dirs.yml
-    - name: users | mtadm sudo
+    - name: users | Import mtadm sudo
       ansible.builtin.import_tasks: user_sudo.yml
     - name: users | Disable pam auth functions
       ansible.builtin.lineinfile:

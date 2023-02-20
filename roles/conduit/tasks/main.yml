@@ -3,7 +3,7 @@
 #
 # Build the list of authorized keys
 #
-- name: main | Build list of authorized keys
+- name: Build list of authorized keys
   ansible.builtin.import_tasks: authorized_keys.yml
   tags:
     - always
@@ -11,7 +11,7 @@
 #
 # Attempt to bootstrap an unconfigured gateway
 #
-- name: main | Bootstrap
+- name: Bootstrap
   ansible.builtin.import_tasks: bootstrap.yml
   tags:
     - bootstrap
@@ -21,13 +21,13 @@
 #
 # Ansible first pass setup
 #
-- name: main | Ansible setup
+- name: Ansible setup
   ansible.builtin.import_tasks: ansible.yml
   tags:
     - setup
     - ansible
 
-- name: main | Fail if certain info is missing
+- name: Fail if certain info is missing
   ansible.builtin.fail:
     msg: "Required information is missing"
   when:
@@ -36,7 +36,7 @@
 #
 # Initial setup.  Stuff required before packages install
 #
-- name: main | Initial setup
+- name: Initial setup
   ansible.builtin.import_tasks: setup.yml
   tags:
     - always
@@ -44,7 +44,7 @@
 #
 #  Set up for preserving config during firmware upgrade
 #
-- name: main | Preserve config setup
+- name: Preserve config setup
   ansible.builtin.import_tasks: preserve.yml
   tags:
     - setup
@@ -54,7 +54,7 @@
 #
 # Update mLinux if required
 #
-- name: main | Upgrade mlinux
+- name: Upgrade mlinux
   ansible.builtin.import_tasks: mlinux-upgrade.yml
   when:
     - mlinux_version is defined
@@ -64,7 +64,7 @@
     - setup
     - mlinux
 
-- name: main | Configure mlinux
+- name: Configure mlinux
   ansible.builtin.import_tasks: mlinux.yml
   when:
     - mlinux_version is defined
@@ -75,7 +75,7 @@
 #
 # Set up logrotate
 #
-- name: main | Set up logrotate
+- name: Set up logrotate
   ansible.builtin.import_tasks: logrotate.yml
   tags:
     - logrotate
@@ -84,7 +84,7 @@
 #
 # Set up networking
 #
-- name: main | Setup networking
+- name: Setup networking
   ansible.builtin.import_tasks: networking.yml
   tags:
     - networking
@@ -93,7 +93,7 @@
 #
 # Set up PPP
 #
-- name: main | Setup ppp
+- name: Setup ppp
   ansible.builtin.import_tasks: ppp.yml
   tags:
     - networking
@@ -103,7 +103,7 @@
 #
 # Set hostname
 #
-- name: main | Set hostname
+- name: Set hostname
   ansible.builtin.import_tasks: hostname.yml
   tags:
     - hostname
@@ -112,7 +112,7 @@
 #
 # Set timezone and time
 #
-- name: main | Setup time
+- name: Setup time
   ansible.builtin.import_tasks: time.yml
   tags:
     - time
@@ -121,7 +121,7 @@
 #
 # Set up user stuff
 #
-- name: main | Set up users
+- name: Set up users
   ansible.builtin.import_tasks: users.yml
   tags:
     - users
@@ -130,7 +130,7 @@
 #
 # Secure ssh
 #
-- name: main | Set up ssh
+- name: Set up ssh
   ansible.builtin.import_tasks: sshd.yml
   tags:
     - sshd
@@ -139,7 +139,7 @@
 # Stop any services we don't want
 #
 
-- name: main | Stop mosquitto
+- name: Stop mosquitto
   ansible.builtin.service: # noqa: ignore-errors
     name: mosquitto
     state: stopped
@@ -149,7 +149,7 @@
     - services
     - setup
 
-- name: main | Disable mosquitto
+- name: Disable mosquitto
   ansible.builtin.lineinfile:
     dest: /etc/default/mosquitto
     regexp: '^ENABLED='
@@ -163,7 +163,7 @@
 #
 # Set up /usr/local tree
 #
-- name: main | Set up /usr/local tree
+- name: Set up /usr/local tree
   ansible.builtin.import_tasks: local.yml
   tags:
     - localtree
@@ -172,7 +172,7 @@
 #
 # Install and configure TTN packet forwarder
 #
-- name: main | Set up TTN packet forwarder
+- name: Set up TTN packet forwarder
   ansible.builtin.import_tasks: ttn.yml
   tags:
     - ttn
@@ -180,7 +180,7 @@
 #
 # Set up ssh_tunnel (autossh)
 #
-- name: main | Set up ssh_tunnel (autossh)
+- name: Set up ssh_tunnel (autossh)
   ansible.builtin.import_tasks: ssh_tunnel.yml
   tags:
     - ssh_tunnel
@@ -190,7 +190,7 @@
 #
 # Set up monit
 #
-- name: main | Set up moniit
+- name: Set up moniit
   ansible.builtin.import_tasks: monit.yml
   tags:
     - monit
@@ -199,7 +199,7 @@
 #
 # Always update system checksum file last
 #
-- name: main | Schedule update of system checksum file
+- name: Schedule update of system checksum file
   delegate_to: 127.0.0.1
   ansible.builtin.command: "true"
   notify: Update system checksum file

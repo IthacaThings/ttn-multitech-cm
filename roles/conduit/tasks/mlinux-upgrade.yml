@@ -64,7 +64,7 @@
 
 - name: mlinux-upgrade | Unmonitor space usage on /var/volatile
   ansible.builtin.command: "monit unmonitor volatile" # noqa: ignore-errors
-  notify: monit monitor volatile
+  notify: Monit monitor volatile
   changed_when: true
   ignore_errors: true
 

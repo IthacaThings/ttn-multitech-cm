@@ -55,7 +55,7 @@
   when: ansible_local.opkg.lora_network_server is defined
   notify:
     - Reload facts
-    - opkg clean
+    - Opkg clean
 
 - name: ttn | Remove Multi-Tech lora-packet-forwarder
   community.general.opkg:
@@ -64,13 +64,13 @@
   when: ansible_local.opkg.lora_packet_forwarder is defined
   notify:
     - Reload facts
-    - opkg clean
+    - Opkg clean
 
-- name: ttn | ttn_packet_forwarder
+- name: ttn | Include ttn_packet_forwarder
   ansible.builtin.include_tasks: ttn_packet_forwarder.yml
   when: forwarder_variant != "basic"
 
-- name: ttn | ttn_basic_station
+- name: ttn | Include ttn_basic_station
   ansible.builtin.include_tasks: ttn_basic_station.yml
   when: forwarder_variant == "basic"
 

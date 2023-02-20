@@ -8,7 +8,7 @@
 # numbering scheme is not really handled here, so this will
 # usually be done by a separate script.
 #
-- name: main | "Set up {{ ssh_tunnel_gateway_user_on_jumphost }} user"
+- name: "Set up {{ ssh_tunnel_gateway_user_on_jumphost }} user"
   ansible.builtin.user:
     name: "{{ ssh_tunnel_gateway_user_on_jumphost }}"
     append: true
@@ -16,7 +16,7 @@
     password: "*"
   tags: users
 
-- name: main | Create {{ ssh_tunnel_gateway_user_on_jumphost }}  .ssh dir
+- name: Create {{ ssh_tunnel_gateway_user_on_jumphost }}  .ssh dir
   ansible.builtin.file:
     dest: "~{{ ssh_tunnel_gateway_user_on_jumphost }}/.ssh"
     state: directory
@@ -25,14 +25,14 @@
     group: "{{ ssh_tunnel_gateway_user_on_jumphost }}"
   tags: users
 
-- name: main | Create authorized keys
+- name: Create authorized keys
   delegate_to: 127.0.0.1
   ansible.builtin.shell: "( cat roles/conduit/files/authorized_keys; bin/gen_authorized_keys ) > {{ role_path }}/files/authorized_keys"
   changed_when: true
   tags: users
 
 # Using a template?
-- name: main | "Install {{ ssh_tunnel_gateway_user_on_jumphost }} authorized keys"
+- name: "Install {{ ssh_tunnel_gateway_user_on_jumphost }} authorized keys"
   ansible.builtin.copy:
     dest: "~{{ ssh_tunnel_gateway_user_on_jumphost }}/.ssh/authorized_keys"
     src: authorized_keys
@@ -41,7 +41,7 @@
     group: "{{ ssh_tunnel_gateway_user_on_jumphost }}"
   tags: users
 
-- name: main | Only allow gateway ports from localhost
+- name: Only allow gateway ports from localhost
   ansible.builtin.lineinfile:
     dest: /etc/ssh/sshd_config
     regexp: "^GatewayPorts"

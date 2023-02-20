@@ -43,17 +43,17 @@
 - name: ttnv3 | Read local_conf and parse out gw_key
   when: forwarder_variant != "basic"
   block:
-    - name: ttnv3 | slurp local_config.json
+    - name: ttnv3 | Slurp local_config.json
       ansible.builtin.slurp: # noqa: ignore-errors
         src: /var/config/lora/local_conf.json
       register: local_conf_b64
       ignore_errors: true
-    - name: ttnv3 | local_conf
+    - name: ttnv3 | Fact local_conf
       ansible.builtin.set_fact: # noqa: ignore-errors
         local_conf: "{{ local_conf_b64.content | b64decode | from_json }}"
       ignore_errors: true
       when: local_conf_b64 is succeeded
-    - name: ttnv3 | gw_key
+    - name: ttnv3 | Fact gw_key
       ansible.builtin.set_fact:
         gw_key: "{{ local_conf.gateway_conf.servers[0].serv_gw_key }}"
       when:
@@ -66,12 +66,12 @@
 - name: ttnv3 | Read tc.key and parse out gw_key
   when: forwarder_variant.startswith("basic")
   block:
-    - name: ttnv3 | slurp tc.key
+    - name: ttnv3 | Slurp tc.key
       ansible.builtin.slurp:
         src: /var/config/lora/tc.key
       register: tc_key_b64
       ignore_errors: true
-    - name: ttnv3 | gw_key
+    - name: ttnv3 | Fact gw_key
       ansible.builtin.set_fact: # noqa: ignore-errors
         gw_key: "{{ tc_key_b64.content | b64decode | split | last }}"
       ignore_errors: true
@@ -107,10 +107,10 @@
 - name: ttnv3 | Extract the key and key_id
   when: gw_key is not defined and key_data_json is success
   block:
-    - name: ttnv3 | key_data
+    - name: ttnv3 | Fact key_data
       ansible.builtin.set_fact:
         key_data: "{{ key_data_json.stdout | from_json }}"
-    - name: ttnv3 | gw_key, gw_key_id
+    - name: ttnv3 | Fact gw_key, gw_key_id
       ansible.builtin.set_fact:
         gw_key: "{{ key_data.key }}"
         gw_key_id: "{{ key_data.id }}"
@@ -120,7 +120,7 @@
     - global_conf is not defined
     - forwarder_variant != 'basic'
   block:
-    - name: ttnv3 | fetch global_conf.json
+    - name: ttnv3 | Fetch global_conf.json
       delegate_to: 127.0.0.1
       ansible.builtin.uri:
         url: "https://{{ router_v3 }}/api/v3/gcs/gateways/{{ lora_hostname }}/semtechudp/global_conf.json"
@@ -128,7 +128,7 @@
         headers:
           Authorization: "Bearer {{ gw_key }}"
       register: get_config
-    - name: ttnv3 | global_conf
+    - name: ttnv3 | Fact global_conf
       ansible.builtin.set_fact:
         global_conf: "{{ get_config.json }}"
 ...
