@@ -48,7 +48,7 @@
   notify: restart ntpd
 
 #
-#	 /etc/devault/ntp
+#  /etc/devault/ntp
 #
 
 - name: time | Ensure /var/config/default/ntpd.default exists
@@ -85,7 +85,7 @@
     - Update system checksum file
 
 #
-#	Monit
+# Monit
 #
 
 - name: time | Calculate some facts monit depends on

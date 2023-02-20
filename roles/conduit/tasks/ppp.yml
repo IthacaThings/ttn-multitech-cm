@@ -1,9 +1,9 @@
 ---
 
 #
-#	Setup /var/config/ppp/ppp_on_boot
+# Setup /var/config/ppp/ppp_on_boot
 #
-#	This should have no effect if cellular is not configured
+# This should have no effect if cellular is not configured
 #
 
 - name: ppp | Get stat info about /etc/ppp/ppp_on_boot
@@ -36,7 +36,7 @@
     - cellular_provider is defined
 
 #
-#	Set or reset APN
+# Set or reset APN
 #
 
 - name: ppp | Reset APN
@@ -61,7 +61,7 @@
     - cellular_provider is defined
 
 #
-#	Set PPP configuration options
+# Set PPP configuration options
 #
 
 - name: ppp | Ensure the connection stays up
@@ -104,7 +104,7 @@
     - ppp0_mtu is defined
 
 #
-#	Monit
+# Monit
 #
 - name: ppp | /var/config/monit/monit.d/ppp.monit
   template:

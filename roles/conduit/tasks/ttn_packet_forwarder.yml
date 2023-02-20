@@ -1,10 +1,10 @@
 ---
 
 #
-#	Install all variants of packet forwarder
+# Install all variants of packet forwarder
 #
 
-#	Install dependencies
+# Install dependencies
 #
 - name: ttn_packet_forwarder | Install depedencies for packet forwarder
   opkg:
@@ -18,7 +18,7 @@
     - opkg clean
 
 #
-#	Make sure we have package for correct version
+# Make sure we have package for correct version
 #
 - name: ttn_packet_forwarder | Get info on local copy of packet-forwarder package
   local_action: stat
@@ -130,7 +130,7 @@
   ignore_errors: true
 
 #
-#	Install the TTN config files
+# Install the TTN config files
 #
 - name: ttn_packet_forwarder | Local packet forwarder configuration file
   template:

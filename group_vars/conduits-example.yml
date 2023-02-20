@@ -10,14 +10,14 @@ ttn_user: ttn
 # Authorized keys for login to the above users.
 # Use this to define authorized keys that are overridden by host
 # specific configuration
-#authorized_keys:
+## authorized_keys:
 #  - KEY1
 #  - KEY2
 #  - ...
 # Use this to define authorized keys that are supplemented by host
 # authorized keys.  GROUP is the name of this file
 # (i.e. authorized_keys_conduits).
-#authorized_keys_GROUP:
+## authorized_keys_GROUP:
 #  - KEY1
 #  - KEY2
 #  - ...
@@ -54,7 +54,7 @@ contact_email: ttn-org@example.com
 
 # Assign additional gateway collaborators.  If rights are not
 # specified they default to those defined in roles/conduit/defaults/main.yml
-#gateway_collaborators_conduits:
+## gateway_collaborators_conduits:
 #  - { username: jchonig, rights: [ gateway:status, gateway:delete ] }
 #  - { username: terrillmoore }
 

@@ -1,7 +1,7 @@
 ---
 
 #
-#	Register gateway with TTNv3
+# Register gateway with TTNv3
 #
 
 - name: ttnv3 | Register the gateway

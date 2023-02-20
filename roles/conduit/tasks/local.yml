@@ -1,7 +1,7 @@
 ---
 
 #
-#	Move /usr/local to /var/config/local so it survives an upgrade
+# Move /usr/local to /var/config/local so it survives an upgrade
 #
 - name: local | Create /var/config/local
   file:

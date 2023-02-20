@@ -1,7 +1,7 @@
 ---
 
 #
-#	Force a reload of the anible cache
+# Force a reload of the anible cache
 #
 
 - name: reload_facts | Clear the facts

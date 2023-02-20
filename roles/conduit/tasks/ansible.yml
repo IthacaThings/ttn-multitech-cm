@@ -1,8 +1,8 @@
 ---
 
 #
-#	Install dependencies.  This is mostly to ensure everything is
-#	in place as Ansible will not run without many of these
+# Install dependencies.  This is mostly to ensure everything is
+# in place as Ansible will not run without many of these
 #
 - name: ansible | Install Ansible dependencies
   opkg:

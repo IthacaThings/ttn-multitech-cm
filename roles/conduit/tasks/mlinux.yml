@@ -1,7 +1,7 @@
 ---
 
 #
-#	mlinux setup
+# mlinux setup
 #
 
 - name: mlinux | /etc/opkg/mlinux-feed.conf

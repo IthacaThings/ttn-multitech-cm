@@ -110,7 +110,7 @@
     - Restart lora-basic-station
 
 #
-#	Cleanup
+# Cleanup
 #
 
 - name: ttn_basic_station | Install /var/config/lora-basic-station

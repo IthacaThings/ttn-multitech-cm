@@ -2,13 +2,13 @@
 # handlers file for setup
 
 #
-#	Make sure init script is run
+# Make sure init script is run
 #
 - name: update rc
   shell: "for init in ttn-pkt-forwarder lora-basic-station; do update-rc.d -f ${init} remove; test -f /etc/init.d/${init} && update-rc.d ${init} defaults 95 30 || true; done"
 
 #
-#	Restart the packet forwarder
+# Restart the packet forwarder
 #
 - name: restart ttn-pkt-forwarder
   service:
@@ -17,7 +17,7 @@
     sleep: "{{ forwarder_restart_delay }}"
 
 #
-#	Restart the LoRA basic Station
+# Restart the LoRA basic Station
 #
 - name: Restart lora-basic-station
   service:
@@ -26,13 +26,13 @@
     sleep: "{{ forwarder_restart_delay }}"
 
 #
-#	Clean up after TTNv3 install
+# Clean up after TTNv3 install
 #
 - name: TTNv3 cleanup
   include_tasks: ttnv3_cleanup.yml
 
 #
-#	Remind to
+# Remind to
 - name: register gateway
   debug:
     msg: "Please go to https://console.thethingsnetwork.org/gateways
@@ -53,7 +53,7 @@
   include_tasks: restart_tunnel.yml
 
 #
-#	Restart sshd after config changes
+# Restart sshd after config changes
 #
 - name: Restart ssh
   service: name=sshd state=restarted
@@ -61,20 +61,20 @@
   ignore_errors: true
 
 #
-#	Remind
+# Remind
 #
 - name: interface reboot
   debug:
     msg: Interface configuration changed, remember to reboot
 
 #
-#	Reload the facts
+# Reload the facts
 #
 - name: Reload facts
   include_tasks: reload_facts.yml
 
 #
-#	ppp
+# ppp
 #
 - name: Start ppp
   service:
@@ -89,14 +89,14 @@
     state: stopped
 
 #
-#	opkg handlers
+# opkg handlers
 #
 - name: opkg clean
   shell: "opkg clean --autoremove"
   when: ansible_local.mlinux.version is version('5', '>=')
 
 #
-#	Monit handlers
+# Monit handlers
 #
 - name: Restart monit
   service: name=monit state=restarted

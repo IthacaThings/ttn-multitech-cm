@@ -1,6 +1,6 @@
 ---
 #
-#	Check mLinux version
+# Check mLinux version
 #
 
 - name: mlinux-upgrade | Read md5sum.txt
@@ -112,7 +112,7 @@
     test_command: "test -f {{ mlinux_restore_init_crumb }}"
 
 #
-#	Recover state
+# Recover state
 #
 
 - name: mlinux-upgrade | Run mlinux_setup script

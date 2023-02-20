@@ -1,7 +1,7 @@
 ---
 
 #
-#	Register gateway
+# Register gateway
 #
 
 - name: ttn | Check versions
@@ -46,7 +46,7 @@
     group: root
 
 #
-#	Remove Multi-Tech stuff that we don't want and install the TTN packet-forwarder
+# Remove Multi-Tech stuff that we don't want and install the TTN packet-forwarder
 #
 - name: ttn | Remove Multi-Tech lora-network-server
   opkg:
@@ -75,7 +75,7 @@
   when: forwarder_variant == "basic"
 
 #
-#	Monit
+# Monit
 #
 
 - name: ttn | /var/config/monit/monit.d/ttn.monit

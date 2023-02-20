@@ -12,7 +12,7 @@
     - opkg clean
 
 #
-#	/var/config/monit/.monit.id
+# /var/config/monit/.monit.id
 #
 
 - name: monit | Get stat info about /var/config/monit/.monit.id
@@ -40,7 +40,7 @@
     follow: no
 
 #
-#	Event Queue
+# Event Queue
 #
 
 - name: monit | Create monit event queue
@@ -55,7 +55,7 @@
     - Restart monit
 
 #
-#	Test scripts
+# Test scripts
 #
 
 - name: monit | Install monit test scripts

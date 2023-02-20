@@ -1,6 +1,6 @@
 ---
 #
-#	Merge the list of authorized keys into one file
+# Merge the list of authorized keys into one file
 #
 - name: authorized_keys | Create temporary file
   tempfile:

@@ -16,14 +16,14 @@ ansible_port: 22
 # is the default config )
 # eth0_type: dhcp
 # Uncomment and set the following info to set a static address
-#eth0_type: static
-#eth0_address: 10.0.0.51
-#eth0_netmask: 255.255.255.0
-#eth0_gateway: 10.0.0.1
+# eth0_type: static
+## eth0_address: 10.0.0.51
+## eth0_netmask: 255.255.255.0
+## eth0_gateway: 10.0.0.1
 # By default we'll configure google nameservers, if you want to
 # specify, use:
-#static_domain:   example.com
-#static_nameservers:
+## static_domain:   example.com
+## static_nameservers:
 #  - 192.168.1.4
 #  - 192.168.1.5
 
@@ -31,13 +31,13 @@ ansible_port: 22
 # LANs usually use DHCP, but you can provide a static address in the
 # same format as for an Ethernet interface.  Make sure that the
 # wireless interface you have is supported by mLinux.
-#eth0_type: manual
-#wlan0_type: dhcp
+## eth0_type: manual
+## wlan0_type: dhcp
 # Wireless keys should not be stored here, but in a vault in this format
 # For WPA-PSK and WPA-PSK2:
-#wireless_keys: { ssid: 'MYNETWORKNAME', psk: 'ASecretPhrase' }
+## wireless_keys: { ssid: 'MYNETWORKNAME', psk: 'ASecretPhrase' }
 # For (very insecure) WEP and plain text
-#wireless_keys: { ssid: 'MYNETWORKNAME', psk: 'TotallyInsecure', key_mgmt: 'NONE' }
+## wireless_keys: { ssid: 'MYNETWORKNAME', psk: 'TotallyInsecure', key_mgmt: 'NONE' }
 
 # To upgrade to a specific version of mLinux, specify it here.
 # It's best to do this when you are on the same network, or have

@@ -93,7 +93,7 @@
     force: yes
 
 #
-#	Monit
+# Monit
 #
 - name: networking | /var/config/monit/monit.d/networking.monit
   template:

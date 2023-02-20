@@ -1,6 +1,6 @@
 ---
 #
-#	Do inital login and try to run setup script
+# Do inital login and try to run setup script
 #
 
 - name: bootstrap | Create temporary file

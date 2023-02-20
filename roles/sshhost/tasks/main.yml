@@ -4,7 +4,7 @@
 # XXX - Probably not necessary to create user
 # XXX - local_action to run script?
 #
-#	Create ssh user on jumphost. Note that the MCCI port-mapping
+# Create ssh user on jumphost. Note that the MCCI port-mapping
 # numbering scheme is not really handled here, so this will
 # usually be done by a separate script.
 #

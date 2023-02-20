@@ -1,6 +1,6 @@
 ---
 #
-#	Set up directories so tasks can install Monit scripts
+# Set up directories so tasks can install Monit scripts
 #
 
 - name: setup | Create persistent directories

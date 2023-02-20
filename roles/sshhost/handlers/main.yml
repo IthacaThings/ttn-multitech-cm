@@ -1,6 +1,6 @@
 ---
 #
-#	Restart sshd after config changes
+# Restart sshd after config changes
 #
 - name: Restart ssh
   service: name=ssh state=restarted

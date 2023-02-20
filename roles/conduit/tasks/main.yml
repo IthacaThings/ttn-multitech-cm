@@ -1,7 +1,7 @@
 ---
 
 #
-#	Build the list of authorized keys
+# Build the list of authorized keys
 #
 - name: main | Build list of authorized keys
   import_tasks: authorized_keys.yml
@@ -9,7 +9,7 @@
     - always
 
 #
-#	Attempt to bootstrap an unconfigured gateway
+# Attempt to bootstrap an unconfigured gateway
 #
 - name: main | Bootstrap
   import_tasks: bootstrap.yml
@@ -19,7 +19,7 @@
 
 #
 #
-#	Ansible first pass setup
+# Ansible first pass setup
 #
 - name: main | Ansible setup
   import_tasks: ansible.yml
@@ -34,7 +34,7 @@
     - "'mlinux' not in ansible_local or ansible_local.mlinux|length == 0"
 
 #
-#	Initial setup.  Stuff required before packages install
+# Initial setup.  Stuff required before packages install
 #
 - name: main | Initial setup
   import_tasks: setup.yml
@@ -52,7 +52,7 @@
     - mlinux
 
 #
-#	Update mLinux if required
+# Update mLinux if required
 #
 - name: main | Upgrade mlinux
   import_tasks: mlinux-upgrade.yml
@@ -73,7 +73,7 @@
     - mlinux
 
 #
-#	Set up logrotate
+# Set up logrotate
 #
 - name: main | Set up logrotate
   import_tasks: logrotate.yml
@@ -82,7 +82,7 @@
     - setup
 
 #
-#	Set up networking
+# Set up networking
 #
 - name: main | Setup networking
   import_tasks: networking.yml
@@ -91,7 +91,7 @@
     - setup
 
 #
-#	Set up PPP
+# Set up PPP
 #
 - name: main | Setup ppp
   import_tasks: ppp.yml
@@ -101,7 +101,7 @@
     - setup
 
 #
-#	Set hostname
+# Set hostname
 #
 - name: main | Set hostname
   import_tasks: hostname.yml
@@ -110,7 +110,7 @@
     - setup
 
 #
-#	Set timezone and time
+# Set timezone and time
 #
 - name: main | Setup time
   import_tasks: time.yml
@@ -119,7 +119,7 @@
     - setup
 
 #
-#	Set up user stuff
+# Set up user stuff
 #
 - name: main | Set up users
   import_tasks: users.yml
@@ -128,16 +128,15 @@
     - setup
 
 #
-#	Secure ssh
+# Secure ssh
 #
 - name: main | Set up ssh
   import_tasks: sshd.yml
   tags:
     - sshd
     - setup
-
 #
-#	Stop any services we don't want
+# Stop any services we don't want
 #
 
 - name: main | Stop mosquitto
@@ -159,7 +158,7 @@
     - setup
 
 #
-#	Set up /usr/local tree
+# Set up /usr/local tree
 #
 - name: main | Set up /usr/local tree
   import_tasks: local.yml
@@ -168,7 +167,7 @@
     - setup
 
 #
-#	Install and configure TTN packet forwarder
+# Install and configure TTN packet forwarder
 #
 - name: main | Set up TTN packet forwarder
   import_tasks: ttn.yml
@@ -176,7 +175,7 @@
     - ttn
 
 #
-#	Set up ssh_tunnel (autossh)
+# Set up ssh_tunnel (autossh)
 #
 - name: main | Set up ssh_tunnel (autossh)
   import_tasks: ssh_tunnel.yml
@@ -186,7 +185,7 @@
     - setup
 
 #
-#	Set up monit
+# Set up monit
 #
 - name: main | Set up moniit
   import_tasks: monit.yml
@@ -195,7 +194,7 @@
     - setup
 
 #
-#	Always update system checksum file last
+# Always update system checksum file last
 #
 - name: main | Schedule update of system checksum file
   command: "true"

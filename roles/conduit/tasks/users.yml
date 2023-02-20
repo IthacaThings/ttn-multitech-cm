@@ -1,7 +1,7 @@
 ---
 
 #
-#	Setup users
+# Setup users
 #
 
 - name: users | Create non-volatile home dirs
@@ -18,7 +18,7 @@
     target_user: "root"
 
 #
-#	Create ttn user
+# Create ttn user
 #
 - name: users | "Set up {{ ttn_user }} user"
   user:
@@ -38,7 +38,7 @@
     target_user: ttn
 
 #
-#	Configure mtadm user
+# Configure mtadm user
 #
 
 - name: users | Configure mtadm user

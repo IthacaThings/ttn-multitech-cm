@@ -1,7 +1,7 @@
 ---
 
 #
-#	Restart the SSH tunnel and wait for it to come back
+# Restart the SSH tunnel and wait for it to come back
 #
 
 - name: restart_tunnel | Restart ssh tunnel

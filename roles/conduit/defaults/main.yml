@@ -64,8 +64,8 @@ status_public: true
 location_public: true
 
 # Multi-tech version of mLinux images
-#mlinux_upgrade_bin: "mlinux-{{ 'factory' if conduit_type == 'mtcdt' else conduit_type }}-image-{{ conduit_type }}-upgrade.bin"
-#mlinux_url: "http://www.multitech.net/mlinux/images/{{ conduit_type }}/{{ mlinux_version }}"
+## mlinux_upgrade_bin: "mlinux-{{ 'factory' if conduit_type == 'mtcdt' else conduit_type }}-image-{{ conduit_type }}-upgrade.bin"
+## mlinux_url: "http://www.multitech.net/mlinux/images/{{ conduit_type }}/{{ mlinux_version }}"
 # TTNI version of mLinux images
 mlinux_base_url: https://ttni.tech/mlinux
 mlinux_upgrade_bin: "ttni-base-image-{{ conduit_type }}-upgrade.bin"
@@ -112,7 +112,7 @@ wlan0_udhcp_opts: -b -t 2592000
 
 # WPA stuff
 wpa_conf: /var/config/wpa_supplicant.conf
-#wpa_driver: nl80211
+## wpa_driver: nl80211
 
 # Wireless firmware
 rtl8192cu_firmware_file: "rtl8192cufw_TMSC.bin"
