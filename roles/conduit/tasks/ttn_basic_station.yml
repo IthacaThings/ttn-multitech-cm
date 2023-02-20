@@ -76,6 +76,7 @@
   ansible.builtin.get_url:
     url: "{{ basic_cert_url }}"
     dest: "{{ role_path }}/files"
+    mode: '0644'
 
 - name: ttn_basic_station | Install certificate /var/config/lora/tc.trust
   ansible.builtin.copy:

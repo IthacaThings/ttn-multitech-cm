@@ -26,6 +26,7 @@
   ansible.builtin.get_url:
     url: "{{ rtl8192cu_firmware_url }}"
     dest: "{{ role_path }}/files"
+    mode: '0644'
   when:
     - "'rtl8192cu' in ansible_local.usb.drivers"
     - rtl8192cu_firmware_path not in ansible_local.firmware
@@ -35,6 +36,7 @@
   ansible.builtin.copy:
     src: "{{ role_path }}/files/{{ rtl8192cu_firmware_file }}"
     dest: "/lib/firmware/{{ rtl8192cu_firmware_path }}"
+    mode: '0644'
   notify: interface reboot
   when:
     - "'rtl8192cu' in ansible_local.usb.drivers"

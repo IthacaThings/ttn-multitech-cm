@@ -16,6 +16,7 @@
     remote_src: true
     src: /etc/ppp/ppp_on_boot
     dest: /var/config/ppp/ppp_on_boot
+    mode: '0644'
   when: ppp_on_boot.stat.islnk is defined and not ppp_on_boot.stat.islnk
 
 - name: ppp | Make /etc/ppp/ppp_on_boot a link to /var/config/ppp/ppp_on_boot

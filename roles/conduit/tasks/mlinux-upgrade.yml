@@ -51,6 +51,7 @@
   ansible.builtin.get_url:
     url: "{{ mlinux_url }}/{{ mlinux_upgrade_bin }}"
     dest: "{{ role_path }}/files/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
+    mode: '0644'
     timeout: 14400
     checksum: "md5:{{ mlinux_upgrade_expected_md5 }}"
   when:

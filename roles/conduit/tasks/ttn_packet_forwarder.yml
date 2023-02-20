@@ -31,6 +31,7 @@
   ansible.builtin.get_url:
     url: "{{ forwarder_url }}"
     dest: "{{ role_path }}/files"
+    mode: '0644'
   when:
     - not forwarder_package_stat.stat.exists
 
@@ -56,6 +57,7 @@
   ansible.builtin.copy:
     src: "{{ forwarder_package_full }}"
     dest: "/var/config/{{ forwarder_package_full }}"
+    mode: '0644'
   when:
     - forwarder_installed != forwarder_package_version
 
