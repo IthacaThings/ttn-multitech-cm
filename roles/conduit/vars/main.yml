@@ -34,4 +34,3 @@ authorized_keys_list:
 gateway_collaborators_list:
   - "{{ gateway_collaborators }}"	# XXX - What if this is empty?
   - "{% for group in group_names %}{% if 'gateway_collaborators_' ~ group in vars %}{{ vars['gateway_collaborators_' ~ group] }}{% endif %}{% endfor %}"
-
