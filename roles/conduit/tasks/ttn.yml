@@ -60,7 +60,7 @@
 - name: ttn | Remove Multi-Tech lora-packet-forwarder
   community.general.opkg:
     name: lora-packet-forwarder
-    state: absent`
+    state: absent
   when: ansible_local.opkg.lora_packet_forwarder is defined
   notify:
     - Reload facts
