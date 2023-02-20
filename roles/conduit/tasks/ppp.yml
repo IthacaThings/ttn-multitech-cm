@@ -42,7 +42,7 @@
 - name: ppp | Reset APN
   ansible.builtin.shell: mlinux-set-apn -c
   when:
-    - cellular_apn is not defined or use_cellular == False
+    - cellular_apn is not defined or not use_cellular
 
 - name: ppp | Set APN
   ansible.builtin.shell: "mlinux-set-apn -- {{ cellular_apn }}"
@@ -90,7 +90,7 @@
     regexp: '^#?persist'
     line: '#persist'
   notify: Stop ppp
-  when: use_cellular == False or cellular_provider is not defined
+  when: not use_cellular or cellular_provider is not defined
 
 - name: ppp | Set ppp MTU
   ansible.builtin.lineinfile:
@@ -125,4 +125,4 @@
     state: absent
   notify:
     - Restart monit
-  when: use_cellular == False or cellular_provider is not defined
+  when: not use_cellular or cellular_provider is not defined

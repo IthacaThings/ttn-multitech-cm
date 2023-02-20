@@ -32,7 +32,7 @@
     url: "{{ forwarder_url }}"
     dest: "{{ role_path }}/files"
   when:
-    - forwarder_package_stat.stat.exists == false
+    - not forwarder_package_stat.stat.exists
 
 - name: ttn_packet_forwarder | Find old .ipk files
   ansible.builtin.find:

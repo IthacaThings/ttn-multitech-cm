@@ -38,7 +38,7 @@
   ansible.builtin.file:
     name: /etc/logrotate.d
     state: absent
-  when: logrotate_d.stat.isdir is defined and logrotate_d.stat.isdir == True
+  when: logrotate_d.stat.isdir is defined and logrotate_d.stat.isdir
 
 - name: logrotate | Point /etc/logrotate.d at /var/config/logrotate.d
   ansible.builtin.file:
@@ -46,4 +46,4 @@
     state: link
     force: true
     src: /var/config/logrotate.d
-  when: logrotate_d.stat.isdir is defined and logrotate_d.stat.isdir == True
+  when: logrotate_d.stat.isdir is defined and logrotate_d.stat.isdir

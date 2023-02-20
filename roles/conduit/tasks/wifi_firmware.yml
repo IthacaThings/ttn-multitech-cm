@@ -29,7 +29,7 @@
   when:
     - "'rtl8192cu' in ansible_local.usb.drivers"
     - rtl8192cu_firmware_path not in ansible_local.firmware
-    - rtl8192cufw_stat.stat.exists == false
+    - not rtl8192cufw_stat.stat.exists
 
 - name: wifi_firmware | Install rtl8192cu firmware
   ansible.builtin.copy:

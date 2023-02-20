@@ -54,7 +54,7 @@
     timeout: 14400
     checksum: "md5:{{ mlinux_upgrade_expected_md5 }}"
   when:
-    - mlinux_upgrade_stat.stat.exists == False or mlinux_upgrade_stat.stat.checksum != mlinux_upgrade_expected_md5
+    - not mlinux_upgrade_stat.stat.exists or mlinux_upgrade_stat.stat.checksum != mlinux_upgrade_expected_md5
 
 - name: mlinux-upgrade | Validate {{ mlinux_upgrade_bin }}_{{ mlinux_version }}
   delegate_to: 127.0.0.1
