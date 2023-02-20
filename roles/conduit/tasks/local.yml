@@ -27,7 +27,7 @@
 
 - name: local | Copy /usr/local content to /var/config/local
   delegate_to: "{{ inventory_hostname }}"
-  ansible.builtin.synchronize:
+  ansible.posix.synchronize:
     archive: true
     src: /usr/local
     dest: /var/config

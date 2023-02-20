@@ -35,7 +35,7 @@
 
 - name: user_dirs | Copy /home/{{ target_user }}/.ssh content to /var/config/home/{{target_user }}/.ssh
   delegate_to: "{{ inventory_hostname }}"
-  ansible.builtin.synchronize:
+  ansible.posix.synchronize:
     archive: true
     src: "{{ ttn_sshdir_stat.stat.path }}/"
     dest: "{{ ttn_newsshdir }}"

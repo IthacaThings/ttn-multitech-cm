@@ -99,6 +99,15 @@
   ansible.builtin.shell: "opkg clean --autoremove"
   when: ansible_local.mlinux.version is version('5', '>=')
 
+- name: opkg update
+  ansible.builtin.shell: "opkg update"
+  register: result
+  when: mlinux_feed is changed or ttni_feed is changed
+  until: result is succeeded
+  retries: 10
+  delay: 10
+  notify: Reload facts
+
 #
 # Monit handlers
 #

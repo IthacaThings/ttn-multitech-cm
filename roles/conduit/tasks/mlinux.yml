@@ -11,7 +11,7 @@
     mode: "0644"
     owner: root
     group: root
-  register: mlinux_feed
+  notify: opkg update
 
 - name: mlinux | /etc/opkg/ttni-feed.conf
   ansible.builtin.template:
@@ -20,13 +20,7 @@
     mode: "0644"
     owner: root
     group: root
-  register: ttni_feed
+  notify: opkg update
 
-- name: mlinux | Update opkg cache
-  ansible.builtin.shell: "opkg update"
-  register: result
-  when: mlinux_feed is changed or ttni_feed is changed
-  until: result is succeeded
-  retries: 10
-  delay: 10
-  notify: Reload facts
+- name: mlinux | Run handlers in case we need to update opkg
+  ansible.builtin.meta: flush_handlers
