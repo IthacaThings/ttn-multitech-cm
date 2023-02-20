@@ -2,8 +2,8 @@
 
 # Select the URL
 forwarder_package: "{{ forwarder_variant }}-packet-forwarder"
-forwarder_package_version: "{{ forwarder_package }}_{{forwarder_version }}"
-forwarder_package_full: "{{forwarder_package_version }}_arm926ejste.ipk"
+forwarder_package_version: "{{ forwarder_package }}_{{ forwarder_version }}"
+forwarder_package_full: "{{ forwarder_package_version }}_arm926ejste.ipk"
 forwarder_url: "{{ forwarder_baseurl_ttni }}/{{ forwarder_package_full }}"
 forwarder_logcheck: "{{ 'check_basiclog' if forwarder_variant == 'basic' else 'check_pktfwdlog' }}"
 
@@ -14,7 +14,7 @@ forwarder_installed_version: "{{ ansible_local.opkg.poly_packet_forwarder if ans
 forwarder_installed: "{{ forwarder_installed_package }}_{{ forwarder_installed_version }}"
 
 # EUI for use with non-TTN forwarders
-lora_eui: "eui-{{ ansible_local.lora.eui|lower }}"
+lora_eui: "eui-{{ ansible_local.lora.eui | lower }}"
 lora_hostname: "{{ hostname if forwarder_variant != 'poly' else lora_eui }}"
 lora_hostname_delete: "{{ lora_eui if forwarder_variant == 'mp' else hostname }}"
 

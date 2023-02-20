@@ -18,7 +18,7 @@
     mode: "0755"
     owner: root
     group: root
-  loop: "{{ ['bin','lib','sbin','share']|flatten }}"
+  loop: "{{ ['bin', 'lib', 'sbin', 'share'] | flatten }}"
 
 - name: local | Get stat info about /usr/local
   ansible.builtin.stat:
