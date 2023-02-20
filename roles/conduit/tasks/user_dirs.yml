@@ -34,7 +34,11 @@
     - "{{ ttn_newsshdir }}"
 
 - name: user_dirs | Copy /home/{{ target_user }}/.ssh content to /var/config/home/{{target_user }}/.ssh
-  ansible.builtin.shell: "rsync -av ~{{ target_user }}/.ssh/ {{ ttn_newsshdir }}"
+  delegate_to: "{{ inventory_hostname }}"
+  ansible.builtin.synchronize:
+    archive: true
+    src: "{{ ttn_sshdir_stat.stat.path }}/"
+    dest: "{{ ttn_newsshdir }}"
   when:
     - ttn_sshdir_stat.stat.exists
     - ttn_sshdir_stat.stat.lnk_target is not defined
@@ -48,7 +52,8 @@
     - ttn_sshdir_stat.stat.lnk_target is not defined or ttn_sshdir_stat.stat.lnk_target != ttn_newsshdir
 
 - name: user_dirs | Replace /home/{{ target_user }}/.ssh with a symlink to {{ ttn_newsshdir }}
-  ansible.builtin.command: "ln -fTs {{ ttn_newsshdir }} /home/{{ target_user }}/.ssh"
+  ansible.builtin.command: "ln -fTs {{ ttn_newsshdir }} /home/{{
+  target_user }}/.ssh" # noqa: deprecated-command-syntax
   when:
     - ttn_sshdir_stat.stat.lnk_target is not defined or ttn_sshdir_stat.stat.lnk_target != ttn_newsshdir
 
