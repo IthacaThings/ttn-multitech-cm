@@ -134,10 +134,11 @@
     - Restart lora-basic-station
 
 - name: ttn_basic_station | Enable basic station
-  ansible.builtin.lineinfile: dest=/etc/default/lora-basic-station
-    regexp="^ENABLED="
-    line='ENABLED="yes"'
-    state=present
+  ansible.builtin.lineinfile:
+    dest: /etc/default/lora-basic-station
+    regexp: "^ENABLED="
+    line: 'ENABLED="yes"'
+    state: present
   notify:
     - Restart lora-basic-station
 
@@ -149,10 +150,10 @@
 
 - name: ttn_basic_station |  Disable ttn-pkt-forwarder
   ansible.builtin.lineinfile:
-    dest=/etc/default/ttn-pkt-forwarder
-    regexp="^ENABLED="
-    line='ENABLED="no"'
-    state=present
+    dest: /etc/default/ttn-pkt-forwarder
+    regexp: "^ENABLED="
+    line: 'ENABLED="no"'
+    state: present
   ignore_errors: true
 
 - name: ttn_basic_station | Remove some files

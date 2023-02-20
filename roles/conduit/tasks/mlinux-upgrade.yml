@@ -120,7 +120,8 @@
 # XXX - Change root password
 
 - name: mlinux-upgrade | Reload ansible_local
-  ansible.builtin.setup: filter=ansible_local
+  ansible.builtin.setup:
+    filter: ansible_local
 
 - name: mlinux-upgrade | Fail if upgrade did not take
   ansible.builtin.fail:

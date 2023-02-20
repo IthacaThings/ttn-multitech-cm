@@ -3,4 +3,6 @@
 # Restart sshd after config changes
 #
 - name: Restart ssh
-  ansible.builtin.service: name=ssh state=restarted
+  ansible.builtin.service:
+    name: ssh
+    state: restarted

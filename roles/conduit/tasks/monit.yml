@@ -101,9 +101,10 @@
     - Restart monit
 
 - name: monit | Enable monit
-  ansible.builtin.lineinfile: dest=/etc/default/monit
-    regexp="^ENABLED="
-    line="ENABLED="yes""
-    state=present
+  ansible.builtin.lineinfile:
+    dest: /etc/default/monit
+    regexp: "^ENABLED="
+    line: 'ENABLED="yes"'
+    state: present
   notify:
     - Restart monit

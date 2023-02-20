@@ -140,7 +140,9 @@
 #
 
 - name: main | Stop mosquitto
-  ansible.builtin.service: name=mosquitto state=stopped
+  ansible.builtin.service:
+    name: mosquitto
+    state: stopped
   when: ansible_local.opkg.mosquitto is defined
   ignore_errors: true
   tags:
@@ -148,10 +150,11 @@
     - setup
 
 - name: main | Disable mosquitto
-  ansible.builtin.lineinfile: dest=/etc/default/mosquitto
-    regexp='^ENABLED='
-    line='ENABLED="no"'
-    state=present
+  ansible.builtin.lineinfile:
+    dest: /etc/default/mosquitto
+    regexp: '^ENABLED='
+    line: 'ENABLED="no"'
+    state: present
   when: ansible_local.opkg.mosquitto is defined
   tags:
     - services

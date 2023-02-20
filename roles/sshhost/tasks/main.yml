@@ -41,10 +41,11 @@
   tags: users
 
 - name: main | Only allow gateway ports from localhost
-  ansible.builtin.lineinfile: dest=/etc/ssh/sshd_config
-    regexp="^GatewayPorts"
-    line="GatewayPorts no"
-    state=present
+  ansible.builtin.lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: "^GatewayPorts"
+    line: "GatewayPorts no"
+    state: present
   notify: Restart ssh
   tags: sshd
 

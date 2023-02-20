@@ -58,7 +58,9 @@
     - ssh_tunnel_enabled
 
 - name: ssh_tunnel | Stop ssh_tunnel if not enabled
-  ansible.builtin.service: name=ssh_tunnel state=stopped
+  ansible.builtin.service:
+    name: ssh_tunnel
+    state: stopped
   ignore_errors: true
   when:
     - not ssh_tunnel_enabled

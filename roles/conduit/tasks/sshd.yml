@@ -17,19 +17,21 @@
     force: yes
 
 - name: sshd | Disallow password authentication
-  ansible.builtin.lineinfile: dest=/var/config/ssh/sshd_config
-    regexp="^#?PasswordAuthentication\s"
-    line="PasswordAuthentication no"
-    state=present
+  ansible.builtin.lineinfile:
+    dest: /var/config/ssh/sshd_config
+    regexp: '^#?PasswordAuthentication\s'
+    line: "PasswordAuthentication no"
+    state: present
   notify:
     - Restart ssh
     - Update system checksum file
 
 - name: sshd | Disallow root SSH access
-  ansible.builtin.lineinfile: dest=/var/config/ssh/sshd_config
-    regexp="^#?PermitRootLogin\s"
-    line="PermitRootLogin without-password"
-    state=present
+  ansible.builtin.lineinfile:
+    dest: /var/config/ssh/sshd_config
+    regexp: '^#?PermitRootLogin\s'
+    line: "PermitRootLogin without-password"
+    state: present
   notify:
     - Restart ssh
     - Update system checksum file

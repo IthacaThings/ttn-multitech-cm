@@ -67,7 +67,9 @@
     - forwarder_installed != forwarder_package_version
 
 - name: ttn_packet_forwarder | Stop packet-forwarder
-  ansible.builtin.service: name=ttn-pkt-forwarder state=stopped
+  ansible.builtin.service:
+    name: ttn-pkt-forwarder
+    state: stopped
   when: forwarder_installed != forwarder_package_version
   ignore_errors: yes
 
@@ -123,10 +125,10 @@
 
 - name: ttn_packet_forwarder | Disable LoRA Basic Station
   ansible.builtin.lineinfile:
-    dest=/etc/default/lora-basic-station
-    regexp="^ENABLED="
-    line='ENABLED="no"'
-    state=present
+    dest: /etc/default/lora-basic-station
+    regexp: "^ENABLED="
+    line: 'ENABLED="no"'
+    state: present
   ignore_errors: true
 
 #
