@@ -3,7 +3,7 @@
 #
 
 - name: wifi_firmware | WiFi firmware dirs
-  file:
+  ansible.builtin.file:
     dest: "/lib/firmware/{{ item }}"
     state: directory
     mode: "0755"
@@ -13,8 +13,8 @@
     - rtlwifi
 
 - name: wifi_firmware |  Check if rtl8192cu firmware is downloaded
-  local_action: stat
-  args:
+  delegate_to: 127.0.0.1
+  ansible.builtin.stat:
     path: "{{ role_path }}/files/{{ rtl8192cu_firmware_file }}"
   register: rtl8192cufw_stat
   when:
@@ -22,8 +22,8 @@
     - rtl8192cu_firmware_path not in ansible_local.firmware
 
 - name: wifi_firmware | Download rtl8192cu firmware
-  local_action: get_url
-  args:
+  delegate_to: 127.0.0.1
+  ansible.builtin.get_url:
     url: "{{ rtl8192cu_firmware_url }}"
     dest: "{{ role_path }}/files"
   when:
@@ -32,7 +32,7 @@
     - rtl8192cufw_stat.stat.exists == false
 
 - name: wifi_firmware | Install rtl8192cu firmware
-  copy:
+  ansible.builtin.copy:
     src: "{{ role_path }}/files/{{ rtl8192cu_firmware_file }}"
     dest: "/lib/firmware/{{ rtl8192cu_firmware_path }}"
   notify: interface reboot

@@ -5,7 +5,7 @@
 #
 
 - name: mlinux | /etc/opkg/mlinux-feed.conf
-  template:
+  ansible.builtin.template:
     src: mlinux-feed.conf.j2
     dest: "/etc/opkg/mlinux-feed.conf"
     mode: "0644"
@@ -14,7 +14,7 @@
   register: mlinux_feed
 
 - name: mlinux | /etc/opkg/ttni-feed.conf
-  template:
+  ansible.builtin.template:
     src: ttni-feed.conf.j2
     dest: "/etc/opkg/ttni-feed.conf"
     mode: "0644"
@@ -23,7 +23,7 @@
   register: ttni_feed
 
 - name: mlinux | Update opkg cache
-  shell: "opkg update"
+  ansible.builtin.shell: "opkg update"
   register: result
   when: mlinux_feed is changed or ttni_feed is changed
   until: result is succeeded

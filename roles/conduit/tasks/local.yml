@@ -4,7 +4,7 @@
 # Move /usr/local to /var/config/local so it survives an upgrade
 #
 - name: local | Create /var/config/local
-  file:
+  ansible.builtin.file:
     name: /var/config/local
     state: directory
     mode: "0755"
@@ -12,7 +12,7 @@
     group: root
 
 - name: local | /var/config/local/tree
-  file:
+  ansible.builtin.file:
     name: "/var/config/local/{{ item }}"
     state: directory
     mode: "0755"
@@ -21,22 +21,22 @@
   loop: "{{ ['bin','lib','sbin','share']|flatten }}"
 
 - name: local | Get stat info about /usr/local
-  stat:
+  ansible.builtin.stat:
     path: /usr/local
   register: usr_local
 
 - name: local | Copy /usr/local content to /var/config/local
-  shell: "rsync -av /usr/local /var/config"
+  ansible.builtin.shell: "rsync -av /usr/local /var/config"
   when: usr_local.stat.exists and usr_local.stat.isdir
 
 - name: local | Remove /usr/local tree
-  file:
+  ansible.builtin.file:
     name: /usr/local
     state: absent
   when: usr_local.stat.exists and not usr_local.stat.islnk
 
 - name: local | Point /usr/local at /var/config/local
-  file:
+  ansible.builtin.file:
     name: /usr/local
     state: link
     src: /var/config/local

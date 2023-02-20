@@ -1,17 +1,17 @@
 ---
 
 - name: networking | Check that wlan0 exists if we are configuring it as only interface
-  shell: ifconfig wlan0
+  ansible.builtin.shell: ifconfig wlan0
   when:
     - eth0_type is not defined or eth0_type == 'manual'
     - wlan0_type is defined
 
 - name: networking | Check if we need WiFi firmware
-  import_tasks: wifi_firmware.yml
+  ansible.builtin.import_tasks: wifi_firmware.yml
   when: wlan0_type is defined
 
 - name: networking | Static /etc/resolv.conf
-  template:
+  ansible.builtin.template:
     src: resolv.conf-static.j2
     dest: "{{ resolv_conf_static }}"
     mode: "0644"
@@ -21,7 +21,7 @@
     - ( eth0_type is defined and eth0_type == 'static' ) or ( wlan0_type is defined and wlan0_type == 'static' )
 
 - name: networking | Set up dhcp /etc/resolv.conf
-  file:
+  ansible.builtin.file:
     name: /etc/resolv.conf
     state: link
     force: yes
@@ -31,7 +31,7 @@
     - wlan0_type is not defined or wlan0_type != 'static'
 
 - name: networking | Delete static /etc/resolv.conf if not used
-  file:
+  ansible.builtin.file:
     name: "{{ resolv_conf_static }}"
     state: absent
   when:
@@ -39,7 +39,7 @@
     - wlan0_type is not defined or wlan0_type != 'static'
 
 - name: networking | Set up /var/config/network/interfaces
-  template:
+  ansible.builtin.template:
     src: interfaces.j2
     dest: /var/config/network/interfaces
     mode: "0644"
@@ -50,7 +50,7 @@
     - eth0_type is defined or wlan0_type is defined
 
 - name: networking | Set up {{ wpa_conf }}
-  template:
+  ansible.builtin.template:
     src: wpa_supplicant.conf.j2
     dest: "{{ wpa_conf }}"
     mode: "0600"
@@ -61,14 +61,14 @@
     - wireless_keys is defined
 
 - name: networking | Delete {{ wpa_conf }} if no wireless keys
-  file:
+  ansible.builtin.file:
     name: "{{ wpa_conf }}"
     state: absent
   when:
     - wireless_keys is not defined
 
 - name: networking | Install support scripts
-  copy:
+  ansible.builtin.copy:
     dest: "/var/config/{{ item }}"
     src: "{{ item }}"
     mode: "0755"
@@ -79,14 +79,14 @@
     - ifup_restart
 
 - name: networking | Link /etc/udhcpc.d/60restart
-  file:
+  ansible.builtin.file:
     dest: /etc/udhcpc.d/60restart
     src: /var/config/udhcpc_restart
     state: link
     force: yes
 
 - name: networking | Link /etc/network/if-up.d/restart
-  file:
+  ansible.builtin.file:
     dest: /etc/network/if-up.d/restart
     src: /var/config/ifup_restart
     state: link
@@ -96,7 +96,7 @@
 # Monit
 #
 - name: networking | /var/config/monit/monit.d/networking.monit
-  template:
+  ansible.builtin.template:
     src: networking.monit.j2
     dest: /var/config/monit/monit.d/networking.monit
     mode: "700"

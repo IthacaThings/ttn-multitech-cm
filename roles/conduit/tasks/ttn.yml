@@ -5,7 +5,7 @@
 #
 
 - name: ttn | Check versions
-  fail:
+  ansible.builtin.fail:
     msg: "mp packet forwarder 3.0.25 or greater is required on this version of mLinux due to lack of nodejs"
   when:
     - not forwarder_variant.startswith("basic")
@@ -13,14 +13,14 @@
     - ( forwarder_variant != "mp" or forwarder_version is version('3.0.25', '<') )
 
 - name: ttn | Check if using correct card for the region
-  fail:
+  ansible.builtin.fail:
     msg: "Lora card {{ ansible_local.lora.product_id }} and region {{ region }} mismatch"
   when:
     - ( ansible_local.lora.product_id is match("MTAC-LORA-(H-)?915") and region is match("EU|IN") ) or ( ansible_local.lora.product_id is match("MTAC-LORA-(H-)?868") and region is match("US|AU|AS1|AS2|KR") )
     - radio_mismatch is not defined
 
 - name: ttn | Check if using correct packet forwarder
-  fail:
+  ansible.builtin.fail:
     msg: "Must use mp_packet_forwarder or basic station with SPI versions of LoRa cards"
   when:
     - ansible_local.lora.hw_version != "MTAC-LORA-1.0"
@@ -28,17 +28,17 @@
     - forwarder_variant != "basic"
 
 - name: ttn | Check that we have an SPI card if using Basic Station
-  fail:
+  ansible.builtin.fail:
     msg: "{{ ansible_local.lora.product_id }} USB card not supported by LoRA Basic Station, use mp packet forwarder"
   when:
     - forwarder_variant == "basic"
     - ansible_local.lora.product_id is match("MTAC-LORA-(915|868)")
 
 - name: ttn | Configure ttnv3
-  include_tasks: ttnv3.yml
+  ansible.builtin.include_tasks: ttnv3.yml
 
 - name: ttn | Lora dir
-  file:
+  ansible.builtin.file:
     name: /var/config/lora
     state: directory
     mode: "0755"
@@ -49,7 +49,7 @@
 # Remove Multi-Tech stuff that we don't want and install the TTN packet-forwarder
 #
 - name: ttn | Remove Multi-Tech lora-network-server
-  opkg:
+  community.general.opkg:
     name: lora-network-server
     state: absent
   when: ansible_local.opkg.lora_network_server is defined
@@ -58,7 +58,7 @@
     - opkg clean
 
 - name: ttn | Remove Multi-Tech lora-packet-forwarder
-  opkg:
+  community.general.opkg:
     name: lora-packet-forwarder
     state: absent`
   when: ansible_local.opkg.lora_packet_forwarder is defined
@@ -67,11 +67,11 @@
     - opkg clean
 
 - name: ttn | ttn_packet_forwarder
-  include_tasks: ttn_packet_forwarder.yml
+  ansible.builtin.include_tasks: ttn_packet_forwarder.yml
   when: forwarder_variant != "basic"
 
 - name: ttn | ttn_basic_station
-  include_tasks: ttn_basic_station.yml
+  ansible.builtin.include_tasks: ttn_basic_station.yml
   when: forwarder_variant == "basic"
 
 #
@@ -79,7 +79,7 @@
 #
 
 - name: ttn | /var/config/monit/monit.d/ttn.monit
-  template:
+  ansible.builtin.template:
     src: ttn.monit.j2
     dest: /var/config/monit/monit.d/ttn.monit
     mode: "700"

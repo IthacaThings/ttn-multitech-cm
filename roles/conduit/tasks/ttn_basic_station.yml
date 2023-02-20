@@ -5,7 +5,7 @@
 # XXX - TODO - Switch version and test this code
 
 - name: ttn_basic_station | Stop lora-basic if we are updating it
-  service:
+  ansible.builtin.service:
     name: lora-basic-station
     state: stopped
   ignore_errors: true
@@ -14,7 +14,7 @@
     - ansible_local.opkg.lora_basic_station is defined and ansible_local.opkg.lora_basic_station != forwarder_version
 
 - name: ttn_basic_station | Uninstall old version of lora_basic_station
-  opkg:
+  community.general.opkg:
     name: lora_basic_station
     state: absent
     force: remove
@@ -25,7 +25,7 @@
     - ansible_local.opkg.lora_basic_station is not defined or ansible_local.opkg.lora_basic_station != forwarder_version
 
 - name: ttn_basic_station | Install the desired version of lora_basic_station
-  opkg:
+  community.general.opkg:
     name: "lora_basic_station=={{ forwarder_version }}"
     state: present
   notify:
@@ -38,31 +38,30 @@
 - name: ttn_basic_station | Fetch and update station.conf
   block:
     - name: ttn_basic_station | gps_arg
-      set_fact:
+      ansible.builtin.set_fact:
         gps_arg: "--gps /dev/{{ gps_device }}"
       when: have_gps and use_gps
     - name: ttn_basic_station | gps_arg
-      set_fact:
+      ansible.builtin.set_fact:
         gps_arg: ""
       when: not (have_gps and use_gps)
     - name: ttn_basic_station | mt_station_conf
-      local_action:
-        module: command
-        args:
-          "bin/mt_station_conf --url {{ basic_station_conf_url[conduit_type] }}
-          --routerid {{ ansible_local.lora.eui }}
-          --log-file {{ basic_log_file }}
-          --log-level {{ basic_log_level }}
-          --log-size {{ forwarder_logrotate_size }}
-          --log-rotate {{ forwarder_logrotate_count }}
-          {{ gps_arg }}"
+      delegate_to: 127.0.0.1
+      ansible.builtin.command: |
+        bin/mt_station_conf --url {{ basic_station_conf_url[conduit_type] }}
+         --routerid {{ ansible_local.lora.eui }}
+         --log-file {{ basic_log_file }}
+         --log-level {{ basic_log_level }}
+         --log-size {{ forwarder_logrotate_size }}
+         --log-rotate {{ forwarder_logrotate_count }}
+         {{ gps_arg }}
       register: station_conf_raw
     - name: ttn_basic_station | station_conf
-      set_fact:
+      ansible.builtin.set_fact:
         station_conf: "{{ station_conf_raw.stdout | from_json }}"
 
 - name: ttn_basic_station | Install /var/config/lora/station.conf
-  template:
+  ansible.builtin.template:
     src: station.conf.j2
     dest: /var/config/lora/station.conf
     mode: "0644"
@@ -72,13 +71,13 @@
     - Restart lora-basic-station
 
 - name: ttn_basic_station | Download certificate
-  local_action: get_url
-  args:
+  delegate_to: 127.0.0.1
+  ansible.builtin.get_url:
     url: "{{ basic_cert_url }}"
     dest: "{{ role_path }}/files"
 
 - name: ttn_basic_station | Install certificate /var/config/lora/tc.trust
-  copy:
+  ansible.builtin.copy:
     src: "{{ role_path }}/files/{{ basic_cert_url | basename }}"
     dest: "/var/config/lora/tc.trust"
     owner: root
@@ -88,7 +87,7 @@
     - Restart lora-basic-station
 
 - name: ttn_basic_station | Install gateway key /var/config/lora/tc.key
-  template:
+  ansible.builtin.template:
     src: tc.key.j2
     dest: /var/config/lora/tc.key
     newline_sequence: '\r\n'
@@ -99,7 +98,7 @@
     - Restart lora-basic-station
 
 - name: ttn_basic_station | Install uri file /var/config/lora/tc.uri
-  template:
+  ansible.builtin.template:
     src: tc.uri.j2
     dest: /var/config/lora/tc.uri
     newline_sequence: '\r\n'
@@ -114,7 +113,7 @@
 #
 
 - name: ttn_basic_station | Install /var/config/lora-basic-station
-  template:
+  ansible.builtin.template:
     src: lora-basic-station.j2
     dest: /var/config/init.d/lora-basic-station
     mode: "0755"
@@ -124,7 +123,7 @@
     - Restart lora-basic-station
 
 - name: ttn_basic_station | /etc/init.d/lora-basic-station to /var/config/lora/lora-basic-station
-  file:
+  ansible.builtin.file:
     dest: /etc/init.d/lora-basic-station
     state: link
     src: /var/config/init.d/lora-basic-station
@@ -135,7 +134,7 @@
     - Restart lora-basic-station
 
 - name: ttn_basic_station | Enable basic station
-  lineinfile: dest=/etc/default/lora-basic-station
+  ansible.builtin.lineinfile: dest=/etc/default/lora-basic-station
     regexp="^ENABLED="
     line='ENABLED="yes"'
     state=present
@@ -143,13 +142,13 @@
     - Restart lora-basic-station
 
 - name: ttn_basic_station | Stop the packet fowarder
-  service:
+  ansible.builtin.service:
     name: ttn-pkt-forwarder
     state: stopped
   ignore_errors: true
 
 - name: ttn_basic_station |  Disable ttn-pkt-forwarder
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest=/etc/default/ttn-pkt-forwarder
     regexp="^ENABLED="
     line='ENABLED="no"'
@@ -157,7 +156,7 @@
   ignore_errors: true
 
 - name: ttn_basic_station | Remove some files
-  file:
+  ansible.builtin.file:
     name: "{{ item }}"
     state: absent
   loop:

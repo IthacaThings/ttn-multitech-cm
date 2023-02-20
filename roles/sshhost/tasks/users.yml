@@ -1,7 +1,7 @@
 ---
 
 - name: users | Remove default users
-  user: name={{ item }} state=absent remove=yes
+  ansible.builtin.user: name={{ item }} state=absent remove=yes
   with_items:
     - user
     - ubuntu

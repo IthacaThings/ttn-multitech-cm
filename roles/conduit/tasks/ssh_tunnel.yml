@@ -1,11 +1,11 @@
 ---
 
 - name: ssh_tunnel | Is SSH tunnel enabled
-  set_fact:
+  ansible.builtin.set_fact:
     ssh_tunnel_enabled: "{{ ssh_tunnel_remote_port is defined and ssh_tunnel_remote_port > 0 and ssh_tunnel_gateway_user_on_jumphost is defined }}"
 
 - name: ssh_tunnel | Install autossh
-  opkg:
+  community.general.opkg:
     state: installed
     pkg: "{{ item }}"
   when: ansible_local is not defined or ansible_local.opkg is not defined or item|regex_replace('-','_') not in ansible_local.opkg.keys()
@@ -16,7 +16,7 @@
     - opkg clean
 
 - name: ssh_tunnel | /var/config/ssh_tunnel.default
-  template:
+  ansible.builtin.template:
     src: ssh_tunnel.j2
     dest: /var/config/ssh_tunnel.default
     mode: "0755"
@@ -27,7 +27,7 @@
     - ssh_tunnel_enabled
 
 - name: ssh_tunnel | /var/config/init.d/ssh_tunnel
-  copy:
+  ansible.builtin.copy:
     dest: /var/config/init.d/ssh_tunnel
     src: ssh_tunnel.initd
     mode: "0755"
@@ -38,7 +38,7 @@
     - ssh_tunnel_enabled
 
 - name: ssh_tunnel | Link /etc/default/ssh_tunnel to /var/config/ssh_tunnel.default
-  file:
+  ansible.builtin.file:
     dest: /etc/default/ssh_tunnel
     state: link
     src: /var/config/ssh_tunnel.default
@@ -48,7 +48,7 @@
     - ssh_tunnel_enabled
 
 - name: ssh_tunnel | Link /etc/init.d/ssh_tunnel to /var/config/init.d/ssh_tunnel
-  file:
+  ansible.builtin.file:
     dest: /etc/init.d/ssh_tunnel
     state: link
     src: /var/config/init.d/ssh_tunnel
@@ -58,13 +58,13 @@
     - ssh_tunnel_enabled
 
 - name: ssh_tunnel | Stop ssh_tunnel if not enabled
-  service: name=ssh_tunnel state=stopped
+  ansible.builtin.service: name=ssh_tunnel state=stopped
   ignore_errors: true
   when:
     - not ssh_tunnel_enabled
 
 - name: ssh_tunnel | Clean up ssh_tunnel if not enabled
-  file:
+  ansible.builtin.file:
     dest: "{{ item }}"
     state: absent
   with_items:

@@ -4,7 +4,7 @@
 # Build the list of authorized keys
 #
 - name: main | Build list of authorized keys
-  import_tasks: authorized_keys.yml
+  ansible.builtin.import_tasks: authorized_keys.yml
   tags:
     - always
 
@@ -12,7 +12,7 @@
 # Attempt to bootstrap an unconfigured gateway
 #
 - name: main | Bootstrap
-  import_tasks: bootstrap.yml
+  ansible.builtin.import_tasks: bootstrap.yml
   tags:
     - bootstrap
     - never
@@ -22,13 +22,13 @@
 # Ansible first pass setup
 #
 - name: main | Ansible setup
-  import_tasks: ansible.yml
+  ansible.builtin.import_tasks: ansible.yml
   tags:
     - setup
     - ansible
 
 - name: main | Fail if certain info is missing
-  fail:
+  ansible.builtin.fail:
     msg: "Required information is missing"
   when:
     - "'mlinux' not in ansible_local or ansible_local.mlinux|length == 0"
@@ -37,7 +37,7 @@
 # Initial setup.  Stuff required before packages install
 #
 - name: main | Initial setup
-  import_tasks: setup.yml
+  ansible.builtin.import_tasks: setup.yml
   tags:
     - always
 
@@ -45,7 +45,7 @@
 #  Set up for preserving config during firmware upgrade
 #
 - name: main | Preserve config setup
-  import_tasks: preserve.yml
+  ansible.builtin.import_tasks: preserve.yml
   tags:
     - setup
     - preserve
@@ -55,7 +55,7 @@
 # Update mLinux if required
 #
 - name: main | Upgrade mlinux
-  import_tasks: mlinux-upgrade.yml
+  ansible.builtin.import_tasks: mlinux-upgrade.yml
   when:
     - mlinux_version is defined
     - mlinux_version != ansible_local.mlinux.version
@@ -65,7 +65,7 @@
     - mlinux
 
 - name: main | Configure mlinux
-  import_tasks: mlinux.yml
+  ansible.builtin.import_tasks: mlinux.yml
   when:
     - mlinux_version is defined
   tags:
@@ -76,7 +76,7 @@
 # Set up logrotate
 #
 - name: main | Set up logrotate
-  import_tasks: logrotate.yml
+  ansible.builtin.import_tasks: logrotate.yml
   tags:
     - logrotate
     - setup
@@ -85,7 +85,7 @@
 # Set up networking
 #
 - name: main | Setup networking
-  import_tasks: networking.yml
+  ansible.builtin.import_tasks: networking.yml
   tags:
     - networking
     - setup
@@ -94,7 +94,7 @@
 # Set up PPP
 #
 - name: main | Setup ppp
-  import_tasks: ppp.yml
+  ansible.builtin.import_tasks: ppp.yml
   tags:
     - networking
     - ppp
@@ -104,7 +104,7 @@
 # Set hostname
 #
 - name: main | Set hostname
-  import_tasks: hostname.yml
+  ansible.builtin.import_tasks: hostname.yml
   tags:
     - hostname
     - setup
@@ -113,7 +113,7 @@
 # Set timezone and time
 #
 - name: main | Setup time
-  import_tasks: time.yml
+  ansible.builtin.import_tasks: time.yml
   tags:
     - time
     - setup
@@ -122,7 +122,7 @@
 # Set up user stuff
 #
 - name: main | Set up users
-  import_tasks: users.yml
+  ansible.builtin.import_tasks: users.yml
   tags:
     - users
     - setup
@@ -131,7 +131,7 @@
 # Secure ssh
 #
 - name: main | Set up ssh
-  import_tasks: sshd.yml
+  ansible.builtin.import_tasks: sshd.yml
   tags:
     - sshd
     - setup
@@ -140,7 +140,7 @@
 #
 
 - name: main | Stop mosquitto
-  service: name=mosquitto state=stopped
+  ansible.builtin.service: name=mosquitto state=stopped
   when: ansible_local.opkg.mosquitto is defined
   ignore_errors: true
   tags:
@@ -148,9 +148,9 @@
     - setup
 
 - name: main | Disable mosquitto
-  lineinfile: dest=/etc/default/mosquitto
-    regexp="^ENABLED="
-    line="ENABLED="no""
+  ansible.builtin.lineinfile: dest=/etc/default/mosquitto
+    regexp='^ENABLED='
+    line='ENABLED="no"'
     state=present
   when: ansible_local.opkg.mosquitto is defined
   tags:
@@ -161,7 +161,7 @@
 # Set up /usr/local tree
 #
 - name: main | Set up /usr/local tree
-  import_tasks: local.yml
+  ansible.builtin.import_tasks: local.yml
   tags:
     - localtree
     - setup
@@ -170,7 +170,7 @@
 # Install and configure TTN packet forwarder
 #
 - name: main | Set up TTN packet forwarder
-  import_tasks: ttn.yml
+  ansible.builtin.import_tasks: ttn.yml
   tags:
     - ttn
 
@@ -178,7 +178,7 @@
 # Set up ssh_tunnel (autossh)
 #
 - name: main | Set up ssh_tunnel (autossh)
-  import_tasks: ssh_tunnel.yml
+  ansible.builtin.import_tasks: ssh_tunnel.yml
   tags:
     - ssh_tunnel
     - monit
@@ -188,7 +188,7 @@
 # Set up monit
 #
 - name: main | Set up moniit
-  import_tasks: monit.yml
+  ansible.builtin.import_tasks: monit.yml
   tags:
     - monit
     - setup
@@ -197,8 +197,8 @@
 # Always update system checksum file last
 #
 - name: main | Schedule update of system checksum file
-  command: "true"
-  delegate_to: localhost
+  delegate_to: 127.0.0.1
+  ansible.builtin.command: "true"
   notify: Update system checksum file
   tags:
     - always

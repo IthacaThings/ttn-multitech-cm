@@ -5,7 +5,7 @@
 #
 
 - name: logrotate | Install logrotate
-  opkg:
+  community.general.opkg:
     state: installed
     pkg: "logrotate"
   when:
@@ -15,7 +15,7 @@
     - opkg clean
 
 - name: logrotate | /var/config/logrotate.d
-  file:
+  ansible.builtin.file:
     name: /var/config/logrotate.d
     state: directory
     mode: "0755"
@@ -23,25 +23,25 @@
     group: root
 
 - name: logrotate | Copy in logrotate files
-  template:
+  ansible.builtin.template:
     src: "{{ item.src }}"
     dest: "/var/config/logrotate.d/{{ item.path|regex_replace('\\.j2$','') }}"
   with_filetree: "../templates/logrotate.d"
   when: item.src|regex_search('\.j2$')
 
 - name: logrotate | Get stat info about /etc/logrotate.d
-  stat:
+  ansible.builtin.stat:
     path: /etc/logrotate.d
   register: logrotate_d
 
 - name: logrotate | Remove /etc/logrotate.d
-  file:
+  ansible.builtin.file:
     name: /etc/logrotate.d
     state: absent
   when: logrotate_d.stat.isdir is defined and logrotate_d.stat.isdir == True
 
 - name: logrotate | Point /etc/logrotate.d at /var/config/logrotate.d
-  file:
+  ansible.builtin.file:
     name: /etc/logrotate.d
     state: link
     force: yes

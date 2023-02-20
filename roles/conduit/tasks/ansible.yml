@@ -5,7 +5,7 @@
 # in place as Ansible will not run without many of these
 #
 - name: ansible | Install Ansible dependencies
-  opkg:
+  community.general.opkg:
     state: installed
     pkg: "{{ item }}"
     update_cache: yes
@@ -19,7 +19,7 @@
     - "{{ ansible_depends_old }}"
 
 - name: ansible | /var/config/ansible
-  file:
+  ansible.builtin.file:
     name: /var/config/ansible
     state: directory
     mode: "0755"
@@ -27,7 +27,7 @@
     group: root
 
 - name: ansible | /var/config/ansible/facts.d
-  copy:
+  ansible.builtin.copy:
     dest: "/var/config/ansible/"
     mode: "0755"
     directory_mode: "0755"
@@ -37,11 +37,11 @@
   notify: Reload facts
 
 - name: ansible | Point /etc/ansible at /var/config/ansible
-  file:
+  ansible.builtin.file:
     name: /etc/ansible
     state: link
     src: /var/config/ansible
   notify: Reload facts
 
 - name: ansible | Run handlers in case facts have changed
-  meta: flush_handlers
+  ansible.builtin.meta: flush_handlers

@@ -5,7 +5,7 @@
 #
 
 - name: users | Create non-volatile home dirs
-  file:
+  ansible.builtin.file:
     dest: /var/config/home
     state: directory
     mode: "0755"
@@ -13,7 +13,7 @@
     group: root
 
 - name: users | "Set up dirs for root"
-  import_tasks: user_dirs.yml
+  ansible.builtin.import_tasks: user_dirs.yml
   vars:
     target_user: "root"
 
@@ -21,7 +21,7 @@
 # Create ttn user
 #
 - name: users | "Set up {{ ttn_user }} user"
-  user:
+  ansible.builtin.user:
     name: "{{ ttn_user }}"
     append: yes
     groups: adm,dialout,disk,plugdev,sudo
@@ -31,9 +31,9 @@
 - name: users | Configure mtadm user
   block:
     - name: users | ttn dirs
-      import_tasks: user_dirs.yml
+      ansible.builtin.import_tasks: user_dirs.yml
     - name: users | ttn sudo
-      import_tasks: user_sudo.yml
+      ansible.builtin.import_tasks: user_sudo.yml
   vars:
     target_user: ttn
 
@@ -44,11 +44,11 @@
 - name: users | Configure mtadm user
   block:
     - name: users | mtadm dirs
-      import_tasks: user_dirs.yml
+      ansible.builtin.import_tasks: user_dirs.yml
     - name: users | mtadm sudo
-      import_tasks: user_sudo.yml
+      ansible.builtin.import_tasks: user_sudo.yml
     - name: users | Disable pam auth functions
-      lineinfile:
+      ansible.builtin.lineinfile:
         dest: /etc/pam.d/sshd
         regex: ^(auth .*)$
         line: '# \1'

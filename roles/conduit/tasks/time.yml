@@ -1,18 +1,18 @@
 ---
 
 - name: time | Set the timezone
-  file:
+  ansible.builtin.file:
     name: /etc/localtime
     state: link
     force: yes
     src: "/usr/share/zoneinfo/{{ timezone }}"
 
 - name: time | Set time from ntp server
-  shell: "ntpdate -bu {{ ntp_servers[0] }} && hwclock -wu"
+  ansible.builtin.shell: "ntpdate -bu {{ ntp_servers[0] }} && hwclock -wu"
   ignore_errors: yes
 
 - name: time | Install ntp packages
-  opkg:
+  community.general.opkg:
     name: ntp
     state: installed
   when: ansible_local is not defined or ansible_local.opkg is not defined or item|regex_replace('-','_') not in ansible_local.opkg.keys()
@@ -24,7 +24,7 @@
     - opkg clean
 
 - name: time | Create /var/config/ntp
-  file:
+  ansible.builtin.file:
     name: /var/config/ntp
     state: directory
     mode: "0755"
@@ -32,7 +32,7 @@
     group: ntp
 
 - name: time | /var/config/ntp.conf
-  template:
+  ansible.builtin.template:
     src: ntp.conf.j2
     dest: /var/config/ntp.conf
     mode: "0644"
@@ -40,7 +40,7 @@
     group: root
 
 - name: time | /etc/ntp.conf
-  file:
+  ansible.builtin.file:
     name: /etc/ntp.conf
     state: link
     force: yes
@@ -52,7 +52,7 @@
 #
 
 - name: time | Ensure /var/config/default/ntpd.default exists
-  copy:
+  ansible.builtin.copy:
     src: /etc/default/ntpd.default
     dest: /var/config/default/ntpd.default
     remote_src: yes
@@ -61,7 +61,7 @@
     - Update system checksum file
 
 - name: time | Link /etc/default/ntpd to /var/config/default/ntpd.default
-  file:
+  ansible.builtin.file:
     dest: /etc/default/ntpd
     state: link
     src: /var/config/default/ntpd.default
@@ -71,11 +71,11 @@
     - Update system checksum file
 
 - name: time | Do we want SET_SYSTEM_CLOCK?
-  set_fact:
+  ansible.builtin.set_fact:
     set_system_clock: "{{ 0 if use_cellular and cellular_apn is defined else 1 }}"
 
 - name: time | Prevent ntpd from hanging on boot when net is down
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /var/config/default/ntpd.default
     regexp: "^SET_SYSTEM_CLOCK="
     line: "SET_SYSTEM_CLOCK={{ set_system_clock }}"
@@ -89,11 +89,11 @@
 #
 
 - name: time | Calculate some facts monit depends on
-  set_fact:
+  ansible.builtin.set_fact:
     monit_ntpd_pidfile: "{{ '/var/run/ntp.pid' if ansible_local.opkg.ntp is version('4.2.8', '<') else '/var/run/ntpd.pid' }}"
 
 - name: time | /var/config/monit/monit.d/ntp.monit
-  template:
+  ansible.builtin.template:
     src: ntp.monit.j2
     dest: /var/config/monit/monit.d/ntp.monit
     mode: "700"

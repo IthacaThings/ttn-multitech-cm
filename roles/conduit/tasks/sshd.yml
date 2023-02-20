@@ -1,23 +1,23 @@
 ---
 
 - name: sshd | Get info on /etc/ssh/sshd_config
-  stat:
+  ansible.builtin.stat:
     path: /etc/ssh/sshd_config
   register: sshd_config
 
 - name: sshd | Move /etc/ssh/sshd_config to /var/config/ssh if a file
-  command: mv /etc/ssh/sshd_config /var/config/ssh
+  ansible.builtin.command: mv /etc/ssh/sshd_config /var/config/ssh
   when: sshd_config.stat.islnk is defined and not sshd_config.stat.islnk
 
 - name: sshd | Link /etc/ssh/sshd_config to /var/config/ssh/sshd_config
-  file:
+  ansible.builtin.file:
     dest: /etc/ssh/sshd_config
     state: link
     src: /var/config/ssh/sshd_config
     force: yes
 
 - name: sshd | Disallow password authentication
-  lineinfile: dest=/var/config/ssh/sshd_config
+  ansible.builtin.lineinfile: dest=/var/config/ssh/sshd_config
     regexp="^#?PasswordAuthentication\s"
     line="PasswordAuthentication no"
     state=present
@@ -26,7 +26,7 @@
     - Update system checksum file
 
 - name: sshd | Disallow root SSH access
-  lineinfile: dest=/var/config/ssh/sshd_config
+  ansible.builtin.lineinfile: dest=/var/config/ssh/sshd_config
     regexp="^#?PermitRootLogin\s"
     line="PermitRootLogin without-password"
     state=present

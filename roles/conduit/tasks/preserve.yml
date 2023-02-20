@@ -1,11 +1,11 @@
 ---
 
 - name: preserve | Figure out if we need to ignore certificates on older versions
-  set_fact:
+  ansible.builtin.set_fact:
     validate_certs: "{{ ansible_local.mlinux.version is version('3.3.24', '>') }}"
 
 - name: preserve | Fetch preserve script
-  get_url:
+  ansible.builtin.get_url:
     url: "{{ mlinux_ttni_preserve_root[ansible_distribution_major_version] }}/preserve_config"
     validate_certs: "{{ validate_certs }}"
     dest: /etc/init.d/preserve_config
@@ -14,10 +14,10 @@
     group: root
 
 - name: preserve | Enable Preserve service
-  command: update-rc.d preserve_config start 39 0 6 .
+  ansible.builtin.command: update-rc.d preserve_config start 39 0 6 .
 
 - name: preserve | Save a copy of the restore script
-  get_url:
+  ansible.builtin.get_url:
     url: "{{ mlinux_ttni_preserve_root[ansible_distribution_major_version] }}/restore_config"
     validate_certs: "{{ validate_certs }}"
     dest: /var/config/restore_config
@@ -26,7 +26,7 @@
     group: root
 
 - name: preserve | Create restore dir
-  file:
+  ansible.builtin.file:
     dest: /var/config/restore.d
     state: directory
     mode: "0755"
@@ -34,7 +34,7 @@
     group: root
 
 - name: preserve | Install restore scripts
-  template:
+  ansible.builtin.template:
     src: "{{ item }}.j2"
     dest: "/var/config/restore.d/{{ item }}"
     mode: "0755"
@@ -45,7 +45,7 @@
     - 15restore
 
 - name: preserve | Install restore initscript
-  template:
+  ansible.builtin.template:
     src: restore.init.j2
     dest: "/var/config/init.d/restore.init"
     mode: "0755"
@@ -53,7 +53,7 @@
     group: root
 
 - name: preserve | Mark restore as completed
-  file:
+  ansible.builtin.file:
     name: /var/lib/restore.done
     state: touch
     mode: "0644"

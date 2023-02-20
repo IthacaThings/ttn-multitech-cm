@@ -7,7 +7,7 @@
 # Install dependencies
 #
 - name: ttn_packet_forwarder | Install depedencies for packet forwarder
-  opkg:
+  community.general.opkg:
     state: installed
     pkg: "{{ item }}"
   when: (ansible_local is not defined) or (ansible_local.opkg is not defined) or (item not in ansible_local.opkg.keys())
@@ -21,21 +21,21 @@
 # Make sure we have package for correct version
 #
 - name: ttn_packet_forwarder | Get info on local copy of packet-forwarder package
-  local_action: stat
-  args:
+  delegate_to: 127.0.0.1
+  ansible.builtin.stat:
     path: "{{ role_path }}/files/{{ forwarder_package_full }}"
   register: forwarder_package_stat
 
 - name: ttn_packet_forwarder | Download requested version of packet-forwarder
-  local_action: get_url
-  args:
+  delegate_to: 127.0.0.1
+  ansible.builtin.get_url:
     url: "{{ forwarder_url }}"
     dest: "{{ role_path }}/files"
   when:
     - forwarder_package_stat.stat.exists == false
 
 - name: ttn_packet_forwarder | Find old .ipk files
-  find:
+  ansible.builtin.find:
     paths:
       /var/config
     patterns:
@@ -45,7 +45,7 @@
     - forwarder_installed != forwarder_package_version
 
 - name: ttn_packet_forwarder | Delete old .ipk files
-  file:
+  ansible.builtin.file:
     path: "{{ item.path }}"
     state: absent
   with_items: "{{ old_ipk.files }}"
@@ -53,39 +53,39 @@
     - old_ipk.files is defined
 
 - name: ttn_packet_forwarder | Copy over packet-forwarder
-  copy:
+  ansible.builtin.copy:
     src: "{{ forwarder_package_full }}"
     dest: "/var/config/{{ forwarder_package_full }}"
   when:
     - forwarder_installed != forwarder_package_version
 
 - name: ttn_packet_forwarder | Unmonitor packet forwarder if changes are being made
-  shell: "monit unmonitor check_pktfwdlog"
+  ansible.builtin.shell: "monit unmonitor check_pktfwdlog"
   notify: monit monitor check_pktfwdlog
   ignore_errors: yes
   when:
     - forwarder_installed != forwarder_package_version
 
 - name: ttn_packet_forwarder | Stop packet-forwarder
-  service: name=ttn-pkt-forwarder state=stopped
+  ansible.builtin.service: name=ttn-pkt-forwarder state=stopped
   when: forwarder_installed != forwarder_package_version
   ignore_errors: yes
 
 - name: ttn_packet_forwarder | Remove all existing packet-forwarder packages
-  shell: "opkg remove poly-packet-forwarder mp-packet-forwarder ttn-packet-forwarder"
+  ansible.builtin.shell: "opkg remove poly-packet-forwarder mp-packet-forwarder ttn-packet-forwarder"
   when:
     - forwarder_installed != forwarder_package_version
   notify: Reload facts
 
 - name: ttn_packet_forwarder | Install {{ forwarder_package_full }}
-  shell: "opkg install /var/config/{{ forwarder_package_full }}"
+  ansible.builtin.shell: "opkg install /var/config/{{ forwarder_package_full }}"
   when: forwarder_installed != forwarder_package_version
   notify:
     - restart ttn-pkt-forwarder
     - Reload facts
 
 - name: ttn_packet_forwarder | Install /var/config/init.d/ttn-pkt-forwarder
-  template:
+  ansible.builtin.template:
     src: ttn-pkt-forwarder.j2
     dest: /var/config/init.d/ttn-pkt-forwarder
     mode: "0755"
@@ -95,7 +95,7 @@
     - restart ttn-pkt-forwarder
 
 - name: ttn_packet_forwarder | Link /etc/init.d/ttn-pkt-forwarder to /var/config/init.d/ttn-pkt-forwarder
-  file:
+  ansible.builtin.file:
     dest: /etc/init.d/ttn-pkt-forwarder
     state: link
     src: /var/config/init.d/ttn-pkt-forwarder
@@ -106,7 +106,7 @@
     - restart ttn-pkt-forwarder
 
 - name: ttn_packet_forwarder | Install /etc/default/ttn-pkt-forwarder
-  copy:
+  ansible.builtin.copy:
     src: "{{ role_path }}/files/default.enabled"
     dest: /etc/default/ttn-pkt-forwarder
     mode: "0755"
@@ -116,13 +116,13 @@
     - restart ttn-pkt-forwarder
 
 - name: ttn_packet_forwarder | Stop the LoRA Basic Station
-  service:
+  ansible.builtin.service:
     name: lora-basic-station
     state: stopped
   ignore_errors: true
 
 - name: ttn_packet_forwarder | Disable LoRA Basic Station
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest=/etc/default/lora-basic-station
     regexp="^ENABLED="
     line='ENABLED="no"'
@@ -133,7 +133,7 @@
 # Install the TTN config files
 #
 - name: ttn_packet_forwarder | Local packet forwarder configuration file
-  template:
+  ansible.builtin.template:
     src: local_conf.json.j2
     dest: /var/config/lora/local_conf.json
     mode: "0644"
@@ -144,7 +144,7 @@
 - name: ttn_packet_forwarder | Packet Forwarder configuration (before 3.0.25)
   block:
     - name: ttn_packet_forwarder | Install node.js
-      opkg:
+      community.general.opkg:
         state: present
         pkg: "{{ item }}"
       when: (ansible_local is not defined) or (ansible_local.opkg is not defined) or (item not in ansible_local.opkg.keys())
@@ -154,17 +154,17 @@
         - Reload facts
         - opkg clean
     - name: ttn_packet_forwarder | ttn_global_conf.json.j2
-      template:
+      ansible.builtin.template:
         src: global_conf.json.j2
         dest: /var/config/lora/ttn_global_conf.json
         mode: "0644"
         owner: root
         group: root
     - name: ttn_packet_forwarder | merge.js
-      shell: node /opt/lora/merge.js /var/config/lora/ttn_global_conf.json /var/config/lora/multitech_overrides.json /var/config/lora/global_conf.json
+      ansible.builtin.shell: node /opt/lora/merge.js /var/config/lora/ttn_global_conf.json /var/config/lora/multitech_overrides.json /var/config/lora/global_conf.json
       notify: restart ttn-pkt-forwarder
     - name: ttn_packet_forwarder | global_conf.json.j2
-      template:
+      ansible.builtin.template:
         src: global_conf.json.j2
         dest: /var/config/lora/global_conf.json
         mode: "0644"
@@ -175,7 +175,7 @@
 - name: ttn_packet_forwarder | Packet Forwarder configuration (3.0.25 and later)
   block:
     - name: ttn_packet_forwarder | Remove node.js
-      opkg:
+      community.general.opkg:
         state: absent
         pkg: "{{ item }}"
       when: (ansible_local is not defined) or (ansible_local.opkg is not defined) or (item in ansible_local.opkg.keys())
@@ -185,7 +185,7 @@
         - Reload facts
         - opkg clean
     - name: ttn_packet_forwarder | global_conf.json.j2
-      template:
+      ansible.builtin.template:
         src: global_conf.json.j2
         dest: /var/config/lora/global_conf.json
         mode: "0644"
@@ -193,13 +193,13 @@
         group: root
       notify: restart ttn-pkt-forwarder
     - name: ttn_packet_forwarder | Remove ttn_global_conf.json
-      file:
+      ansible.builtin.file:
         dest: /var/config/lora/ttn_global_conf.json
         state: absent
   when: forwarder_variant == "mp" and forwarder_version is version('3.0.25', '>=')
 
 - name: ttn_packet_forwarder | Remove some files
-  file:
+  ansible.builtin.file:
     name: "{{ item }}"
     state: absent
   loop:

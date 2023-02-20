@@ -5,55 +5,54 @@
 #
 
 - name: ttnv3 | Register the gateway
-  local_action:
-    module: command
-    args:
-      "bin/register
-        --json
-        --id {{ lora_hostname }}
-        --eui {{ ansible_local.lora.eui }}
-        --region {{ region }}
-        {{ '--latitude ' + latitude|string if latitude is defined and latitude else '' }}
-        {{ '--longitude ' + longitude|string if longitude is defined and longitude else '' }}
-        {{ '--altitude ' + altitude|string if altitude is defined and altitude else '' }}
-        {{ '--update-location-from-status' if use_gps and have_gps else '' }}
-        {{ '--status-public' if status_public else '--status-private' }}
-        {{ '--location-public' if location_public else '--location-private' }}
-        --router {{ router_v3 }}
-        --description {{ description | quote }}
-        --brand {{ gateway_brand | quote }}
-        --model {{ gateway_model | quote }}
-        --antenna-type {{ antenna_type | quote }}
-        --antenna-model {{ antenna_model | quote }}
-        {{ gateway_owner }}
-        --collaborators '{{ gateway_collaborators_list | flatten | to_json }}'"
+  delegate_to: 127.0.0.1
+  ansible.builtin.command: |
+    bin/register
+    --json
+    --id {{ lora_hostname }}
+    --eui {{ ansible_local.lora.eui }}
+    --region {{ region }}
+    {{ '--latitude ' + latitude|string if latitude is defined and latitude else '' }}
+    {{ '--longitude ' + longitude|string if longitude is defined and longitude else '' }}
+    {{ '--altitude ' + altitude|string if altitude is defined and altitude else '' }}
+    {{ '--update-location-from-status' if use_gps and have_gps else '' }}
+    {{ '--status-public' if status_public else '--status-private' }}
+    {{ '--location-public' if location_public else '--location-private' }}
+    --router {{ router_v3 }}
+    --description {{ description | quote }}
+    --brand {{ gateway_brand | quote }}
+    --model {{ gateway_model | quote }}
+    --antenna-type {{ antenna_type | quote }}
+    --antenna-model {{ antenna_model | quote }}
+    {{ gateway_owner }}
+    --collaborators '{{ gateway_collaborators_list | flatten | to_json }}'
   throttle: 1
   register: register_output
 
 - name: ttnv3 | Set the gateway_info fact
-  set_fact:
+  ansible.builtin.set_fact:
     gateway_info: "{{ register_output.stdout | from_json }}"
   when: forwarder_variant == 'mp'
 
 - name: ttnv3 | Set Some facts
-  set_fact:
+  ansible.builtin.set_fact:
     gw_router: "{{ gateway_info.gateway_server_address }}"
   when: forwarder_variant == 'mp'
 
 - name: ttnv3 | Read local_conf and parse out gw_key
   block:
     - name: ttnv3 | slurp local_config.json
-      slurp:
+      ansible.builtin.slurp:
         src: /var/config/lora/local_conf.json
       register: local_conf_b64
       ignore_errors: true
     - name: ttnv3 | local_conf
-      set_fact:
+      ansible.builtin.set_fact:
         local_conf: "{{ local_conf_b64.content | b64decode | from_json }}"
       ignore_errors: true
       when: local_conf_b64 is succeeded
     - name: ttnv3 | gw_key
-      set_fact:
+      ansible.builtin.set_fact:
         gw_key: "{{ local_conf.gateway_conf.servers[0].serv_gw_key }}"
       when:
         - local_conf is defined
@@ -66,40 +65,38 @@
 - name: ttnv3 | Read tc.key and parse out gw_key
   block:
     - name: ttnv3 | slurp tc.key
-      slurp:
+      ansible.builtin.slurp:
         src: /var/config/lora/tc.key
       register: tc_key_b64
       ignore_errors: true
     - name: ttnv3 | gw_key
-      set_fact:
+      ansible.builtin.set_fact:
         gw_key: "{{ tc_key_b64.content | b64decode | split | last }}"
       ignore_errors: true
       when: tc_key_b64 is succeeded
   when: forwarder_variant.startswith("basic")
 
 - name: ttnv3 | Test key by fetching config
-  uri:
+  delegate_to: 127.0.0.1
+  ansible.builtin.uri:
     headers:
       Authorization: "Bearer {{ gw_key }}"
     url: "https://{{ router_v3 }}/api/v3/gcs/gateways/{{ lora_hostname }}/semtechudp/global_conf.json"
     method: GET
   register: get_config
   ignore_errors: true
-  delegate_to: 127.0.0.1
   when: gw_key is defined
 
 - name: ttnv3 | Extract global.conf
-  set_fact:
+  ansible.builtin.set_fact:
     global_conf: "{{ get_config.json }}"
   when:
     - gw_key is defined
     - get_config is succeeded
 
 - name: ttnv3 | Generate a key if we do not have one
-  local_action:
-    module: shell
-    args:
-      "ttn-lw-cli gateway api-keys create {{ lora_hostname }} --name link --right-gateway-link"
+  delegate_to: 127.0.0.1
+  ansible.builtin.shell: "ttn-lw-cli gateway api-keys create {{ lora_hostname }} --name link --right-gateway-link"
   register: key_data_json
   throttle: 1
   notify: TTNv3 cleanup
@@ -108,10 +105,10 @@
 - name: ttnv3 | Extract the key and key_id
   block:
     - name: ttnv3 | key_data
-      set_fact:
+      ansible.builtin.set_fact:
         key_data: "{{ key_data_json.stdout | from_json }}"
     - name: ttnv3 | gw_key, gw_key_id
-      set_fact:
+      ansible.builtin.set_fact:
         gw_key: "{{ key_data.key }}"
         gw_key_id: "{{ key_data.id }}"
   when: gw_key is not defined and key_data_json is success
@@ -119,15 +116,15 @@
 - name: ttnv3 | Get the packet forwarder global config file
   block:
     - name: ttnv3 | fetch global_conf.json
-      uri:
+      delegate_to: 127.0.0.1
+      ansible.builtin.uri:
         url: "https://{{ router_v3 }}/api/v3/gcs/gateways/{{ lora_hostname }}/semtechudp/global_conf.json"
         method: GET
         headers:
           Authorization: "Bearer {{ gw_key }}"
       register: get_config
-      delegate_to: 127.0.0.1
     - name: ttnv3 | global_conf
-      set_fact:
+      ansible.builtin.set_fact:
         global_conf: "{{ get_config.json }}"
   when:
     - global_conf is not defined

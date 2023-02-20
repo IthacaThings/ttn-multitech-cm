@@ -7,19 +7,19 @@
 #
 
 - name: ppp | Get stat info about /etc/ppp/ppp_on_boot
-  stat:
+  ansible.builtin.stat:
     path: /etc/ppp/ppp_on_boot
   register: ppp_on_boot
 
 - name: ppp | Copy /etc/ppp/ppp_on_boot to /var/config/ppp/ppp_on_boot
-  copy:
+  ansible.builtin.copy:
     remote_src: true
     src: /etc/ppp/ppp_on_boot
     dest: /var/config/ppp/ppp_on_boot
   when: ppp_on_boot.stat.islnk is defined and not ppp_on_boot.stat.islnk
 
 - name: ppp | Make /etc/ppp/ppp_on_boot a link to /var/config/ppp/ppp_on_boot
-  file:
+  ansible.builtin.file:
     dest: /etc/ppp/ppp_on_boot
     state: link
     src: /var/config/ppp/ppp_on_boot
@@ -27,7 +27,7 @@
   when: ppp_on_boot.stat.islnk is defined and not ppp_on_boot.stat.islnk
 
 - name: ppp | Make /var/config/ppp/ppp_on_boot executable
-  file:
+  ansible.builtin.file:
     dest: /var/config/ppp/ppp_on_boot
     mode: "755"
   notify: Start ppp
@@ -40,18 +40,18 @@
 #
 
 - name: ppp | Reset APN
-  shell: mlinux-set-apn -c
+  ansible.builtin.shell: mlinux-set-apn -c
   when:
     - cellular_apn is not defined or use_cellular == False
 
 - name: ppp | Set APN
-  shell: "mlinux-set-apn -- {{ cellular_apn }}"
+  ansible.builtin.shell: "mlinux-set-apn -- {{ cellular_apn }}"
   when:
     - use_cellular
     - cellular_apn is defined
 
 - name: ppp | Set provider
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/ppp/ppp_on_boot
     regexp: '^\$PPPD call '
     line: '$PPPD call {{ cellular_provider }}'
@@ -65,7 +65,7 @@
 #
 
 - name: ppp | Ensure the connection stays up
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/ppp/options
     regexp: '^#?persist'
     line: 'persist'
@@ -75,7 +75,7 @@
     - cellular_provider is defined
 
 - name: ppp | Ensure unlimited connection attempts
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/ppp/options
     regexp: '^#?maxfail'
     line: 'maxfail 0'
@@ -85,7 +85,7 @@
     - cellular_provider is defined
 
 - name: ppp | Reset PPP persist option
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/ppp/options
     regexp: '^#?persist'
     line: '#persist'
@@ -93,7 +93,7 @@
   when: use_cellular == False or cellular_provider is not defined
 
 - name: ppp | Set ppp MTU
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/ppp/options
     regexp: '^#?mtu'
     line: "mtu {{ ppp0_mtu }}"
@@ -107,7 +107,7 @@
 # Monit
 #
 - name: ppp | /var/config/monit/monit.d/ppp.monit
-  template:
+  ansible.builtin.template:
     src: ppp.monit.j2
     dest: /var/config/monit/monit.d/ppp.monit
     mode: "700"
@@ -120,7 +120,7 @@
     - cellular_apn is defined
 
 - name: ppp | Remove /var/config/monit/monit.d/ppp.monit
-  file:
+  ansible.builtin.file:
     path: /var/config/monit/monit.d/ppp/monit
     state: absent
   notify:
