@@ -1,17 +1,17 @@
 ---
 
-- name: time Set the timezone
+- name: time | Set the timezone
   file:
     name: /etc/localtime
     state: link
     force: yes
     src: "/usr/share/zoneinfo/{{ timezone }}"
 
-- name: time Set time from ntp server
+- name: time | Set time from ntp server
   shell: "ntpdate -bu {{ ntp_servers[0] }} && hwclock -wu"
   ignore_errors: yes
 
-- name: time Install ntp packages
+- name: time | Install ntp packages
   opkg:
     name: ntp
     state: installed
@@ -23,7 +23,7 @@
     - Reload facts
     - opkg clean
 
-- name: time Create /var/config/ntp
+- name: time | Create /var/config/ntp
   file:
     name: /var/config/ntp
     state: directory
@@ -31,7 +31,7 @@
     owner: ntp
     group: ntp
 
-- name: time /var/config/ntp.conf
+- name: time | /var/config/ntp.conf
   template:
     src: ntp.conf.j2
     dest: /var/config/ntp.conf
@@ -39,7 +39,7 @@
     owner: root
     group: root
 
-- name: time /etc/ntp.conf
+- name: time | /etc/ntp.conf
   file:
     name: /etc/ntp.conf
     state: link
@@ -51,7 +51,7 @@
 #	 /etc/devault/ntp
 #
 
-- name: time Ensure /var/config/default/ntpd.default exists
+- name: time | Ensure /var/config/default/ntpd.default exists
   copy:
     src: /etc/default/ntpd.default
     dest: /var/config/default/ntpd.default
@@ -60,7 +60,7 @@
   notify:
     - Update system checksum file
 
-- name: time Link /etc/default/ntpd to /var/config/default/ntpd.default
+- name: time | Link /etc/default/ntpd to /var/config/default/ntpd.default
   file:
     dest: /etc/default/ntpd
     state: link
@@ -70,11 +70,11 @@
     - restart ntpd
     - Update system checksum file
 
-- name: time Do we want SET_SYSTEM_CLOCK?
+- name: time | Do we want SET_SYSTEM_CLOCK?
   set_fact:
     set_system_clock: "{{ 0 if use_cellular and cellular_apn is defined else 1 }}"
 
-- name: time Prevent ntpd from hanging on boot when net is down
+- name: time | Prevent ntpd from hanging on boot when net is down
   lineinfile:
     dest: /var/config/default/ntpd.default
     regexp: "^SET_SYSTEM_CLOCK="
@@ -88,11 +88,11 @@
 #	Monit
 #
 
-- name: networking Calculate some facts monit depends on
+- name: time | Calculate some facts monit depends on
   set_fact:
     monit_ntpd_pidfile: "{{ '/var/run/ntp.pid' if ansible_local.opkg.ntp is version('4.2.8', '<') else '/var/run/ntpd.pid' }}"
 
-- name: networking /var/config/monit/monit.d/ntp.monit
+- name: time | /var/config/monit/monit.d/ntp.monit
   template:
     src: ntp.monit.j2
     dest: /var/config/monit/monit.d/ntp.monit

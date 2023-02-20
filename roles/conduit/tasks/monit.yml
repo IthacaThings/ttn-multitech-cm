@@ -1,6 +1,6 @@
 ---
 
-- name: monit Install Monit and dependencies
+- name: monit | Install Monit and dependencies
   opkg:
     state: installed
     pkg: "{{ item }}"
@@ -15,21 +15,23 @@
 #	/var/config/monit/.monit.id
 #
 
-- name: monit Get stat info about /var/config/monit/.monit.id
+- name: monit | Get stat info about /var/config/monit/.monit.id
   stat:
     path: /var/config/monit/.monit.id
   register: config_monit_id
 
-- name: monit Move .monit.id to /var/config/monit if source exists and dest does not
+- name: monit | Move .monit.id to /var/config/monit if source exists and dest does not
   block:
-    - stat:
+    - name: monit | Find /home/root/.monit.id
+      stat:
         path: /home/root/.monit.id
       register: monit_id
-    - command: mv /home/root/.monit.id /var/config/monit
+    - name: monit | Move /home/root/.monit.id
+      command: mv /home/root/.monit.id /var/config/monit
       when: monit_id.stat.exists and not monit_id.stat.islnk
   when: not config_monit_id.stat.exists
 
-- name: monit Link /home/root/.monit.id to /var/config/monit/.monit.id
+- name: monit | Link /home/root/.monit.id to /var/config/monit/.monit.id
   file:
     path: /home/root/.monit.id
     src: /var/config/monit/.monit.id
@@ -41,7 +43,7 @@
 #	Event Queue
 #
 
-- name: monit Create monit event queue
+- name: monit | Create monit event queue
   file:
     name: /var/monit
     state: directory
@@ -56,7 +58,7 @@
 #	Test scripts
 #
 
-- name: monit Install monit test scripts
+- name: monit | Install monit test scripts
   copy:
     src: "{{ role_path }}/files/{{ item }}"
     dest: /usr/local/lib/{{ item }}
@@ -68,7 +70,7 @@
     - check_basiclog
     - check_system_md5
 
-- name: monit Install config files
+- name: monit | Install config files
   copy:
     src: "{{ role_path }}/files/{{ item | basename }}"
     dest: "{{ item }}"
@@ -78,7 +80,7 @@
   loop:
     - /var/config/system.md5sum.exclude
 
-- name: monit /var/config/monit/monitrc
+- name: monit | /var/config/monit/monitrc
   template:
     src: monitrc.j2
     dest: /var/config/monit/monitrc
@@ -88,7 +90,7 @@
   notify:
     - Restart monit
 
-- name: monit Point /etc/monitrc at /var/config/monit/monitrc
+- name: monit | Point /etc/monitrc at /var/config/monit/monitrc
   file:
     name: /etc/monitrc
     state: link
@@ -98,7 +100,7 @@
     - Reload facts
     - Restart monit
 
-- name: monit Enable monit
+- name: monit | Enable monit
   lineinfile: dest=/etc/default/monit
     regexp="^ENABLED="
     line="ENABLED="yes""

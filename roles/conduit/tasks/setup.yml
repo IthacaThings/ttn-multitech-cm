@@ -3,7 +3,7 @@
 #	Set up directories so tasks can install Monit scripts
 #
 
-- name: monit Create persistent directories
+- name: setup | Create persistent directories
   file:
     name: "{{ item[0] }}"
     state: directory

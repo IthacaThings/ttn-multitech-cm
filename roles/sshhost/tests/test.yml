@@ -1,5 +1,6 @@
 ---
-- hosts: localhost
+- name: test | Testing
+  hosts: localhost
   remote_user: root
   roles:
     - sshhost

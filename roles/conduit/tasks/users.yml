@@ -4,7 +4,7 @@
 #	Setup users
 #
 
-- name: users Create non-volatile home dirs
+- name: users | Create non-volatile home dirs
   file:
     dest: /var/config/home
     state: directory
@@ -12,7 +12,7 @@
     owner: root
     group: root
 
-- name: users "Set up dirs for root"
+- name: users | "Set up dirs for root"
   import_tasks: user_dirs.yml
   vars:
     target_user: "root"
@@ -20,7 +20,7 @@
 #
 #	Create ttn user
 #
-- name: users "Set up {{ ttn_user }} user"
+- name: users | "Set up {{ ttn_user }} user"
   user:
     name: "{{ ttn_user }}"
     append: yes
@@ -28,10 +28,12 @@
     shell: /bin/bash
     password: "*"
 
-- name: users Configure mtadm user
+- name: users | Configure mtadm user
   block:
-    - import_tasks: user_dirs.yml
-    - import_tasks: user_sudo.yml
+    - name: users | ttn dirs
+      import_tasks: user_dirs.yml
+    - name: users | ttn sudo
+      import_tasks: user_sudo.yml
   vars:
     target_user: ttn
 
@@ -39,11 +41,14 @@
 #	Configure mtadm user
 #
 
-- name: users Configure mtadm user
+- name: users | Configure mtadm user
   block:
-    - import_tasks: user_dirs.yml
-    - import_tasks: user_sudo.yml
-    - lineinfile:
+    - name: users | mtadm dirs
+      import_tasks: user_dirs.yml
+    - name: users | mtadm sudo
+      import_tasks: user_sudo.yml
+    - name: users | Disable pam auth functions
+      lineinfile:
         dest: /etc/pam.d/sshd
         regex: ^(auth .*)$
         line: '# \1'

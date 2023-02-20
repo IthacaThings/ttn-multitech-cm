@@ -1,8 +1,10 @@
 ---
-- hosts: conduits
+- name: site - conduits
+  hosts: conduits
   roles:
     - conduit
 
-- hosts: jumphost.example.com
+- name: site - jumphost
+  hosts: jumphost.example.com
   roles:
     - sshhost

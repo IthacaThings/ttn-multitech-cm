@@ -1,10 +1,10 @@
 ---
 
-- name: ssh_tunnel Is SSH tunnel enabled
+- name: ssh_tunnel | Is SSH tunnel enabled
   set_fact:
     ssh_tunnel_enabled: "{{ ssh_tunnel_remote_port is defined and ssh_tunnel_remote_port > 0 and ssh_tunnel_gateway_user_on_jumphost is defined }}"
 
-- name: ssh_tunnel Install autossh
+- name: ssh_tunnel | Install autossh
   opkg:
     state: installed
     pkg: "{{ item }}"
@@ -15,7 +15,7 @@
     - Reload facts
     - opkg clean
 
-- name: ssh_tunnel /var/config/ssh_tunnel.default
+- name: ssh_tunnel | /var/config/ssh_tunnel.default
   template:
     src: ssh_tunnel.j2
     dest: /var/config/ssh_tunnel.default
@@ -26,7 +26,7 @@
   when: 
     - ssh_tunnel_enabled
 
-- name: ssh_tunnel /var/config/init.d/ssh_tunnel
+- name: ssh_tunnel | /var/config/init.d/ssh_tunnel
   copy:
     dest: /var/config/init.d/ssh_tunnel
     src: ssh_tunnel.initd
@@ -37,7 +37,7 @@
   when:
     - ssh_tunnel_enabled
 
-- name: ssh_tunnel Link /etc/default/ssh_tunnel to /var/config/ssh_tunnel.default
+- name: ssh_tunnel | Link /etc/default/ssh_tunnel to /var/config/ssh_tunnel.default
   file:
     dest: /etc/default/ssh_tunnel
     state: link
@@ -47,7 +47,7 @@
   when:
     - ssh_tunnel_enabled
     
-- name: ssh_tunnel Link /etc/init.d/ssh_tunnel to /var/config/init.d/ssh_tunnel
+- name: ssh_tunnel | Link /etc/init.d/ssh_tunnel to /var/config/init.d/ssh_tunnel
   file:
     dest: /etc/init.d/ssh_tunnel
     state: link
@@ -57,13 +57,13 @@
   when:
     - ssh_tunnel_enabled
 
-- name: ssh_tunnel Stop ssh_tunnel if not enabled
+- name: ssh_tunnel | Stop ssh_tunnel if not enabled
   service: name=ssh_tunnel state=stopped
   ignore_errors: true
   when:
     - not ssh_tunnel_enabled
    
-- name: ssh_tunnel Clean up ssh_tunnel if not enabled
+- name: ssh_tunnel | Clean up ssh_tunnel if not enabled
   file:
     dest: "{{ item }}"
     state: absent

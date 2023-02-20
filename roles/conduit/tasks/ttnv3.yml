@@ -4,7 +4,7 @@
 #	Register gateway with TTNv3
 #
 
-- name: ttnv3 Register the gateway
+- name: ttnv3 | Register the gateway
   local_action:
     module: command
     args:
@@ -30,27 +30,30 @@
   throttle: 1
   register: register_output
 
-- name: ttnv3 Set the gateway_info fact
+- name: ttnv3 | Set the gateway_info fact
   set_fact:
     gateway_info: "{{ register_output.stdout | from_json }}"
   when: forwarder_variant == 'mp'
 
-- name: ttnv3 Set Some facts
+- name: ttnv3 | Set Some facts
   set_fact:
     gw_router: "{{ gateway_info.gateway_server_address }}"
   when: forwarder_variant == 'mp'
 
-- name: ttnv3 Read local_conf and parse out gw_key
+- name: ttnv3 | Read local_conf and parse out gw_key
   block:
-    - slurp:
+    - name: ttnv3 | slurp local_config.json
+      slurp:
         src: /var/config/lora/local_conf.json
       register: local_conf_b64
       ignore_errors: true
-    - set_fact:
+    - name: ttnv3 | local_conf
+      set_fact:
         local_conf: "{{ local_conf_b64.content | b64decode | from_json }}"
       ignore_errors: true
       when: local_conf_b64 is succeeded
-    - set_fact:
+    - name: ttnv3 | gw_key
+      set_fact:
         gw_key: "{{ local_conf.gateway_conf.servers[0].serv_gw_key }}"
       when:
         - local_conf is defined
@@ -60,19 +63,21 @@
         - local_conf.gateway_conf.servers[0].serv_gw_key.startswith("NNSXS.")
   when: forwarder_variant != "basic"
 
-- name: ttnv3 Read tc.key and parse out gw_key
+- name: ttnv3 | Read tc.key and parse out gw_key
   block:
-    - slurp:
+    - name: ttnv3 | slurp tc.key
+      slurp:
         src: /var/config/lora/tc.key
       register: tc_key_b64
       ignore_errors: true
-    - set_fact:
+    - name: ttnv3 | gw_key
+      set_fact:
         gw_key: "{{ tc_key_b64.content | b64decode | split | last }}"
       ignore_errors: true
       when: tc_key_b64 is succeeded
   when: forwarder_variant.startswith("basic")
 
-- name: ttnv3 Test key by fetching config
+- name: ttnv3 | Test key by fetching config
   uri:
     headers:
       Authorization: "Bearer {{ gw_key }}"
@@ -83,14 +88,14 @@
   delegate_to: 127.0.0.1
   when: gw_key is defined
 
-- name: ttnv3 Extract global.conf
+- name: ttnv3 | Extract global.conf
   set_fact:
     global_conf: "{{ get_config.json }}"
   when:
     - gw_key is defined
     - get_config is succeeded
 
-- name: ttnv3 Generate a key if we do not have one
+- name: ttnv3 | Generate a key if we do not have one
   local_action:
     module: shell
     args:
@@ -100,25 +105,29 @@
   notify: TTNv3 cleanup
   when: gw_key is not defined or get_config is not succeeded
 
-- name: ttnv3 Extract the key and key_id
+- name: ttnv3 | Extract the key and key_id
   block:
-    - set_fact:
+    - name: ttnv3 | key_data
+      set_fact:
         key_data: "{{ key_data_json.stdout | from_json }}"
-    - set_fact:
+    - name: ttnv3 | gw_key, gw_key_id
+      set_fact:
         gw_key: "{{ key_data.key }}"
         gw_key_id: "{{ key_data.id }}"
   when: gw_key is not defined and key_data_json is success
 
-- name: ttnv3 Get the packet forwarder global config file
+- name: ttnv3 | Get the packet forwarder global config file
   block:
-  - uri:
+  - name: ttnv3 | fetch global_conf.json
+    uri:
       url: "https://{{ router_v3 }}/api/v3/gcs/gateways/{{ lora_hostname }}/semtechudp/global_conf.json"
       method: GET
       headers:
         Authorization: "Bearer {{ gw_key }}"
     register: get_config
     delegate_to: 127.0.0.1
-  - set_fact:
+  - name: ttnv3 | global_conf
+    set_fact:
       global_conf: "{{ get_config.json }}"
   when:
     - global_conf is not defined

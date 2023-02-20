@@ -1,6 +1,6 @@
 ---
 
-- name: Remove default users
+- name: users | Remove default users
   user: name={{ item }} state=absent remove=yes
   with_items:
     - user

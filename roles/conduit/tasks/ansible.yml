@@ -4,7 +4,7 @@
 #	Install dependencies.  This is mostly to ensure everything is
 #	in place as Ansible will not run without many of these
 #
-- name: ansible Install Ansible dependencies
+- name: ansible | Install Ansible dependencies
   opkg: 
     state: installed
     pkg: "{{ item }}"
@@ -18,7 +18,7 @@
     - "{{ ansible_depends }}"
     - "{{ ansible_depends_old }}"
 
-- name: ansible /var/config/ansible
+- name: ansible | /var/config/ansible
   file:
     name: /var/config/ansible
     state: directory
@@ -26,7 +26,7 @@
     owner: root
     group: root
 
-- name: ansible /var/config/ansible/facts.d
+- name: ansible | /var/config/ansible/facts.d
   copy:
     dest: "/var/config/ansible/"
     mode: "0755"
@@ -36,12 +36,12 @@
     src: facts.d
   notify: Reload facts
 
-- name: ansible Point /etc/ansible at /var/config/ansible
+- name: ansible | Point /etc/ansible at /var/config/ansible
   file:
     name: /etc/ansible
     state: link
     src: /var/config/ansible
   notify: Reload facts
 
-- name: ansible Run handlers in case facts have changed
+- name: ansible | Run handlers in case facts have changed
   meta: flush_handlers

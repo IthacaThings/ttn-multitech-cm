@@ -4,13 +4,13 @@
 #	Restart the SSH tunnel and wait for it to come back
 #
 
-- name: restart_tunnel Restart ssh tunnel
+- name: restart_tunnel | Restart ssh tunnel
   service:
     name: ssh_tunnel
     state: restarted
   ignore_errors: true
 
-- name: mlinux-upgrade Wait for ssh tunnel to come back online
+- name: restart_tunnel | Wait for ssh tunnel to come back online
   wait_for_connection:
     delay: 30
     timeout: 600

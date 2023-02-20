@@ -4,7 +4,7 @@
 #	Register gateway
 #
 
-- name: ttn Check versions
+- name: ttn | Check versions
   fail:
     msg: "mp packet forwarder 3.0.25 or greater is required on this version of mLinux due to lack of nodejs"
   when:
@@ -12,14 +12,14 @@
     - ansible_local.mlinux.version is version('5.3.0', '>=')
     - ( forwarder_variant != "mp" or forwarder_version is version('3.0.25', '<') )
 
-- name: ttn Check if using correct card for the region
+- name: ttn | Check if using correct card for the region
   fail:
     msg: "Lora card {{ ansible_local.lora.product_id }} and region {{ region }} mismatch"
   when: 
     - ( ansible_local.lora.product_id is match("MTAC-LORA-(H-)?915") and region is match("EU|IN") ) or ( ansible_local.lora.product_id is match("MTAC-LORA-(H-)?868") and region is match("US|AU|AS1|AS2|KR") )
     - radio_mismatch is not defined
 
-- name: ttn Check if using correct packet forwarder
+- name: ttn | Check if using correct packet forwarder
   fail:
     msg: "Must use mp_packet_forwarder or basic station with SPI versions of LoRa cards"
   when:
@@ -27,16 +27,17 @@
     - forwarder_variant != "mp"
     - forwarder_variant != "basic"
 
-- name: ttn Check that we have an SPI card if using Basic Station
+- name: ttn | Check that we have an SPI card if using Basic Station
   fail:
     msg: "{{ ansible_local.lora.product_id }} USB card not supported by LoRA Basic Station, use mp packet forwarder"
   when:
     - forwarder_variant == "basic"
     - ansible_local.lora.product_id is match("MTAC-LORA-(915|868)")
 
-- include_tasks: ttnv3.yml
+- name: ttn | Configure ttnv3
+  include_tasks: ttnv3.yml
 
-- name: ttn Lora dir
+- name: ttn | Lora dir
   file:
     name: /var/config/lora
     state: directory
@@ -47,7 +48,7 @@
 #
 #	Remove Multi-Tech stuff that we don't want and install the TTN packet-forwarder
 #
-- name: ttn Remove Multi-Tech lora-network-server
+- name: ttn | Remove Multi-Tech lora-network-server
   opkg:
     name: lora-network-server
     state: absent
@@ -56,7 +57,7 @@
     - Reload facts
     - opkg clean
 
-- name: ttn Remove Multi-Tech lora-packet-forwarder
+- name: ttn | Remove Multi-Tech lora-packet-forwarder
   opkg:
     name: lora-packet-forwarder
     state: absent`
@@ -65,10 +66,12 @@
     - Reload facts
     - opkg clean
 
-- include_tasks: ttn_packet_forwarder.yml
+- name: ttn | ttn_packet_forwarder
+  include_tasks: ttn_packet_forwarder.yml
   when: forwarder_variant != "basic"
 
-- include_tasks: ttn_basic_station.yml
+- name: ttn | ttn_basic_station
+  include_tasks: ttn_basic_station.yml
   when: forwarder_variant == "basic"
   
 
@@ -76,7 +79,7 @@
 #	Monit
 #
 
-- name: ttn /var/config/monit/monit.d/ttn.monit
+- name: ttn | /var/config/monit/monit.d/ttn.monit
   template:
     src: ttn.monit.j2
     dest: /var/config/monit/monit.d/ttn.monit
