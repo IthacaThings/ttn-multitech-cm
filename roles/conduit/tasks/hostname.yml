@@ -7,6 +7,7 @@
 
 - name: hostname | Move /etc/hostname to /var/config/ssh if a file
   ansible.builtin.command: mv /etc/hostname /var/config/
+  changed_when: true
   when: s_hostname.stat.islnk is defined and not s_hostname.stat.islnk
 
 - name: hostname | Link /etc/hostname to /var/config/hostname
@@ -27,3 +28,4 @@
 
 - name: hostname | Set hostname
   ansible.builtin.command: "hostname -F /etc/hostname"
+  changed_when: true

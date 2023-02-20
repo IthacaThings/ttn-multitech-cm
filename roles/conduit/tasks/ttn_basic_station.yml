@@ -55,6 +55,7 @@
          --log-size {{ forwarder_logrotate_size }}
          --log-rotate {{ forwarder_logrotate_count }}
          {{ gps_arg }}
+      changed_when: true
       register: station_conf_raw
     - name: ttn_basic_station | station_conf
       ansible.builtin.set_fact:

@@ -28,6 +28,7 @@
 - name: main | Create authorized keys
   delegate_to: 127.0.0.1
   ansible.builtin.shell: "( cat roles/conduit/files/authorized_keys; bin/gen_authorized_keys ) > {{ role_path }}/files/authorized_keys"
+  changed_when: true
   tags: users
 
 # Using a template?

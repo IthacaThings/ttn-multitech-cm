@@ -41,11 +41,13 @@
 
 - name: ppp | Reset APN
   ansible.builtin.command: mlinux-set-apn -c
+  changed_when: true
   when:
     - cellular_apn is not defined or not use_cellular
 
 - name: ppp | Set APN
   ansible.builtin.command: "mlinux-set-apn -- {{ cellular_apn }}"
+  changed_when: true
   when:
     - use_cellular
     - cellular_apn is defined

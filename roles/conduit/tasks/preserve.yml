@@ -15,6 +15,7 @@
 
 - name: preserve | Enable Preserve service
   ansible.builtin.command: update-rc.d preserve_config start 39 0 6 .
+  changed_when: true
 
 - name: preserve | Save a copy of the restore script
   ansible.builtin.get_url:

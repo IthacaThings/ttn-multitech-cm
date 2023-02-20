@@ -9,6 +9,7 @@
 
 - name: time | Set time from ntp server
   ansible.builtin.shell: "ntpdate -bu {{ ntp_servers[0] }} && hwclock -wu"
+  changed_when: true
   ignore_errors: true
 
 - name: time | Install ntp packages

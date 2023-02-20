@@ -63,6 +63,7 @@
   ansible.builtin.command: "monit unmonitor check_pktfwdlog"
   notify: monit monitor check_pktfwdlog
   ignore_errors: true
+  changed_when: true
   when:
     - forwarder_installed != forwarder_package_version
 
@@ -75,12 +76,14 @@
 
 - name: ttn_packet_forwarder | Remove all existing packet-forwarder packages
   ansible.builtin.command: "opkg remove poly-packet-forwarder mp-packet-forwarder ttn-packet-forwarder"
+  changed_when: true
   when:
     - forwarder_installed != forwarder_package_version
   notify: Reload facts
 
 - name: ttn_packet_forwarder | Install {{ forwarder_package_full }}
   ansible.builtin.command: "opkg install /var/config/{{ forwarder_package_full }}"
+  changed_when: true
   when: forwarder_installed != forwarder_package_version
   notify:
     - restart ttn-pkt-forwarder
@@ -165,6 +168,7 @@
         group: root
     - name: ttn_packet_forwarder | merge.js
       ansible.builtin.command: node /opt/lora/merge.js /var/config/lora/ttn_global_conf.json /var/config/lora/multitech_overrides.json /var/config/lora/global_conf.json
+      changed_when: true
       notify: restart ttn-pkt-forwarder
     - name: ttn_packet_forwarder | global_conf.json.j2
       ansible.builtin.template:

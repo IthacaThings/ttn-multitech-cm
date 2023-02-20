@@ -59,10 +59,12 @@
 - name: mlinux-upgrade | Validate {{ mlinux_upgrade_bin }}_{{ mlinux_version }}
   delegate_to: 127.0.0.1
   ansible.builtin.command: "{{ role_path }}/files/mlinux-firmware-upgrade -h {{ conduit_type }} -n {{ role_path }}/files/{{ mlinux_upgrade_bin }}_{{ mlinux_version }}"
+  changed_when: true
 
 - name: mlinux-upgrade | Unmonitor space usage on /var/volatile
   ansible.builtin.command: "monit unmonitor volatile"
   notify: monit monitor volatile
+  changed_when: true
   ignore_errors: true
 
 - name: mlinux-upgrade | Remove some temp files from a failed upgrade

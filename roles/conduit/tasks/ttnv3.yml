@@ -26,6 +26,7 @@
     --antenna-model {{ antenna_model | quote }}
     {{ gateway_owner }}
     --collaborators '{{ gateway_collaborators_list | flatten | to_json }}'
+  changed_when: true
   throttle: 1
   register: register_output
 
@@ -97,6 +98,7 @@
 - name: ttnv3 | Generate a key if we do not have one
   delegate_to: 127.0.0.1
   ansible.builtin.command: "ttn-lw-cli gateway api-keys create {{ lora_hostname }} --name link --right-gateway-link"
+  changed_when: true
   register: key_data_json
   throttle: 1
   notify: TTNv3 cleanup

@@ -203,5 +203,6 @@
   delegate_to: 127.0.0.1
   ansible.builtin.command: "true"
   notify: Update system checksum file
+  changed_when: true
   tags:
     - always
