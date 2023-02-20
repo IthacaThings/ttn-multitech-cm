@@ -58,7 +58,7 @@
 # Restart sshd after config changes
 #
 - name: Restart ssh
-  ansible.builtin.service:
+  ansible.builtin.service: # noqa: ignore-errors
     name: sshd
     state: restarted
   async: 1
@@ -117,11 +117,11 @@
     state: restarted
 
 - name: monit monitor check_pktfwdlog
-  ansible.builtin.command: "monit monitor check_pktfwdlog"
+  ansible.builtin.command: "monit monitor check_pktfwdlog" # noqa: ignore-errors
   ignore_errors: true
 
 - name: monit monitor volatile
-  ansible.builtin.command: "monit monitor volatile"
+  ansible.builtin.command: "monit monitor volatile" # noqa: ignore-errors
   ignore_errors: true
 
 - name: Update system checksum file

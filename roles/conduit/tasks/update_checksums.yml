@@ -1,16 +1,16 @@
 ---
 - name: update_checksums | Unmonitor check_system_md5 to avoid corruption
-  ansible.builtin.command: monit unmonitor check_system_md5
+  ansible.builtin.command: monit unmonitor check_system_md5 # noqa: ignore-errors
   changed_when: true
   ignore_errors: true
 
 - name: update_checksums | Update system checksums
-  ansible.builtin.shell: /usr/local/lib/check_system_md5 || /usr/local/lib/check_system_md5 --reset
+  ansible.builtin.shell: /usr/local/lib/check_system_md5 || /usr/local/lib/check_system_md5 --reset # noqa: ignore-errors
   changed_when: true
   ignore_errors: true
 
 - name: update_checksums | Monitor check_system_md5 again
-  ansible.builtin.command: monit monitor check_system_md5
+  ansible.builtin.command: monit monitor check_system_md5 # noqa: ignore-errors
   changed_when: true
   ignore_errors: true
 ...

@@ -44,12 +44,12 @@
   when: forwarder_variant != "basic"
   block:
     - name: ttnv3 | slurp local_config.json
-      ansible.builtin.slurp:
+      ansible.builtin.slurp: # noqa: ignore-errors
         src: /var/config/lora/local_conf.json
       register: local_conf_b64
       ignore_errors: true
     - name: ttnv3 | local_conf
-      ansible.builtin.set_fact:
+      ansible.builtin.set_fact: # noqa: ignore-errors
         local_conf: "{{ local_conf_b64.content | b64decode | from_json }}"
       ignore_errors: true
       when: local_conf_b64 is succeeded
@@ -72,7 +72,7 @@
       register: tc_key_b64
       ignore_errors: true
     - name: ttnv3 | gw_key
-      ansible.builtin.set_fact:
+      ansible.builtin.set_fact: # noqa: ignore-errors
         gw_key: "{{ tc_key_b64.content | b64decode | split | last }}"
       ignore_errors: true
       when: tc_key_b64 is succeeded

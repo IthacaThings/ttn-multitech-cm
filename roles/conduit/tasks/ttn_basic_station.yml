@@ -5,7 +5,7 @@
 # XXX - TODO - Switch version and test this code
 
 - name: ttn_basic_station | Stop lora-basic if we are updating it
-  ansible.builtin.service:
+  ansible.builtin.service: # noqa: ignore-errors
     name: lora-basic-station
     state: stopped
   ignore_errors: true
@@ -144,13 +144,13 @@
     - Restart lora-basic-station
 
 - name: ttn_basic_station | Stop the packet fowarder
-  ansible.builtin.service:
+  ansible.builtin.service: # noqa: ignore-errors
     name: ttn-pkt-forwarder
     state: stopped
   ignore_errors: true
 
 - name: ttn_basic_station |  Disable ttn-pkt-forwarder
-  ansible.builtin.lineinfile:
+  ansible.builtin.lineinfile: # noqa: ignore-errors
     dest: /etc/default/ttn-pkt-forwarder
     regexp: "^ENABLED="
     line: 'ENABLED="no"'

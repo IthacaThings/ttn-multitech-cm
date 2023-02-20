@@ -9,7 +9,7 @@
 
 - name: mlinux_setup | Run mlinux_setup (mlinux 3)
   delegate_to: 127.0.0.1
-  ansible.builtin.command:
+  ansible.builtin.command: # noqa: ignore-errors
     cmd: "sshpass -proot ssh {{ ssh_options }} root@{{ ansible_host }} /var/config/mlinux_setup"
   ignore_errors: true
   changed_when: true
@@ -17,7 +17,7 @@
 
 - name: mlinux_setup | Run mlinux_setup (4 < mlinux_verson <= 5.1.8)
   delegate_to: 127.0.0.1
-  ansible.builtin.shell:
+  ansible.builtin.shell: # noqa: ignore-errors
     cmd: "echo root | sshpass -proot ssh {{ ssh_options }} mtadm@{{ ansible_host }} sudo -S /var/config/mlinux_setup"
   changed_when: true
   ignore_errors: true

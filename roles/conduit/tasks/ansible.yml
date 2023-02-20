@@ -5,7 +5,7 @@
 # in place as Ansible will not run without many of these
 #
 - name: ansible | Install Ansible dependencies
-  community.general.opkg:
+  community.general.opkg: # noqa: ignore-errors
     state: installed
     pkg: "{{ item }}"
     update_cache: true

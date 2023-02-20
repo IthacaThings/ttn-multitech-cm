@@ -140,7 +140,7 @@
 #
 
 - name: main | Stop mosquitto
-  ansible.builtin.service:
+  ansible.builtin.service: # noqa: ignore-errors
     name: mosquitto
     state: stopped
   when: ansible_local.opkg.mosquitto is defined

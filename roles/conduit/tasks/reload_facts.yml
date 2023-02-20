@@ -5,7 +5,7 @@
 #
 
 - name: reload_facts | Clear the facts
-  ansible.builtin.meta: clear_facts
+  ansible.builtin.meta: clear_facts # noqa: ignore-errors
   ignore_errors: true
 
 - name: reload_facts | Reload the facts

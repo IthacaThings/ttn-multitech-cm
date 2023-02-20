@@ -5,13 +5,13 @@
 #
 
 - name: restart_tunnel | Restart ssh tunnel
-  ansible.builtin.service:
+  ansible.builtin.service: # noqa: ignore-errors
     name: ssh_tunnel
     state: restarted
   ignore_errors: true
 
 - name: restart_tunnel | Wait for ssh tunnel to come back online
-  ansible.builtin.wait_for_connection:
+  ansible.builtin.wait_for_connection: # noqa: ignore-errors
     delay: 30
     timeout: 600
     connect_timeout: 15
