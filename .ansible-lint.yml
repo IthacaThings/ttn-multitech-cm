@@ -1,0 +1,9 @@
+---
+parseable: true
+
+enable_list:
+  - name[prefix]
+
+skip_list:
+  - name[casing]
+...

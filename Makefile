@@ -173,6 +173,10 @@ ansible-setup:
 	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
 		ansible --inventory ${INVENTORY} -o ${OPTIONS} ${TARGET} --become -m shell -a "opkg update; opkg install ${ANSIBLE_DEPENDS_COMMON}; opkg install ${ANSIBLE_DEPENDS_OLD} || exit 0"
 
+# Lint
+lint:
+	ansible-lint -c .ansible-lint.yml
+
 # Collect logs from gateways
 fetch-logs:
 	@for target in ${HOSTS}; do mkdir -p logs/$${target}; done
