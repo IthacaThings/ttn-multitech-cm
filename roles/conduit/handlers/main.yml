@@ -96,11 +96,11 @@
 # opkg handlers
 #
 - name: opkg clean
-  ansible.builtin.shell: "opkg clean --autoremove"
+  ansible.builtin.command: "opkg clean --autoremove"
   when: ansible_local.mlinux.version is version('5', '>=')
 
 - name: opkg update
-  ansible.builtin.shell: "opkg update"
+  ansible.builtin.command: "opkg update"
   register: result
   when: mlinux_feed is changed or ttni_feed is changed
   until: result is succeeded
@@ -117,11 +117,11 @@
     state: restarted
 
 - name: monit monitor check_pktfwdlog
-  ansible.builtin.shell: "monit monitor check_pktfwdlog"
+  ansible.builtin.command: "monit monitor check_pktfwdlog"
   ignore_errors: true
 
 - name: monit monitor volatile
-  ansible.builtin.shell: "monit monitor volatile"
+  ansible.builtin.command: "monit monitor volatile"
   ignore_errors: true
 
 - name: Update system checksum file

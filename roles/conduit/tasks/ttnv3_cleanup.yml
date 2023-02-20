@@ -1,13 +1,13 @@
 ---
 - name: ttnv3_cleanup | Get all link keys
   delegate_to: 127.0.0.1
-  ansible.builtin.shell: "ttn-lw-cli gateway api-keys list {{ lora_hostname }}"
+  ansible.builtin.command: "ttn-lw-cli gateway api-keys list {{ lora_hostname }}"
   throttle: 1
   register: list_keys
 
 - name: ttnv3_cleanup | Delete all link keys that are not in use
   delegate_to: 127.0.0.1
-  ansible.builtin.shell: "ttn-lw-cli gateway api-keys delete {{ lora_hostname }} {{item.id }}"
+  ansible.builtin.command: "ttn-lw-cli gateway api-keys delete {{ lora_hostname }} {{item.id }}"
   throttle: 1
   loop: "{{ list_keys.stdout | from_json }}"
   no_log: true

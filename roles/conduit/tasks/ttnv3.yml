@@ -96,7 +96,7 @@
 
 - name: ttnv3 | Generate a key if we do not have one
   delegate_to: 127.0.0.1
-  ansible.builtin.shell: "ttn-lw-cli gateway api-keys create {{ lora_hostname }} --name link --right-gateway-link"
+  ansible.builtin.command: "ttn-lw-cli gateway api-keys create {{ lora_hostname }} --name link --right-gateway-link"
   register: key_data_json
   throttle: 1
   notify: TTNv3 cleanup

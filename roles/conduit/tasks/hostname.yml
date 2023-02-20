@@ -26,4 +26,4 @@
   when: hostname is defined
 
 - name: hostname | Set hostname
-  ansible.builtin.shell: "hostname -F /etc/hostname"
+  ansible.builtin.command: "hostname -F /etc/hostname"

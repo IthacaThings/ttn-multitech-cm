@@ -9,7 +9,7 @@
 
 - name: mlinux_setup | Run mlinux_setup (mlinux 3)
   delegate_to: 127.0.0.1
-  ansible.builtin.shell:
+  ansible.builtin.command:
     cmd: "sshpass -proot ssh {{ ssh_options }} root@{{ ansible_host }} /var/config/mlinux_setup"
   ignore_errors: true
   when: mlinux_version is version('4', '<')

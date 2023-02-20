@@ -60,7 +60,7 @@
     - forwarder_installed != forwarder_package_version
 
 - name: ttn_packet_forwarder | Unmonitor packet forwarder if changes are being made
-  ansible.builtin.shell: "monit unmonitor check_pktfwdlog"
+  ansible.builtin.command: "monit unmonitor check_pktfwdlog"
   notify: monit monitor check_pktfwdlog
   ignore_errors: true
   when:
@@ -74,13 +74,13 @@
   ignore_errors: true
 
 - name: ttn_packet_forwarder | Remove all existing packet-forwarder packages
-  ansible.builtin.shell: "opkg remove poly-packet-forwarder mp-packet-forwarder ttn-packet-forwarder"
+  ansible.builtin.command: "opkg remove poly-packet-forwarder mp-packet-forwarder ttn-packet-forwarder"
   when:
     - forwarder_installed != forwarder_package_version
   notify: Reload facts
 
 - name: ttn_packet_forwarder | Install {{ forwarder_package_full }}
-  ansible.builtin.shell: "opkg install /var/config/{{ forwarder_package_full }}"
+  ansible.builtin.command: "opkg install /var/config/{{ forwarder_package_full }}"
   when: forwarder_installed != forwarder_package_version
   notify:
     - restart ttn-pkt-forwarder
@@ -164,7 +164,7 @@
         owner: root
         group: root
     - name: ttn_packet_forwarder | merge.js
-      ansible.builtin.shell: node /opt/lora/merge.js /var/config/lora/ttn_global_conf.json /var/config/lora/multitech_overrides.json /var/config/lora/global_conf.json
+      ansible.builtin.command: node /opt/lora/merge.js /var/config/lora/ttn_global_conf.json /var/config/lora/multitech_overrides.json /var/config/lora/global_conf.json
       notify: restart ttn-pkt-forwarder
     - name: ttn_packet_forwarder | global_conf.json.j2
       ansible.builtin.template:

@@ -1,7 +1,7 @@
 ---
 
 - name: networking | Check that wlan0 exists if we are configuring it as only interface
-  ansible.builtin.shell: ifconfig wlan0
+  ansible.builtin.command: ifconfig wlan0
   when:
     - eth0_type is not defined or eth0_type == 'manual'
     - wlan0_type is defined
