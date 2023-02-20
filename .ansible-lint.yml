@@ -2,10 +2,9 @@
 parseable: true
 
 enable_list:
-  - name[prefix]
+  - name[prefix]  # force prefix name
 
 skip_list:
-  - name[casing]
-  - name[template]
-  - yaml[line-length]
+  - name[template]  # Too restrictive
+  - yaml[line-length]  # Need to clean up before enabling this
 ...
