@@ -12,7 +12,7 @@
     group: root
   notify: Restart monit
   loop:
-    - [ /var/config/monit, "0700" ]
-    - [ /var/config/monit/monit.d, "0700" ]
-    - [ /var/config/init.d, "0755" ]
+    - [/var/config/monit, "0700"]
+    - [/var/config/monit/monit.d, "0700"]
+    - [/var/config/init.d, "0755"]
 ...

@@ -1,3 +1,4 @@
+---
 
 #
 #	Register gateway with TTNv3
@@ -117,17 +118,17 @@
 
 - name: ttnv3 | Get the packet forwarder global config file
   block:
-  - name: ttnv3 | fetch global_conf.json
-    uri:
-      url: "https://{{ router_v3 }}/api/v3/gcs/gateways/{{ lora_hostname }}/semtechudp/global_conf.json"
-      method: GET
-      headers:
-        Authorization: "Bearer {{ gw_key }}"
-    register: get_config
-    delegate_to: 127.0.0.1
-  - name: ttnv3 | global_conf
-    set_fact:
-      global_conf: "{{ get_config.json }}"
+    - name: ttnv3 | fetch global_conf.json
+      uri:
+        url: "https://{{ router_v3 }}/api/v3/gcs/gateways/{{ lora_hostname }}/semtechudp/global_conf.json"
+        method: GET
+        headers:
+          Authorization: "Bearer {{ gw_key }}"
+      register: get_config
+      delegate_to: 127.0.0.1
+    - name: ttnv3 | global_conf
+      set_fact:
+        global_conf: "{{ get_config.json }}"
   when:
     - global_conf is not defined
     - forwarder_variant != 'basic'
