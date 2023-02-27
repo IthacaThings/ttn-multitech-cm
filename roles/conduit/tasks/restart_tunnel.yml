@@ -8,6 +8,8 @@
   ansible.builtin.service: # noqa: ignore-errors
     name: ssh_tunnel
     state: restarted
+  retries: 10
+  delay: 30
   ignore_errors: true
 
 - name: restart_tunnel | Wait for ssh tunnel to come back online
