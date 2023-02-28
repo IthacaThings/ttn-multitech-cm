@@ -176,6 +176,9 @@ monit_pktfwd_stop: '"/etc/init.d/{{ monit_pktfwd_initscript }} stop"'
 monit_pktfwd_restart: '"/etc/init.d/{{ monit_pktfwd_initscript }} restart"'
 monit_pktfwd_reboot: 'exec "/sbin/reboot"'
 
+# Monitor memory
+monit_mem_test: "usage > 30%"
+
 # Monitor space on /
 monit_root_test: "usage > 50%"
 
