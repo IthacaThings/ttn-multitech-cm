@@ -52,7 +52,7 @@
     - ttn_sshdir_stat.stat.lnk_target is not defined or ttn_sshdir_stat.stat.lnk_target != ttn_newsshdir
 
 - name: user_dirs | Replace /home/{{ target_user }}/.ssh with a symlink to {{ ttn_newsshdir }}
-  ansible.builtin.command: "ln -fTs {{ ttn_newsshdir }} /home/{{ target_user }}/.ssh" # noqa: deprecated-command-syntax
+  ansible.builtin.command: "ln -fTs {{ ttn_newsshdir }} /home/{{ target_user }}/.ssh" # noqa: no-free-form
   changed_when: true
   when:
     - ttn_sshdir_stat.stat.lnk_target is not defined or ttn_sshdir_stat.stat.lnk_target != ttn_newsshdir
