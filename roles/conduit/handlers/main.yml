@@ -93,7 +93,6 @@
 - name: Opkg update
   ansible.builtin.command: "opkg update"
   register: result
-  when: mlinux_feed is changed or ttni_feed is changed
   until: result is succeeded
   retries: 10
   delay: 10
