@@ -2,12 +2,12 @@
 
 - name: preserve | Figure out if we need to ignore certificates on older versions
   ansible.builtin.set_fact:
-    validate_certs: "{{ ansible_local.mlinux.version is version('3.3.24', '>') }}"
+    conduit_validate_certs: "{{ ansible_local.mlinux.version is version('3.3.24', '>') }}"
 
 - name: preserve | Fetch preserve script
   ansible.builtin.get_url:
     url: "{{ mlinux_ttni_preserve_root[ansible_distribution_major_version] }}/preserve_config"
-    validate_certs: "{{ validate_certs }}"
+    validate_certs: "{{ conduit_validate_certs }}"
     dest: /etc/init.d/preserve_config
     mode: "0755"
     owner: root
@@ -20,7 +20,7 @@
 - name: preserve | Save a copy of the restore script
   ansible.builtin.get_url:
     url: "{{ mlinux_ttni_preserve_root[ansible_distribution_major_version] }}/restore_config"
-    validate_certs: "{{ validate_certs }}"
+    validate_certs: "{{ conduit_validate_certs }}"
     dest: /var/config/restore_config
     mode: "0755"
     owner: root

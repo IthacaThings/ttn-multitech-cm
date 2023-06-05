@@ -6,61 +6,57 @@
 
 - name: user_dirs | Set facts 1
   ansible.builtin.set_fact:
-    ttn_newhomedir: "/var/config/home/{{ target_user }}"
+    conduit_ttn_newhomedir: "/var/config/home/{{ conduit_target_user }}"
 
 - name: user_dirs | Set facts 2
   ansible.builtin.set_fact:
-    ttn_newsshdir: "{{ ttn_newhomedir }}/.ssh"
+    conduit_ttn_newsshdir: "{{ conduit_ttn_newhomedir }}/.ssh"
 
-- name: user_dirs | "Get info about /var/config/home/{{ target_user }}"
+- name: user_dirs | "Get info about /home/{{ conduit_target_user }}/.ssh"
   ansible.builtin.stat:
-    path: "/var/config/home/{{ target_user }}"
-  register: ttn_newhomedir_stat
+    path: "/home/{{ conduit_target_user }}/.ssh"
+  register: conduit_ttn_sshdir_stat
 
-- name: user_dirs | "Get info about /home/{{ target_user }}/.ssh"
-  ansible.builtin.stat:
-    path: "/home/{{ target_user }}/.ssh"
-  register: ttn_sshdir_stat
-
-- name: user_dirs | "Create {{ target_user }} dirs"
+- name: user_dirs | "Create {{ conduit_target_user }} dirs"
   ansible.builtin.file:
     dest: "{{ item }}"
     state: directory
     mode: "0700"
-    owner: "{{ target_user }}"
-    group: "{{ target_user }}"
+    owner: "{{ conduit_target_user }}"
+    group: "{{ conduit_target_user }}"
   with_items:
-    - "{{ ttn_newhomedir }}"
-    - "{{ ttn_newsshdir }}"
+    - "{{ conduit_ttn_newhomedir }}"
+    - "{{ conduit_ttn_newsshdir }}"
 
-- name: user_dirs | Copy /home/{{ target_user }}/.ssh content to /var/config/home/{{ target_user }}/.ssh
+- name: user_dirs | Copy /home/{{ conduit_target_user }}/.ssh content to /var/config/home/{{ conduit_target_user }}/.ssh
   delegate_to: "{{ inventory_hostname }}"
   ansible.posix.synchronize:
     archive: true
-    src: "{{ ttn_sshdir_stat.stat.path }}/"
-    dest: "{{ ttn_newsshdir }}"
+    src: "{{ conduit_ttn_sshdir_stat.stat.path }}/"
+    dest: "{{ conduit_ttn_newsshdir }}"
   when:
-    - ttn_sshdir_stat.stat.exists
-    - ttn_sshdir_stat.stat.lnk_target is not defined
+    - conduit_ttn_sshdir_stat.stat.exists
+    - conduit_ttn_sshdir_stat.stat.lnk_target is not defined
 
 - name: user_dirs | Remove existing .ssh dir
   ansible.builtin.file:
-    dest: "/home/{{ target_user }}/.ssh"
+    dest: "/home/{{ conduit_target_user }}/.ssh"
     state: absent
   when:
-    - ttn_sshdir_stat.stat.exists
-    - ttn_sshdir_stat.stat.lnk_target is not defined or ttn_sshdir_stat.stat.lnk_target != ttn_newsshdir
+    - conduit_ttn_sshdir_stat.stat.exists
+    - conduit_ttn_sshdir_stat.stat.lnk_target is not defined or conduit_ttn_sshdir_stat.stat.lnk_target != conduit_ttn_newsshdir
 
-- name: user_dirs | Replace /home/{{ target_user }}/.ssh with a symlink to {{ ttn_newsshdir }}
-  ansible.builtin.command: "ln -fTs {{ ttn_newsshdir }} /home/{{ target_user }}/.ssh" # noqa: no-free-form
+- name: user_dirs | Replace /home/{{ conduit_target_user }}/.ssh with a symlink to {{ conduit_ttn_newsshdir }}
+  ansible.builtin.command: "ln -fTs {{ conduit_ttn_newsshdir }} /home/{{ conduit_target_user }}/.ssh" # noqa: no-free-form
   changed_when: true
   when:
-    - ttn_sshdir_stat.stat.lnk_target is not defined or ttn_sshdir_stat.stat.lnk_target != ttn_newsshdir
+    - conduit_ttn_sshdir_stat.stat.exists
+    - conduit_ttn_sshdir_stat.stat.lnk_target is not defined or conduit_ttn_sshdir_stat.stat.lnk_target != conduit_ttn_newsshdir
 
-- name: user_dirs | "Install {{ target_user }} authorized keys"
+- name: user_dirs | "Install {{ conduit_target_user }} authorized keys"
   ansible.posix.authorized_key:
     manage_dir: false
-    path: "{{ ttn_newsshdir }}/authorized_keys"
-    user: "{{ target_user }}"
-    key: "{{ authorized_keys | join('\n') }}"
+    path: "{{ conduit_ttn_newsshdir }}/authorized_keys"
+    user: "{{ conduit_target_user }}"
+    key: "{{ conduit_authorized_keys | join('\n') }}"
     exclusive: true

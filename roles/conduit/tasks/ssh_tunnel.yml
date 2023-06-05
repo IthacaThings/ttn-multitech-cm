@@ -2,7 +2,7 @@
 
 - name: ssh_tunnel | Is SSH tunnel enabled
   ansible.builtin.set_fact:
-    ssh_tunnel_enabled: "{{ ssh_tunnel_remote_port is defined and ssh_tunnel_remote_port > 0 and ssh_tunnel_gateway_user_on_jumphost is defined }}"
+    conduit_ssh_tunnel_enabled: "{{ ssh_tunnel_remote_port is defined and ssh_tunnel_remote_port > 0 and ssh_tunnel_gateway_user_on_jumphost is defined }}"
 
 - name: ssh_tunnel | Install autossh
   community.general.opkg:
@@ -24,7 +24,7 @@
     group: root
   notify: Restart ssh_tunnel
   when:
-    - ssh_tunnel_enabled
+    - conduit_ssh_tunnel_enabled
 
 - name: ssh_tunnel | /var/config/init.d/ssh_tunnel
   ansible.builtin.copy:
@@ -35,7 +35,7 @@
     group: root
   notify: Restart ssh_tunnel
   when:
-    - ssh_tunnel_enabled
+    - conduit_ssh_tunnel_enabled
 
 - name: ssh_tunnel | Link /etc/default/ssh_tunnel to /var/config/ssh_tunnel.default
   ansible.builtin.file:
@@ -45,7 +45,7 @@
     force: true
   notify: Restart ssh_tunnel
   when:
-    - ssh_tunnel_enabled
+    - conduit_ssh_tunnel_enabled
 
 - name: ssh_tunnel | Link /etc/init.d/ssh_tunnel to /var/config/init.d/ssh_tunnel
   ansible.builtin.file:
@@ -55,7 +55,7 @@
     force: true
   notify: Restart ssh_tunnel
   when:
-    - ssh_tunnel_enabled
+    - conduit_ssh_tunnel_enabled
 
 - name: ssh_tunnel | Stop ssh_tunnel if not enabled
   ansible.builtin.service: # noqa: ignore-errors
@@ -63,7 +63,7 @@
     state: stopped
   ignore_errors: true
   when:
-    - not ssh_tunnel_enabled
+    - not conduit_ssh_tunnel_enabled
 
 - name: ssh_tunnel | Clean up ssh_tunnel if not enabled
   ansible.builtin.file:
@@ -75,4 +75,4 @@
     - /etc/default/ssh_tunnel
     - /etc/init.d/ssh_tunnel
   when:
-    - not ssh_tunnel_enabled
+    - not conduit_ssh_tunnel_enabled

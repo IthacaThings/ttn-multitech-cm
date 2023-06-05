@@ -33,13 +33,13 @@
 - name: logrotate | Get stat info about /etc/logrotate.d
   ansible.builtin.stat:
     path: /etc/logrotate.d
-  register: logrotate_d
+  register: conduit_logrotate_d
 
 - name: logrotate | Remove /etc/logrotate.d
   ansible.builtin.file:
     name: /etc/logrotate.d
     state: absent
-  when: logrotate_d.stat.isdir is defined and logrotate_d.stat.isdir
+  when: conduit_logrotate_d.stat.isdir is defined and conduit_logrotate_d.stat.isdir
 
 - name: logrotate | Point /etc/logrotate.d at /var/config/logrotate.d
   ansible.builtin.file:
@@ -47,4 +47,4 @@
     state: link
     force: true
     src: /var/config/logrotate.d
-  when: logrotate_d.stat.isdir is defined and logrotate_d.stat.isdir
+  when: conduit_logrotate_d.stat.isdir is defined and conduit_logrotate_d.stat.isdir

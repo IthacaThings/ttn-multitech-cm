@@ -16,7 +16,7 @@
   delegate_to: 127.0.0.1
   ansible.builtin.stat:
     path: "{{ role_path }}/files/{{ rtl8192cu_firmware_file }}"
-  register: rtl8192cufw_stat
+  register: conduit_rtl8192cufw_stat
   when:
     - "'rtl8192cu' in ansible_local.usb.drivers"
     - rtl8192cu_firmware_path not in ansible_local.firmware
@@ -30,7 +30,7 @@
   when:
     - "'rtl8192cu' in ansible_local.usb.drivers"
     - rtl8192cu_firmware_path not in ansible_local.firmware
-    - not rtl8192cufw_stat.stat.exists
+    - not conduit_rtl8192cufw_stat.stat.exists
 
 - name: wifi_firmware | Install rtl8192cu firmware
   ansible.builtin.copy:

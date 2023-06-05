@@ -23,7 +23,7 @@
 - name: local | Get stat info about /usr/local
   ansible.builtin.stat:
     path: /usr/local
-  register: usr_local
+  register: conduit_usr_local
 
 - name: local | Copy /usr/local content to /var/config/local
   delegate_to: "{{ inventory_hostname }}"
@@ -31,13 +31,13 @@
     archive: true
     src: /usr/local
     dest: /var/config
-  when: usr_local.stat.exists and usr_local.stat.isdir
+  when: conduit_usr_local.stat.exists and conduit_usr_local.stat.isdir
 
 - name: local | Remove /usr/local tree
   ansible.builtin.file:
     name: /usr/local
     state: absent
-  when: usr_local.stat.exists and not usr_local.stat.islnk
+  when: conduit_usr_local.stat.exists and not conduit_usr_local.stat.islnk
 
 - name: local | Point /usr/local at /var/config/local
   ansible.builtin.file:

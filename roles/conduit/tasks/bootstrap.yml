@@ -8,22 +8,22 @@
   ansible.builtin.tempfile:
     state: file
     suffix: temp
-  register: tempfile
+  register: conduit_tempfile
 
 - name: bootstrap | Generate the boostrap script
   delegate_to: 127.0.0.1
   ansible.builtin.template:
     mode: '0700'
     src: mlinux_setup.j2
-    dest: "{{ tempfile.path }}"
+    dest: "{{ conduit_tempfile.path }}"
 
 - name: bootstrap | Run mlinux_setup (mlinux 3)
   ansible.builtin.script:
-    cmd: "{{ tempfile.path }}"
+    cmd: "{{ conduit_tempfile.path }}"
   become: false
   vars:
-    ansible_ssh_user: root
-    ansible_password: root
+    ansible_ssh_user: root  # noqa: var-naming[no-role-prefix]
+    ansible_password: root  # noqa: var-naming[no-role-prefix]
   when: mlinux_version is version('4', '<')
 
 - name: bootstrap | Run mlinux_setup (4 < mlinux_verson <= 5.1.8)
@@ -31,9 +31,9 @@
     cmd: "{{ role_path }}/files/mlinux_setup"
   become: true
   vars:
-    ansible_ssh_user: mtadm
-    ansible_password: root
-    ansible_become_password: root
+    ansible_ssh_user: mtadm  # noqa: var-naming[no-role-prefix]
+    ansible_password: root   # noqa: var-naming[no-role-prefix]
+    ansible_become_password: root   # noqa: var-naming[no-role-prefix]
   when:
     - mlinux_version is version('4', '>=')
     - mlinux_version is version('5.2.7', '<')
@@ -41,6 +41,6 @@
 - name: bootstrap | Delete temp file
   delegate_to: 127.0.0.1
   ansible.builtin.file:
-    path: "{{ tempfile.path }}"
+    path: "{{ conduit_tempfile.path }}"
     state: absent
 ...

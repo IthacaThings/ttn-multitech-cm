@@ -1,19 +1,19 @@
 ---
 
-- name: user_sudo | Allow "{{ target_user }} to sudo without a password"
+- name: user_sudo | Allow "{{ conduit_target_user }} to sudo without a password"
   ansible.builtin.copy:
-    dest: "/var/config/{{ target_user }}.sudo"
-    content: "{{ target_user }} ALL=(ALL) NOPASSWD: ALL"
+    dest: "/var/config/{{ conduit_target_user }}.sudo"
+    content: "{{ conduit_target_user }} ALL=(ALL) NOPASSWD: ALL"
     mode: "0644"
     owner: root
     group: root
   when: ansible_local.opkg.sudo is defined
 
-- name: user_sudo | Create a link to "/var/config/{{ target_user }}.sudo"
+- name: user_sudo | Create a link to "/var/config/{{ conduit_target_user }}.sudo"
   ansible.builtin.file:
-    dest: "/etc/sudoers.d/{{ target_user }}"
+    dest: "/etc/sudoers.d/{{ conduit_target_user }}"
     state: link
-    src: "/var/config/{{ target_user }}.sudo"
+    src: "/var/config/{{ conduit_target_user }}.sudo"
     force: true
   when: ansible_local.opkg.sudo is defined
 

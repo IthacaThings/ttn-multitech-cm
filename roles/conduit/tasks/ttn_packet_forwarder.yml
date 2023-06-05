@@ -24,7 +24,7 @@
   delegate_to: 127.0.0.1
   ansible.builtin.stat:
     path: "{{ role_path }}/files/{{ forwarder_package_full }}"
-  register: forwarder_package_stat
+  register: conduit_forwarder_package_stat
 
 - name: ttn_packet_forwarder | Download requested version of packet-forwarder
   delegate_to: 127.0.0.1
@@ -33,7 +33,7 @@
     dest: "{{ role_path }}/files"
     mode: '0644'
   when:
-    - not forwarder_package_stat.stat.exists
+    - not conduit_forwarder_package_stat.stat.exists
 
 - name: ttn_packet_forwarder | Find old .ipk files
   ansible.builtin.find:
@@ -41,7 +41,7 @@
       /var/config
     patterns:
       - "*-packet-forwarder_*.ipk"
-  register: old_ipk
+  register: conduit_old_ipk
   when:
     - forwarder_installed != forwarder_package_version
 
@@ -49,9 +49,9 @@
   ansible.builtin.file:
     path: "{{ item.path }}"
     state: absent
-  with_items: "{{ old_ipk.files }}"
+  with_items: "{{ conduit_old_ipk.files }}"
   when:
-    - old_ipk.files is defined
+    - conduit_old_ipk.files is defined
 
 - name: ttn_packet_forwarder | Copy over packet-forwarder
   ansible.builtin.copy:

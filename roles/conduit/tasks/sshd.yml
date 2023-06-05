@@ -3,12 +3,12 @@
 - name: sshd | Get info on /etc/ssh/sshd_config
   ansible.builtin.stat:
     path: /etc/ssh/sshd_config
-  register: sshd_config
+  register: conduit_sshd_config
 
 - name: sshd | Move /etc/ssh/sshd_config to /var/config/ssh if a file
   ansible.builtin.command: mv /etc/ssh/sshd_config /var/config/ssh
   changed_when: true
-  when: sshd_config.stat.islnk is defined and not sshd_config.stat.islnk
+  when: conduit_sshd_config.stat.islnk is defined and not conduit_sshd_config.stat.islnk
 
 - name: sshd | Link /etc/ssh/sshd_config to /var/config/ssh/sshd_config
   ansible.builtin.file:

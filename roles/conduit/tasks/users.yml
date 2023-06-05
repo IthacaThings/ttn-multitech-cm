@@ -15,7 +15,7 @@
 - name: users | "Set up dirs for root"
   ansible.builtin.import_tasks: user_dirs.yml
   vars:
-    target_user: "root"
+    conduit_target_user: "root"
 
 #
 # Create ttn user
@@ -30,7 +30,7 @@
 
 - name: users | Configure mtadm user
   vars:
-    target_user: ttn
+    conduit_target_user: ttn
   block:
     - name: users | Import ttn dirs
       ansible.builtin.import_tasks: user_dirs.yml
@@ -45,7 +45,7 @@
   when:
     - ansible_local.mlinux.version is version('4', '>=')
   vars:
-    target_user: mtadm
+    conduit_target_user: mtadm
   block:
     - name: users | Import mtadm dirs
       ansible.builtin.import_tasks: user_dirs.yml

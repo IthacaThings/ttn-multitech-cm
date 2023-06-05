@@ -9,7 +9,7 @@
 - name: ppp | Get stat info about /etc/ppp/ppp_on_boot
   ansible.builtin.stat:
     path: /etc/ppp/ppp_on_boot
-  register: ppp_on_boot
+  register: conduit_ppp_on_boot
 
 - name: ppp | Copy /etc/ppp/ppp_on_boot to /var/config/ppp/ppp_on_boot
   ansible.builtin.copy:
@@ -17,7 +17,7 @@
     src: /etc/ppp/ppp_on_boot
     dest: /var/config/ppp/ppp_on_boot
     mode: '0644'
-  when: ppp_on_boot.stat.islnk is defined and not ppp_on_boot.stat.islnk
+  when: conduit_ppp_on_boot.stat.islnk is defined and not conduit_ppp_on_boot.stat.islnk
 
 - name: ppp | Make /etc/ppp/ppp_on_boot a link to /var/config/ppp/ppp_on_boot
   ansible.builtin.file:
@@ -25,7 +25,7 @@
     state: link
     src: /var/config/ppp/ppp_on_boot
     force: true
-  when: ppp_on_boot.stat.islnk is defined and not ppp_on_boot.stat.islnk
+  when: conduit_ppp_on_boot.stat.islnk is defined and not conduit_ppp_on_boot.stat.islnk
 
 - name: ppp | Make /var/config/ppp/ppp_on_boot executable
   ansible.builtin.file:

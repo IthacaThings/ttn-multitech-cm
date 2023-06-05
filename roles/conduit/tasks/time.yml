@@ -74,13 +74,13 @@
 
 - name: time | Do we want SET_SYSTEM_CLOCK?
   ansible.builtin.set_fact:
-    set_system_clock: "{{ 0 if use_cellular and cellular_apn is defined else 1 }}"
+    conduit_set_system_clock: "{{ 0 if use_cellular and cellular_apn is defined else 1 }}"
 
 - name: time | Prevent ntpd from hanging on boot when net is down
   ansible.builtin.lineinfile:
     dest: /var/config/default/ntpd.default
     regexp: "^SET_SYSTEM_CLOCK="
-    line: "SET_SYSTEM_CLOCK={{ set_system_clock }}"
+    line: "SET_SYSTEM_CLOCK={{ conduit_set_system_clock }}"
     state: present
   notify:
     - Restart ntpd
@@ -92,7 +92,7 @@
 
 - name: time | Calculate some facts monit depends on
   ansible.builtin.set_fact:
-    monit_ntpd_pidfile: "{{ '/var/run/ntp.pid' if ansible_local.opkg.ntp is version('4.2.8', '<') else '/var/run/ntpd.pid' }}"
+    conduit_ntpd_pidfile: "{{ '/var/run/ntp.pid' if ansible_local.opkg.ntp is version('4.2.8', '<') else '/var/run/ntpd.pid' }}"
 
 - name: time | /var/config/monit/monit.d/ntp.monit
   ansible.builtin.template:

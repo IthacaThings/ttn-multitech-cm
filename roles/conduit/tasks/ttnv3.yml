@@ -28,16 +28,16 @@
     --collaborators '{{ gateway_collaborators_list | flatten | to_json }}'
   changed_when: true
   throttle: 1
-  register: register_output
+  register: conduit_register_output
 
 - name: ttnv3 | Set the gateway_info fact
   ansible.builtin.set_fact:
-    gateway_info: "{{ register_output.stdout | from_json }}"
+    conduit_gateway_info: "{{ conduit_register_output.stdout | from_json }}"
   when: forwarder_variant == 'mp'
 
 - name: ttnv3 | Set Some facts
   ansible.builtin.set_fact:
-    gw_router: "{{ gateway_info.gateway_server_address }}"
+    conduit_gw_router: "{{ conduit_gateway_info.gateway_server_address }}"
   when: forwarder_variant == 'mp'
 
 - name: ttnv3 | Read local_conf and parse out gw_key
@@ -46,22 +46,22 @@
     - name: ttnv3 | Slurp local_config.json
       ansible.builtin.slurp: # noqa: ignore-errors
         src: /var/config/lora/local_conf.json
-      register: local_conf_b64
+      register: conduit_local_conf_b64
       ignore_errors: true
     - name: ttnv3 | Fact local_conf
       ansible.builtin.set_fact: # noqa: ignore-errors
-        local_conf: "{{ local_conf_b64.content | b64decode | from_json }}"
+        conduit_local_conf: "{{ conduit_local_conf_b64.content | b64decode | from_json }}"
       ignore_errors: true
-      when: local_conf_b64 is succeeded
+      when: conduit_local_conf_b64 is succeeded
     - name: ttnv3 | Fact gw_key
       ansible.builtin.set_fact:
-        gw_key: "{{ local_conf.gateway_conf.servers[0].serv_gw_key }}"
+        conduit_gw_key: "{{ conduit_local_conf.gateway_conf.servers[0].serv_gw_key }}"
       when:
-        - local_conf is defined
-        - "'gateway_conf' in local_conf"
-        - "'servers' in local_conf.gateway_conf"
-        - "'serv_gw_key' in local_conf.gateway_conf.servers[0]"
-        - local_conf.gateway_conf.servers[0].serv_gw_key.startswith("NNSXS.")
+        - conduit_local_conf is defined
+        - "'gateway_conf' in conduit_local_conf"
+        - "'servers' in conduit_local_conf.gateway_conf"
+        - "'serv_gw_key' in conduit_local_conf.gateway_conf.servers[0]"
+        - conduit_local_conf.gateway_conf.servers[0].serv_gw_key.startswith("NNSXS.")
 
 - name: ttnv3 | Read tc.key and parse out gw_key
   when: forwarder_variant.startswith("basic")
@@ -69,55 +69,57 @@
     - name: ttnv3 | Slurp tc.key
       ansible.builtin.slurp:
         src: /var/config/lora/tc.key
-      register: tc_key_b64
+      register: conduit_tc_key_b64
       ignore_errors: true
     - name: ttnv3 | Fact gw_key
       ansible.builtin.set_fact: # noqa: ignore-errors
-        gw_key: "{{ tc_key_b64.content | b64decode | split | last }}"
+        conduit_gw_key: "{{ conduit_tc_key_b64.content | b64decode | split | last }}"
       ignore_errors: true
-      when: tc_key_b64 is succeeded
+      when: conduit_tc_key_b64 is succeeded
 
 - name: ttnv3 | Test key by fetching config
   delegate_to: 127.0.0.1
   ansible.builtin.uri:
     headers:
-      Authorization: "Bearer {{ gw_key }}"
+      Authorization: "Bearer {{ conduit_gw_key }}"
     url: "https://{{ router_v3 }}/api/v3/gcs/gateways/{{ lora_hostname }}/semtechudp/global_conf.json"
     method: GET
-  register: get_config
+  register: conduit_get_config
   ignore_errors: true
-  when: gw_key is defined
+  when: conduit_gw_key is defined
 
 - name: ttnv3 | Extract global.conf
   ansible.builtin.set_fact:
-    global_conf: "{{ get_config.json }}"
+    conduit_global_conf: "{{ conduit_get_config.json }}"
   when:
-    - gw_key is defined
-    - get_config is succeeded
+    - conduit_gw_key is defined
+    - conduit_get_config is succeeded
 
 - name: ttnv3 | Generate a key if we do not have one
   delegate_to: 127.0.0.1
   ansible.builtin.command: "ttn-lw-cli gateway api-keys create {{ lora_hostname }} --name link --right-gateway-link"
   changed_when: true
-  register: key_data_json
+  register: conduit_key_data_json
   throttle: 1
   notify: TTNv3 cleanup
-  when: gw_key is not defined or get_config is not succeeded
+  when: conduit_gw_key is not defined or conduit_get_config is failed
 
 - name: ttnv3 | Extract the key and key_id
-  when: gw_key is not defined and key_data_json is success
+  when:
+    - conduit_gw_key is not defined or conduit_get_config is failed
+    - conduit_key_data_json is succeeded
   block:
     - name: ttnv3 | Fact key_data
       ansible.builtin.set_fact:
-        key_data: "{{ key_data_json.stdout | from_json }}"
+        conduit_key_data: "{{ conduit_key_data_json.stdout | from_json }}"
     - name: ttnv3 | Fact gw_key, gw_key_id
       ansible.builtin.set_fact:
-        gw_key: "{{ key_data.key }}"
-        gw_key_id: "{{ key_data.id }}"
+        conduit_gw_key: "{{ conduit_key_data.key }}"
+        conduit_gw_key_id: "{{ conduit_key_data.id }}"
 
 - name: ttnv3 | Get the packet forwarder global config file
   when:
-    - global_conf is not defined
+    - conduit_global_conf is not defined
     - forwarder_variant != 'basic'
   block:
     - name: ttnv3 | Fetch global_conf.json
@@ -126,9 +128,9 @@
         url: "https://{{ router_v3 }}/api/v3/gcs/gateways/{{ lora_hostname }}/semtechudp/global_conf.json"
         method: GET
         headers:
-          Authorization: "Bearer {{ gw_key }}"
-      register: get_config
+          Authorization: "Bearer {{ conduit_gw_key }}"
+      register: conduit_get_config
     - name: ttnv3 | Fact global_conf
       ansible.builtin.set_fact:
-        global_conf: "{{ get_config.json }}"
+        conduit_global_conf: "{{ conduit_get_config.json }}"
 ...

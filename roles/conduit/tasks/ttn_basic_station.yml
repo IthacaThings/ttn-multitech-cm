@@ -39,11 +39,11 @@
   block:
     - name: ttn_basic_station | Fact gps_arg
       ansible.builtin.set_fact:
-        gps_arg: "--gps /dev/{{ gps_device }}"
+        conduit_gps_arg: "--gps /dev/{{ gps_device }}"
       when: have_gps and use_gps
     - name: ttn_basic_station | Fact gps_arg
       ansible.builtin.set_fact:
-        gps_arg: ""
+        conduit_gps_arg: ""
       when: not (have_gps and use_gps)
     - name: ttn_basic_station | Fact mt_station_conf
       delegate_to: 127.0.0.1
@@ -54,12 +54,12 @@
          --log-level {{ basic_log_level }}
          --log-size {{ forwarder_logrotate_size }}
          --log-rotate {{ forwarder_logrotate_count }}
-         {{ gps_arg }}
+         {{ conduit_gps_arg }}
       changed_when: true
-      register: station_conf_raw
+      register: conduit_station_conf_raw
     - name: ttn_basic_station | Fact station_conf
       ansible.builtin.set_fact:
-        station_conf: "{{ station_conf_raw.stdout | from_json }}"
+        conduit_station_conf: "{{ conduit_station_conf_raw.stdout | from_json }}"
 
 - name: ttn_basic_station | Install /var/config/lora/station.conf
   ansible.builtin.template:

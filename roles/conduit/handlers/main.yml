@@ -6,6 +6,7 @@
 #
 - name: Update rc
   ansible.builtin.shell: "for init in ttn-pkt-forwarder lora-basic-station; do update-rc.d -f ${init} remove; test -f /etc/init.d/${init} && update-rc.d ${init} defaults 95 30 || true; done"
+  changed_when: true
 
 #
 # Restart the packet forwarder
@@ -89,6 +90,7 @@
 - name: Opkg clean
   ansible.builtin.command: "opkg clean --autoremove"
   when: ansible_local.mlinux.version is version('5', '>=')
+  changed_when: true
 
 - name: Opkg update
   ansible.builtin.command: "opkg update"
@@ -97,6 +99,7 @@
   retries: 10
   delay: 10
   notify: Reload facts
+  changed_when: true
 
 #
 # Monit handlers
@@ -109,10 +112,12 @@
 - name: Monit monitor check_pktfwdlog
   ansible.builtin.command: "monit monitor check_pktfwdlog" # noqa: ignore-errors
   ignore_errors: true
+  changed_when: true
 
 - name: Monit monitor volatile
   ansible.builtin.command: "monit monitor volatile" # noqa: ignore-errors
   ignore_errors: true
+  changed_when: true
 
 - name: Update system checksum file
   ansible.builtin.include_tasks: update_checksums.yml
