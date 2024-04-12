@@ -103,6 +103,12 @@
     - cellular_provider is defined
     - ppp0_mtu is defined
 
+- name: ppp remove previous PPP startup
+  command: update-rc.d -f ppp remove
+
+- name: ppp install proper PPP startup
+  command: update-rc.d ppp defaults 02
+
 #
 #	Monit
 #
