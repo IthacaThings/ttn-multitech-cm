@@ -1,5 +1,12 @@
 ---
 
+#
+#	Setup /var/config/ppp/ppp_on_boot
+#
+#	This should have no effect if cellular is not configured
+#
+
+- name: ppp Get stat info about /etc/ppp/ppp_on_boot
   stat:
     path: /etc/ppp/ppp_on_boot
   register: ppp_on_boot
