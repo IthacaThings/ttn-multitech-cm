@@ -47,7 +47,7 @@
 - name: preserve Install restore initscript
   template:
     src: restore.init.j2
-    dest: "/var/config/restore.init"
+    dest: "/var/config/init.d/restore.init"
     mode: "0755"
     owner: root
     group: root

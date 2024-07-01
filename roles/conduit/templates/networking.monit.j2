@@ -1,0 +1,11 @@
+{% if eth0_type is defined -%}
+check network "eth0" with interface "eth0"
+    if failed link then restart
+    if changed link capacity then alert
+{% endif -%}
+
+{% if wlan0_type is defined -%}
+check network "wlan0" with interface "wlan0"
+    if failed link then restart
+    if changed link capacity then alert
+{% endif -%}

@@ -35,6 +35,5 @@
 - name: authorized_keys Fail if we didn't find any keys
   fail:
     msg: "No authorized_keys are defined"
-  when: not authorized_keys
-
+  when: not authorized_keys and not 'ping' in ansible_run_tags
 ...

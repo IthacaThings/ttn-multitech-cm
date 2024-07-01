@@ -1,11 +1,12 @@
-.DS_Store
-*~
+#*
 *.new
-/galaxy-roles/
+*~
+.DS_Store
+.ttn-lw-cli.yml
 /*.retry
+/.ttn_org*
 /catalog/
-/.ttn_org
+/galaxy-roles/
 /hosts
 /logs
 /mlinux-firmware-upgrade.*/
-#*

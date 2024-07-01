@@ -15,8 +15,8 @@ set httpd
 
 # Monitor the system
 check system $HOST
-    if loadavg (1min) > 1 then alert
-    if loadavg (5min) > 2 then alert
+    if loadavg (1min) > 2 then alert
+    if loadavg (5min) > 4 then alert
     if memory usage > 25% then alert
 
 # Event Queue
@@ -75,12 +75,6 @@ check filesystem volatile with path /var/volatile
 #       Ansible reconfiguration.
 #
 
-# Check for error conditions in packet forwarder log
-check program check_pktfwdlog with path /usr/local/lib/check_pktfwdlog
-    if status == 1 then exec {{ monit_pktfwd_restart }}
-    if status == 2 for 2 cycles then exec {{ monit_pktfwd_restart }}
-    if status == 3 then {{ monit_pktfwd_reboot }}
-
 {% if ssh_tunnel_enabled -%}
 # Monitor autossh
 check process ssh_tunnel MATCHING /usr/bin/autossh
@@ -95,25 +89,12 @@ check process sshd PIDFILE /var/run/sshd.pid
     start program = "/etc/init.d/sshd start" with timeout 15 seconds
     stop program = "/etc/init.d/sshd stop"
 
-# Monitor ntpd
-check process ntpd PIDFILE {{ monit_ntpd_pidfile }}
-    if does not exist for {{ monit_process_period }} then restart
-    start program = "/etc/init.d/ntpd start" with timeout 15 seconds
-    stop program = "/etc/init.d/ntpd stop"
-
 # Monitor system directory checksums
 check program check_system_md5  with path /usr/local/lib/check_system_md5
     every "{{ 60 | random(seed=inventory_hostname) }} * * * *"
     if status == 1 then alert
 
-{% if eth0_type is defined -%}
-check network "eth0" with interface "eth0"
-    if failed link then restart
-    if changed link capacity then alert
-{% endif -%}
-
-{% if wlan0_type is defined -%}
-check network "wlan0" with interface "wlan0"
-    if failed link then restart
-    if changed link capacity then alert
-{% endif -%}
+#
+#	Include subsystem configs
+#
+include /var/config/monit/monit.d/*

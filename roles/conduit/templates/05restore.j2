@@ -23,3 +23,5 @@ ln -svf "/usr/share/zoneinfo/{{ timezone }}" /etc/localtime
 # /var/config/ttn-packet-forwarder is restored
 echo "Installing " /var/config/*.ipk
 opkg install /var/config/*-packet-forwarder_*.ipk
+
+echo "Finished 05restore"

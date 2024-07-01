@@ -1,0 +1,8 @@
+{{ basic_log_file }}.*[0-9] {
+	daily
+	nocreate
+	missingok
+	compress
+	rotate {{ forwarder_logrotate_count }}
+	dateext
+}

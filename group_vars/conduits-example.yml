@@ -54,7 +54,7 @@ contact_email: ttn-org@example.com
 
 # Assign additional gateway collaborators.  If rights are not
 # specified they default to those defined in roles/conduit/defaults/main.yml
-#gateway_collaborators:
+#gateway_collaborators_conduits:
 #  - { username: jchonig, rights: [ gateway:status, gateway:delete ] }
 #  - { username: terrillmoore }
 

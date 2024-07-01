@@ -43,12 +43,10 @@
     state: absent
   when:
     - ttn_sshdir_stat.stat.exists
-    - ttn_sshdir_stat.stat.lnk_target is not defined
+    - ttn_sshdir_stat.stat.lnk_target is not defined or ttn_sshdir_stat.stat.lnk_target != ttn_newsshdir
 
 - name: user_dirs Replace /home/{{ target_user }}/.ssh with a symlink to {{ ttn_newsshdir }}
   command: "ln -fTs {{ ttn_newsshdir }} /home/{{ target_user }}/.ssh"
-  args:
-    warn: false
   when:
     - ttn_sshdir_stat.stat.lnk_target is not defined or ttn_sshdir_stat.stat.lnk_target != ttn_newsshdir
 
@@ -59,5 +57,3 @@
     user: "{{ target_user }}"
     key: "{{ authorized_keys | join('\n') }}"
     exclusive: true
-
-    

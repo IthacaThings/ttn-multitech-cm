@@ -1,0 +1,5 @@
+# Monitor ntpd
+check process ntpd PIDFILE {{ monit_ntpd_pidfile }}
+    if does not exist for {{ monit_process_period }} then restart
+    start program = "/etc/init.d/ntpd start" with timeout 15 seconds
+    stop program = "/etc/init.d/ntpd stop"

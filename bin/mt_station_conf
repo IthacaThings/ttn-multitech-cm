@@ -1,0 +1,179 @@
+#!/usr/bin/env python3
+
+"""
+MIT License
+
+Copyright (c) 2017 Jeffrey C Honig
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
+
+from __future__ import print_function
+import argparse
+import json
+import logging
+import re
+import sys
+
+import requests
+import requests.exceptions
+
+def parse_args():
+    """ Parse the arguments """
+
+    eui_re = re.compile(r"^(?:eui-)?(?P<eui>[0-9a-fA-FF]{16})$")
+    def eui(string):
+        """ Valiate an EUI """
+        match = eui_re.match(string)
+        if not match:
+            raise ValueError("EUI is not 16 hex digits with optional eui- prefix")
+        return match.group('eui')
+
+    def rotate_size(string):
+        """ Expand size """
+
+        if string.endswith("k"):
+            multiplier = 1000
+        elif string.endswith("M"):
+            multiplier = 1000000
+        elif string.endswith("G"):
+            multiplier = 1000000000
+        else:
+            multiplier = 0
+
+        if multiplier:
+            return int(string[:-1]) * multiplier
+        else:
+            return int(string)
+
+    parser = argparse.ArgumentParser(description="Fetch MT station.conf and force it to json")
+
+    #	Debugging
+    group = parser.add_argument_group("Debugging options")
+    group.add_argument("-d", "--debug",
+                       dest="debug", default=False,
+                       action='store_true',
+                       help="print debugging messages")
+    group.add_argument("--nodebug",
+                       dest="debug",
+                       action='store_false',
+                       help="print debugging messages")
+    group.add_argument("-v", "--verbose",
+                       dest="verbose", default=False,
+                       action='store_true',
+                       help="print verbose messages")
+    group.add_argument("-n", "--noop",
+                       dest="noop", default=False,
+                       action='store_true',
+                       help="Don't make changes, just list what we are going to do")
+
+    #	Options
+    group = parser.add_argument_group("Configuration options")
+    group.add_argument("--url",
+                       dest="url", required=True,
+                       help="URL of the file")
+    group.add_argument("--routerid",
+                       dest="routerid", type=eui, required=True,
+                       help="Router EUI")
+    group.add_argument("--gps",
+                       dest="gps",
+                       help="Path to GPS device")
+    group.add_argument("--fuzzy-pps",
+                       dest="fuzzy_pps", action="store_true",
+                       help="Use fuzzy PPS on GPS")
+    group.add_argument("--log-level",
+                       dest="log_level",
+                       help="Log Level")
+    group.add_argument("--log-rotate",
+                       dest="log_rotate", type=int,
+                       help="Number of log files in rotation")
+    group.add_argument("--log-size",
+                       dest="log_size", type=rotate_size,
+                       help="Maximum size of log file")
+    group.add_argument("--log-file",
+                       dest="log_file",
+                       help="Log file name")
+
+    options = parser.parse_args()
+    if options.debug:
+        options.verbose = options.debug
+
+    return options
+
+def init_logging(options):
+    """ Set up logging """
+
+    logger = logging.getLogger()
+    logger.handlers = []
+    logger.addHandler(logging.StreamHandler())
+    if options.debug:
+        logger.setLevel('DEBUG')
+    elif options.verbose:
+        logger.setLevel('INFO')
+    else:
+        logger.setLevel('WARNING')
+
+def main():
+    """ Figure out what we should do """
+
+    options = parse_args()
+    init_logging(options)
+
+    try:
+        response = requests.get(options.url)
+        logging.debug("Response %s: %s", response.status_code, response.reason)
+        response.raise_for_status()
+        data = response.json()
+    except ValueError:
+        data = json.loads(response.content.decode('utf-8-sig'))
+    except requests.exceptions.HTTPError as error:
+        sys.exit(error)
+    except requests.exceptions.RequestException as error:
+        raise
+
+    for section in ['station_conf','SX1301_conf']:
+        if section not in data:
+            logging.error("Section %s not found in station.conf", section)
+            return 1
+
+    data['station_conf']['routerid'] = options.routerid
+    if options.log_file:
+        data['station_conf']['log_file'] = options.log_file
+    if options.log_level:
+        data['station_conf']['log_level'] = options.log_level
+    if options.log_rotate:
+        data['station_conf']['log_rotate'] = options.log_rotate
+    if options.log_size:
+        data['station_conf']['log_size'] = options.log_size
+    if options.gps:
+        data['station_conf']['gps'] = options.gps
+        data['station_conf']['pps'] = "fuzzy" if options.fuzzy_pps else "gps"
+
+    print(json.dumps(data, indent=4))
+
+    return 0
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main())
+    except KeyboardInterrupt:
+        print()
+        sys.exit(1)
+
+

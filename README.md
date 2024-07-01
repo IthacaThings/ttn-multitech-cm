@@ -92,6 +92,17 @@ authentication. It is also recommended that you use ssh-agent to
 forward keys from your local system to the jump host and not keep
 private keys on cloud hosts.
 
+If you are using RSA keys and you have an older OS on the Conduit but
+are using a newer OS (and OpenSSH version) on your host system (Ubuntu
+22.04 and later and macOS Ventura and later), you may run into a
+problem where RSA keys do not work. This is due to OpenSSH retiring
+the RSA key exchange algorithm due to security concerns.
+
+To enable access to these Conduits, add `-o PubkeyAcceptedAlgorithms=+ssh-rsa`
+to the end of the `ssh_args` in `ansible.cfg`. This should be
+considered a short-term fix, moving to elliptical curve keys is much
+more secure.
+
 ## Commissioning
 
 From version 5.2, official mLinux images require commisioning to
@@ -509,12 +520,6 @@ The available variables are defined in the [Conduit role README](roles/conduit/R
 
 ## Required changes
 
-### ttn_version
-
-The `ttn_version` variable defaults to `3`, update any gateways that
-need to stay registered with TTNv2 with `ttn_version: 2` before
-running.
-
 ### router_v3
 
 The `router_v3` variable needs to be defined in conduits.yml.  Select
@@ -610,7 +615,55 @@ ttn-lw-cli login --api-key APIKEY
 
 You now should be logged in.
 
-# TODO
+## TODO
+
+### Lora Basic Station support
 
 Add option to run basics station on conduit 
 http://www.multitech.net/developer/software/lora/running-basic-station-on-conduit/
+
+### Requirements
+
+* [X] Ensure we have SPI card
+* [X] Add Let's Encrypt Certificates
+  * /var/config/lora/rc.trust
+* Install lora-basic-station (specify version)
+  * Installed by default in our image
+* [X] Create LNS key (we already do)
+  * /var/config/lora/tc.key
+* [X] /var/config/lora/tc.uri
+  * "wss://{{ router_v3 }}:8887
+* [X] /var/config/lora/station.conf
+  * [MTCDT|http://www.multitech.net/developer/wp-content/uploads/downloads/2020/06/mtcdt-station.conf_.txt]
+  * [MTCAP|http://www.multitech.net/developer/wp-content/uploads/downloads/2020/06/mtcap-station.conf_.txt]
+* Logging
+  * https://lora-developers.semtech.com/resources/tools/lora-basics/lora-basics-for-gateways/
+  * [X] station_conf['station_conf']
+	 * log_level - INFO
+	 * log_size - 100000
+	 * log_rotate - 3
+ * [X] - gzip old log files
+* Process
+  * [X] lora-basic-station vs ttn-pkt-forwader
+  * [X] update-rc.d needed?
+* [X] Configuration
+  * Fetch station.conf in Ansible and edit appropriately?
+  * Need a custom version of lora-basic-station, use a different template for ttn-pkt-forwarder
+* Monitoring (monit)
+  * [X] Changes in log file format
+	* Re-write check_pkgfwdlog or add a flag for Basic station
+* [X] ttnv3 reads local_conf
+* [X] /etc/default/lora-basic-station
+  * [X] ENABLE="yes"
+  * [X] Log errors on failure
+* [ ] GPS configuration
+  * [ ] GPS Garbage?
+* [ ] Bugs
+  * [ ] Is log rotation getting processed correctly?
+  * [X] Does lora-basic-station notice interface changes and handle
+        them properly
+	* [X] Or does it need to be restarted by udhcpd?
+
+* Bugs with lora-basic-station
+  * [X] 008000000000FD46 tramsposed to 000000800000FD46
+	* Fixed in v3.14 branch, waiting for deploy of TTS

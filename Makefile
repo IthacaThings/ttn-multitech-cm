@@ -6,7 +6,7 @@
 #	Visit subdirs
 #
 # Subdirs we should visit
-SUBDIRS = bin
+SUBDIRS = 
 
 all::
 	for dir in ${SUBDIRS}; do \
@@ -95,6 +95,7 @@ ANSIBLE_DEPENDS_COMMON = python-core \
 	python-compression \
 	python-dateutil \
 	python-distutils \
+	python-email \
 	python-html \
 	python-json \
 	python-multiprocessing \
@@ -171,6 +172,10 @@ gather: ${CATALOG}
 ansible-setup:
 	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
 		ansible --inventory ${INVENTORY} -o ${OPTIONS} ${TARGET} --become -m shell -a "opkg update; opkg install ${ANSIBLE_DEPENDS_COMMON}; opkg install ${ANSIBLE_DEPENDS_OLD} || exit 0"
+
+# Lint
+lint:
+	ansible-lint
 
 # Collect logs from gateways
 fetch-logs:

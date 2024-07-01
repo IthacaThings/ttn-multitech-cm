@@ -104,11 +104,6 @@ do_start() {
 
     case ${pkt_fwd} in
 	/opt/lora/*)
-	    echo -n "Resetting concentrator: "
-	    /usr/sbin/mts-io-sysfs store lora/reset 0
-	    /usr/sbin/mts-io-sysfs store lora/reset 1
-	    sleep 1
-	    echo "DONE"
 	    if [ ! -f $conf_dir/global_conf.json -o ! -f $conf_dir/local_conf.json ] ; then
 		echo "$0: Not configured"
 		exit 1

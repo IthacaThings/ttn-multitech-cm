@@ -5,6 +5,7 @@ forwarder_package: "{{ forwarder_variant }}-packet-forwarder"
 forwarder_package_version: "{{ forwarder_package }}_{{forwarder_version }}"
 forwarder_package_full: "{{forwarder_package_version }}_arm926ejste.ipk"
 forwarder_url: "{{ forwarder_baseurl_ttni }}/{{ forwarder_package_full }}"
+forwarder_logcheck: "{{ 'check_basiclog' if forwarder_variant == 'basic' else 'check_pktfwdlog' }}"
 
 forwarder_installed_package: "{{ 'poly-packet-forwarder' if ansible_local.opkg.poly_packet_forwarder is defined else 'mp-packet-forwarder' if ansible_local.opkg.mp_packet_forwarder is defined else False }}"
 
@@ -14,7 +15,7 @@ forwarder_installed: "{{ forwarder_installed_package }}_{{ forwarder_installed_v
 
 # EUI for use with non-TTN forwarders
 lora_eui: "eui-{{ ansible_local.lora.eui|lower }}"
-lora_hostname: "{{ hostname if forwarder_variant == 'mp' else lora_eui }}"
+lora_hostname: "{{ hostname if forwarder_variant != 'poly' else lora_eui }}"
 lora_hostname_delete: "{{ lora_eui if forwarder_variant == 'mp' else hostname }}"
 
 # Is ssh_tunnel enabled
@@ -22,10 +23,15 @@ ssh_tunnel_daemon_args: "-f -M {{ ssh_tunnel_keepalive_base_port }} -o ServerAli
 
 # Is the GPS present?
 have_gps: "{{ gps_device in ansible_local.dev }}"
-set_gps: "{{ true if (use_gps and have_gps) or (use_fake_gps and latitude and longitude) else false }}"
-set_fake_gps: "{{ true if ttn_version == 2 and (use_fake_gps and latitude and longitude) and not (use_gps and have_gps) else false }}"
+set_gps: "{{ true if use_gps and have_gps else false }}"
 
 # Accumulate list of authorized keys
 authorized_keys_list:
   - "{{ authorized_keys }}"	# XXX - What if this is empty?
   - "{% for group in group_names %}{% if 'authorized_keys_' ~ group in vars %}{{ vars['authorized_keys_' ~ group] }}{% endif %}{% endfor %}"
+
+# Accumulate list of authorized keys
+gateway_collaborators_list:
+  - "{{ gateway_collaborators }}"	# XXX - What if this is empty?
+  - "{% for group in group_names %}{% if 'gateway_collaborators_' ~ group in vars %}{{ vars['gateway_collaborators_' ~ group] }}{% endif %}{% endfor %}"
+

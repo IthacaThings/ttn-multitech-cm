@@ -4,30 +4,31 @@ ansible_python_interpreter: /usr/bin/python
 
 # Ansible package dependencies
 ansible_depends:
-    - python-core
-    - python-argparse
-    - python-async
-    - python-compression
-    - python-dateutil
-    - python-distutils
-    - python-email
-    - python-html
-    - python-json
-    - python-multiprocessing
-    - python-pkgutil
-    - python-psutil
-    - python-pycurl
-    - python-pyopenssl
-    - python-pyserial
-    - python-pyudev
-    - python-pyusb
-    - python-shell
-    - python-simplejson
-    - python-syslog
-    - python-terminal
-    - python-textutils
-    - python-unixadmin
-    - python-xml
+  - python-core
+  - python-argparse
+  - python-compression
+  - python-dateutil
+  - python-distutils
+  - python-email
+  - python-html
+  - python-json
+  - python-multiprocessing
+  - python-pkgutil
+  - python-psutil
+  - python-pyopenssl
+  - python-pyserial
+  - python-pyudev
+  - python-pyusb
+  - python-shell
+  - python-simplejson
+  - python-syslog
+  - python-terminal
+  - python-textutils
+  - python-unixadmin
+  - python-xml
+ansible_depends_old:
+  - python-async
+  - python-pycurl
 
 # Conduit type
 conduit_type: "{{ ansible_local.conduit.hw_version | regex_replace('-[0-9.]+$') | lower }}"
@@ -40,14 +41,24 @@ forwarder_baseurl_kersing: https://github.com/kersing/multitech-installer/raw/ma
 # TTNI cache of packages
 forwarder_baseurl_ttni: "{{ mlinux_ttni_base_url }}/feeds/ttni-arm926ejste"
 # Command to run when rotating logs
-forwarder_logrotate_command: /etc/init.d/ttn-pkt-forwarder restart
+forwarder_logrotate_command: "{{ '/etc/init.d/ttn-pkt-forwarder restart' if forwarder_variant != 'basic' else '' }}"
+forwarder_logrotate_count: 14
+forwarder_logrotate_size: 10M
 # How long to wait between stop and start
 forwarder_restart_delay: 20
 # https://www.thethingsnetwork.org/forum/t/multitech-ttn-connection-lost-after-bad-connectivity/12355
 autoquit_threshold: 5
 
-# Default new gateways to TTNv3
-ttn_version: 3
+# Basic station
+# Basic station stuff
+basic_station_conf_url:
+  mtcdt: "http://www.multitech.net/developer/wp-content/uploads/2021/08/mtcdt-station.conf_.txt"
+  mtcap: "http://www.multitech.net/developer/wp-content/uploads/2020/06/mtcap-station.conf_.txt"
+  mtcap2: "http://www.multitech.net/developer/wp-content/uploads/2021/08/mtcap2station.conf_.txt"
+
+basic_cert_url: https://letsencrypt.org/certs/isrgrootx1.pem
+basic_log_level: INFO,S2E:VERBOSE
+basic_log_file: /var/log/basic-station.log
 
 status_public: true
 location_public: true
@@ -60,6 +71,7 @@ mlinux_base_url: https://ttni.tech/mlinux
 mlinux_upgrade_bin: "ttni-base-image-{{ conduit_type }}-upgrade.bin"
 mlinux_url: "{{ mlinux_base_url }}/images/{{ conduit_type }}/{{ mlinux_version }}"
 mlinux_ttni_base_url: https://ttni.tech/mlinux
+mlinux_restore_init_crumb: /var/lib/restore.init.done
 
 # Tag used by our support repos for this version of mlinux
 mlinux_ttni_preserve_root:
@@ -107,6 +119,9 @@ rtl8192cu_firmware_file: "rtl8192cufw_TMSC.bin"
 rtl8192cu_firmware_path: "rtlwifi/{{ rtl8192cu_firmware_file }}"
 rtl8192cu_firmware_url: "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/{{ rtl8192cu_firmware_path }}"
 
+# Gateway collaborators
+gateway_collaborators: []
+
 # Gateway collaborator rights
 gateway_collaborator_rights:
   - gateway:settings
@@ -117,12 +132,22 @@ gateway_collaborator_rights:
   - gateway:owner
   - gateway:messages
 
-# Use Fake GPS
-# (discouraged https://www.thethingsnetwork.org/forum/t/gateway-gps-configuration-in-local-conf-json/6176)
-use_fake_gps: false
 # Use GPS if present
 use_gps: false
-gps_device: ttyXRUSB2
+gps_device: "{{ 'ttyXRUSB2' if mlinux_version is version('4', '<') else 'gps0' }}"
+
+# Cellular modem
+
+# True to enable a cellular modem
+use_cellular: false
+# This gets set with the APN to connect to.
+cellular_apn: internet
+# Default value for cellular_provider
+# 'gsm' for GSM network, others not tested
+cellular_provider: gsm
+# Values of LoRA parameters when using cellulsr
+cellular_keepalive_interval: 30
+cellular_send_interval: 60
 
 # Cellular modem
 
@@ -152,12 +177,13 @@ monit_ping_action: 'exec "/sbin/reboot"'
 monit_process_period: "1 cycles"
 
 # Monitor the packet fowrarding process
+monit_pktfwd_initscript: "{{ 'ttn-pkt-forwarder' if forwarder_variant != 'basic' else 'lora-basic-station' }}"
 monit_pktfwd_period: "2 cycles"
-monit_pktfwd_pidfile: /var/run/lora-pkt-fwd.pid
-monit_pktfwd_logfile: /var/log/lora-pkt-fwd.log
-monit_pktfwd_start: '"/etc/init.d/ttn-pkt-forwarder start" with timeout 15 seconds'
-monit_pktfwd_stop: '"/etc/init.d/ttn-pkt-forwarder stop"'
-monit_pktfwd_restart: '"/etc/init.d/ttn-pkt-forwarder restart"'
+monit_pktfwd_pidfile: "{{ '/var/run/lora-pkt-fwd.pid' if forwarder_variant != 'basic' else '/var/run/lora/station.pid' }}"
+monit_pktfwd_logfile: "{{ '/var/log/lora-pkt-fwd.log' if forwarder_variant != 'basic' else '/var/log/basic-station.log' }}"
+monit_pktfwd_start: '"/etc/init.d/{{ monit_pktfwd_initscript }} start" with timeout 15 seconds'
+monit_pktfwd_stop: '"/etc/init.d/{{ monit_pktfwd_initscript }} stop"'
+monit_pktfwd_restart: '"/etc/init.d/{{ monit_pktfwd_initscript }} restart"'
 monit_pktfwd_reboot: 'exec "/sbin/reboot"'
 
 # Monitor space on /
@@ -170,3 +196,10 @@ monit_config_test: "usage > 15%"
 monit_volatile_test: "usage > 75%"
 monit_volatile_action: 'exec "/sbin/reboot"'
 monit_volatile_period: "60 cycles"
+
+# PPP
+monit_ppp_if: "ppp0"
+monit_ppp_pidfile: "/var/run/{{ monit_ppp_if }}.pid"
+monit_ppp_initscript: "ppp"
+monit_ppp_start: '"/etc/init.d/{{ monit_ppp_initscript }} start" with timeout 15 seconds'
+monit_ppp_stop: '"/etc/init.d/{{ monit_ppp_initscript }} stop"'

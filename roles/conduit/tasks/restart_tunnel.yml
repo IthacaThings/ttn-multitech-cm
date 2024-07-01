@@ -8,15 +8,13 @@
   service:
     name: ssh_tunnel
     state: restarted
+  retries: 10
+  delay: 30
   ignore_errors: true
 
-- name: restart_tunnel Wait for ssh tunnel to come back
-  wait_for:
-    host: "{{ ansible_host }}"
-    state: started
-    port: "{{ ansible_port }}"
-    delay: 10
-    timeout: 300
+- name: mlinux-upgrade Wait for ssh tunnel to come back online
+  wait_for_connection:
+    delay: 30
+    timeout: 600
     connect_timeout: 15
   ignore_errors: true
-  connection: local

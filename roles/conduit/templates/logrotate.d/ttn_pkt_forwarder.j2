@@ -1,7 +1,8 @@
 /var/log/lora-pkt-fwd.log {
-	rotate 14
+	rotate {{ forwarder_logrotate_count }}
 	daily
-	maxsize 10M
+	maxsize {{ forwarder_logrotate_size }}
+	missingok
         sharedscripts
         postrotate
 		{{ forwarder_logrotate_command }}
