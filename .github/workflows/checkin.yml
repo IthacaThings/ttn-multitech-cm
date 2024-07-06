@@ -1,0 +1,11 @@
+---
+name: push
+run-name: Run some checks on push
+on: [push]
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bin/run make syntax-check lint
+...
