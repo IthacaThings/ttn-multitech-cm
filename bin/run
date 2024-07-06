@@ -2,10 +2,6 @@
 
 trap "rm -f .docker_env" 0 1 2 3 13 15
 
-# The image tag is the lorawan stack version
-LORAWAN_STACK_VERSION=$(curl -qs https://api.github.com/repos/TheThingsNetwork/lorawan-stack/releases | jq -r '.[0].name')
-IMAGE_TAG=ansible-env:${LORAWAN_STACK_VERSION}
-
 prog=$(basename ${0} | tr '[:upper:]' '[:lower:]')
 if [ "${prog}" = "run" ]; then
     if [ -n "${*}" ]; then
@@ -34,6 +30,9 @@ if [ "${#missing[*]}" -gt 0 ]; then
     exit 1
 fi
 
+# The image tag is the lorawan stack version
+LORAWAN_STACK_VERSION=$(curl -qs https://api.github.com/repos/TheThingsNetwork/lorawan-stack/releases | jq -r '.[0].name')
+IMAGE_TAG=ansible-env:${LORAWAN_STACK_VERSION}
 
 build_image() {
     # We use --no-cache to do a full build so .Created is correct
@@ -74,7 +73,7 @@ check_image
 
 declare -a args env
 
-args+=("-it")
+test -t 0 && args+=("-it")
 args+=("--rm")
 
 args+=("-v" "${PWD}:${PWD}")
@@ -82,6 +81,7 @@ args+=("-v" "${HOME}:${HOME}")
 
 env+=("CURRENT_PWD=${PWD}")
 env+=("GID=$(id -g)")
+env+=("GROUP=$(id -gn)")
 env+=("UID=$(id -u)")
 
 # Pass some environemnt variables we need
@@ -102,18 +102,25 @@ fi
 case ${system} in
     Darwin)
 	# Magic to get ssh-agent to work
-	args+=("-v" "/run/host-services/ssh-auth.sock:/ssh-agent/")
-	env+=("SSH_AUTH_SOCK=/ssh-agent")
+	if [ -n "${SSH_AUTH_SOCK}" ]; then
+	    args+=("-v" "/run/host-services/ssh-auth.sock:/ssh-agent/")
+	    env+=("SSH_AUTH_SOCK=/ssh-agent")
+	fi
 	# We need to re-map the cache dir so we can see the token
-	args+=("-v" "${HOME}/Library/Caches/ttn-lw-cli:${HOME}/.cache/ttn-lw-cli")
+	if [ -d "${HOME}/Library/Caches/ttn-lw-cli" ]; then
+	    args+=("-v" "${HOME}/Library/Caches/ttn-lw-cli:${HOME}/.cache/ttn-lw-cli")
+	fi
 	;;
     Linux)
+	# Magic to get ssh-agent to work
+	if [ -n "${SSH_AUTH_SOCK}" ]; then
+	    args+=("-v" "${SSH_AUTH_SOCK}:/ssh-agent/")
+	    env+=("SSH_AUTH_SOCK=/ssh-agent")
+	fi
 	# Mount the cache file with the tokens in the correct place
-	if [ $(which ttn-lw-cli) = "/snap/bin/ttn-lw-cli" ]; then
+	if [ "$(which ttn-lw-cli)" = "/snap/bin/ttn-lw-cli" ]; then
 	    args+=("-v" "${HOME}/snap/ttn-lw-stack/common/ttn-lw-cli:${HOME}/.cache/ttn-lw-cli")
 	fi
-	args+=("-v" "${SSH_AUTH_SOCK}:/ssh-agent/")
-	env+=("SSH_AUTH_SOCK=/ssh-agent")
 	;;
 esac
 

@@ -7,5 +7,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: bin/run make syntax-check lint
+      - name: Checkout config
+        run: |
+          git clone https://github.com/IthacaThings/ttn-multitech-config --branch ttn-ithaca-test .ttn_org
+          mkdir .ttn_org/catalog
+      - name: Install ttn-lw-stack
+        run: |
+          sudo snap install ttn-lw-stack
+          sudo snap alias ttn-lw-stack.ttn-lw-cli ttn-lw-cli
+          # Prevent ${HOME}/.cache from being owned by root
+          mkdir -p ${HOME}/snap/ttn-lw-stack/common/ttn-lw-cli
+          mkdir -p ${HOME}/.cache
+      - name: Run syntax-check
+        run: |
+          bin/run make syntax-check
+#      - name: Run ansible-lint
+#        run: |
+#          bin/run make lint
 ...
