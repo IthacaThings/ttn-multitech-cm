@@ -1,0 +1,132 @@
+#!/bin/bash
+
+trap "rm -f .docker_env" 0 1 2 3 13 15
+
+# The image tag is the lorawan stack version
+LORAWAN_STACK_VERSION=$(curl -qs https://api.github.com/repos/TheThingsNetwork/lorawan-stack/releases | jq -r '.[0].name')
+IMAGE_TAG=ansible-env:${LORAWAN_STACK_VERSION}
+
+prog=$(basename ${0} | tr '[:upper:]' '[:lower:]')
+if [ "${prog}" = "run" ]; then
+    if [ -n "${*}" ]; then
+	prog="${1}"; shift
+    else
+	prog=bash
+    fi
+fi
+
+system=$(uname -s)
+case ${system} in
+    Darwin)
+	date_cmd=gdate
+	;;
+    Linux)
+	date_cmd=date
+	;;
+esac
+
+declare -a missing
+for cmd in curl ${date_cmd} docker jq realpath; do
+    which ${cmd} >/dev/null || missing+=(${cmd})
+done
+if [ "${#missing[*]}" -gt 0 ]; then
+    echo "Please install the following programs: ${missing[*]}" >&2
+    exit 1
+fi
+
+
+build_image() {
+    # We use --no-cache to do a full build so .Created is correct
+    echo "Building ${IMAGE_TAG} ${*}"
+    docker build -q ${*} -t ${IMAGE_TAG} docker || exit $?
+}
+
+check_image() {
+    local image_date
+    local file_date
+
+    # Get creation date of image
+    image_date=$(docker image inspect -f '{{ .Metadata.LastTagTime }}' ${IMAGE_TAG} 2>/dev/null)
+    if [ $? -ne 0 ]; then
+	build_image
+	return
+    fi
+    image_date=$(echo ${image_date} | sed -E -e 's/ /T/' -e 's/ [+-][0-9]{4} //')
+    image_date=$(${date_cmd} --date "${image_date}" +%s)
+
+    # Rebuild if it'a at least a day old
+    #let age=$(date +%s)-${image_date}
+    #if [ ${age} -gt 86400 ]; then
+    #	build_image --no-cache
+    #	return
+    #fi
+
+    # Rebuild if any files we use were modified after the image was built
+    for file_date in $(find docker -name \*~ -prune -o -name .\* -prune -o -type f -print); do
+	if [ $(date -r ${file_date} +%s) -gt ${image_date} ]; then
+	    build_image
+	    return
+	fi
+    done
+}
+
+check_image
+
+declare -a args env
+
+args+=("-it")
+args+=("--rm")
+
+args+=("-v" "${PWD}:${PWD}")
+args+=("-v" "${HOME}:${HOME}")
+
+env+=("CURRENT_PWD=${PWD}")
+env+=("GID=$(id -g)")
+env+=("UID=$(id -u)")
+
+# Pass some environemnt variables we need
+for e in $(printenv | grep -E '^(EDITOR=|HOME=|TTN_LW_|TTN_ORG=|USER=|VISUAL=|ANSIBLE_)'); do
+    env+=("${e}")
+done
+
+# Mount the directory with our configuration files
+if [ -n "${TTN_ORG}" -o -d .ttn_org ]; then
+    if [ -n "${TTN_ORG}" ]; then
+	path = $(realpath ${TTN_ORG})
+    else
+	path=$(realpath .ttn_org)
+    fi
+    args+=("-v" "${path}:${path}")
+fi
+
+case ${system} in
+    Darwin)
+	# Magic to get ssh-agent to work
+	args+=("-v" "/run/host-services/ssh-auth.sock:/ssh-agent/")
+	env+=("SSH_AUTH_SOCK=/ssh-agent")
+	# We need to re-map the cache dir so we can see the token
+	args+=("-v" "${HOME}/Library/Caches/ttn-lw-cli:${HOME}/.cache/ttn-lw-cli")
+	;;
+    Linux)
+	# Mount the cache file with the tokens in the correct place
+	if [ $(which ttn-lw-cli) = "/snap/bin/ttn-lw-cli" ]; then
+	    args+=("-v" "${HOME}/snap/ttn-lw-stack/common/ttn-lw-cli:${HOME}/.cache/ttn-lw-cli")
+	fi
+	args+=("-v" "${SSH_AUTH_SOCK}:/ssh-agent/")
+	env+=("SSH_AUTH_SOCK=/ssh-agent")
+	;;
+esac
+
+# Set up env file
+(
+    for e in ${env[*]}; do
+	echo ${e}
+    done
+) > .docker_env
+args+=("--env-file" ".docker_env")
+
+echo "Starting ${IMAGE_TAG} with ${prog} ${*}"
+docker run ${args[*]} ${IMAGE_TAG} ${prog} ${*}
+
+exit $?
+
