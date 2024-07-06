@@ -32,6 +32,35 @@ these files those changes may be overwritten when running
 Ansilble. It's best to expand the Ansible control repo to support the
 changes you need instead of making local changes.
 
+### Docker container
+
+Later versions of ansible do not support the python2 used in
+mLinux before 6.0.1.  In order to run this playbook on those systems
+it's necessary to use a docker container with an older version of
+ansible.  To do this, run the `make` command with the `bin/run`
+prefix.
+
+```bash
+bin/run make ping
+```
+
+To run this you will need to have `curl`, `jq` and `docker`
+installed.
+
+This docker container will use the token obtained by the host version
+of `ttn-lw-cli` so you will need to run `ttn-lw-cli login` prior to
+running the docker container.  It will also forward the ssh-agent
+socket into the container.
+
+To get a shell prompt in the docker container, run `bin/run` with no
+arguments.  This will have access to your home directory, the current
+directory and the TTN_ORG directory with the configuration.
+
+The tag of the container will be the latest available version of
+`lorawan-stack` as found on
+[Github](https://github.com/TheThingsNetwork/lorawan-stack/releases)
+to ensure we are running the latest version of the stack.
+
 ## mLinux version
 
 This repo has been extensively tested on later versions of mLinux 3.3

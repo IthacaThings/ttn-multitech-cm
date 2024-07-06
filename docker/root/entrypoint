@@ -1,0 +1,19 @@
+#!/bin/bash
+
+if [ "${USER}" != "root" ]; then
+    # macOS UIDs can be less than 1000
+    test ${UID} -lt 1000 && flag=-r
+    useradd ${flag} --uid ${UID} --gid ${GID} --home ${HOME} -G adm --no-create-home --shell ${SHELL} ${USER} > /dev/null
+fi
+
+chmod 777 /ssh-agent
+
+cd ${CURRENT_PWD}
+
+# We need to keep the consistent connection socket in a local F/S
+export ANSIBLE_HOME=/tmp/ansible_home
+mkdir ${ANSIBLE_HOME}
+chown ${USER} ${ANSIBLE_HOME}
+export ANSIBLE_SSH_CONTROL_PATH_DIR=${ANSIBLE_HOME}/cp
+
+gosu ${USER} ${*}

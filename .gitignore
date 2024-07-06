@@ -3,6 +3,7 @@
 *~
 .DS_Store
 .ttn-lw-cli.yml
+.docker_env
 /*.retry
 /.ttn_org*
 /catalog/
