@@ -1,12 +1,18 @@
 #!/bin/bash
 
+if ! getent group ${GROUP} > /dev/null; then
+    groupadd -f -g ${GID} ${GROUP}
+fi
+
 if [ "${USER}" != "root" ]; then
     # macOS UIDs can be less than 1000
     test ${UID} -lt 1000 && flag=-r
     useradd ${flag} --uid ${UID} --gid ${GID} --home ${HOME} -G adm --no-create-home --shell ${SHELL} ${USER} > /dev/null
 fi
 
-chmod 777 /ssh-agent
+if [ -n "${SSH_AUTH_SOCK}" ]; then
+    chmod 777 "${SSH_AUTH_SOCK}"
+fi
 
 cd ${CURRENT_PWD}
 
