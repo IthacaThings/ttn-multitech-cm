@@ -149,16 +149,6 @@ cellular_provider: gsm
 cellular_keepalive_interval: 30
 cellular_send_interval: 60
 
-# Cellular modem
-
-# True to enable a cellular modem
-use_cellular: false
-# This gets set with the APN to connect to.  Sometimes needs to be "broadband"
-cellular_apn: internet
-# Default value for cellular_provider
-# 'gsm' for GSM network, others not tested
-cellular_provider: null
-
 #
 # Monitoring - Configuration of monit
 #
