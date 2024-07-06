@@ -26,7 +26,7 @@
     force: true
   when: ppp_on_boot.stat.islnk is defined and not ppp_on_boot.stat.islnk
 
-- name: ppp Make /var/config/ppp/ppp_on_boot executable
+- name: ppp Make /var/config/ppp/ppp_on_boot executable when we are using cellular
   file:
     dest: /var/config/ppp/ppp_on_boot
     mode: "755"
@@ -35,6 +35,13 @@
     - use_cellular
     - cellular_provider is defined
   
+- name: ppp Make /var/config/ppp/ppp_on_boot not executable when we are not using cellular
+  file:
+    dest: /var/config/ppp/ppp_on_boot
+    mode: "644"
+  notify: Stop ppp
+  when: use_cellular == False or cellular_provider is not defined
+
 #
 #	Set or reset APN
 #
@@ -126,4 +133,5 @@
   notify:
     - Restart monit
   when: use_cellular == False or cellular_provider is not defined
-    
+
+...
