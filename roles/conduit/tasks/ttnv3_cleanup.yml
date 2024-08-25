@@ -10,9 +10,9 @@
 - name: ttnv3_cleanup Delete all link keys that are not in use
   local_action:
     module: shell
-    args: "ttn-lw-cli gateway api-keys delete {{ lora_hostname }} {{item.id }}"
+    args: "ttn-lw-cli gateway api-keys delete {{ lora_hostname }} {{ item.id }}"
   throttle: 1
   loop: "{{ list_keys.stdout | from_json }}"
   no_log: true
-  when: item.name == "link" and item.id != gw_key_id
+  when: item.name == "link" and (gw_key_id is not defined or item.id != gw_key_id)
 ...
