@@ -73,22 +73,20 @@
   when: forwarder_variant.startswith("basic")
 
 - name: ttnv3 Test key by fetching config
-  uri:
-    headers:
-      Authorization: "Bearer {{ gw_key }}"
-    url: "https://{{ router_v3 }}/api/v3/gcs/gateways/{{ lora_hostname }}/semtechudp/global_conf.json"
-    method: GET
-  register: get_config
-  ignore_errors: true
-  delegate_to: 127.0.0.1
+  block:
+    - uri:
+        headers:
+          Authorization: "Bearer {{ gw_key }}"
+        url: "https://{{ router_v3 }}/api/v3/gcs/gateways/{{ lora_hostname }}/semtechudp/global_conf.json"
+        method: GET
+      register: get_config
+      delegate_to: 127.0.0.1
+    - set_fact:
+        global_conf: "{{ get_config.json }}"
+  rescue:
+    - set_fact:
+        gw_key:
   when: gw_key is defined
-
-- name: ttnv3 Extract global.conf
-  set_fact:
-    global_conf: "{{ get_config.json }}"
-  when:
-    - gw_key is defined
-    - get_config is succeeded
 
 - name: ttnv3 Generate a key if we do not have one
   local_action:
