@@ -4,15 +4,19 @@
 #	Restart the SSH tunnel and wait for it to come back
 #
 
-- name: restart_tunnel Restart ssh tunnel
-  service:
-    name: ssh_tunnel
-    state: restarted
-  retries: 10
-  delay: 30
-  ignore_errors: true
+- name: restart_tunnel Update rc.d to start tunnel
+  shell: "update-rc.d -f ssh_tunnel remove; update-rc.d ssh_tunnel defaults 10 50"
 
-- name: mlinux-upgrade Wait for ssh tunnel to come back online
+- name: restart_tunnel Restart ssh tunnel
+  block:
+    - ansible.builtin.reboot:
+        boot_time_command: pgrep autossh
+        reboot_command: /etc/init.d/ssh_tunnel restart
+      ignore_errors: true
+  rescue:
+    - ansible.builtin.meta: noop
+
+- name: restart_tunnel Wait for ssh tunnel to come back online
   wait_for_connection:
     delay: 30
     timeout: 600

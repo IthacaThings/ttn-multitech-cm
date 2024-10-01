@@ -179,7 +179,11 @@
 #	Set up ssh_tunnel (autossh)
 #
 - name: main Set up ssh_tunnel (autossh)
-  import_tasks: ssh_tunnel.yml
+  block:
+    - import_tasks: ssh_tunnel.yml
+  rescue:
+    - debug:
+        msg: "main: SSH tunnel setup failed, continuing..."
   tags:
     - ssh_tunnel
     - monit
