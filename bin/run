@@ -132,8 +132,8 @@ esac
 ) > .docker_env
 args+=("--env-file" ".docker_env")
 
-echo "Starting ${IMAGE_TAG} with ${prog} ${*}"
-docker run ${args[*]} ${IMAGE_TAG} ${prog} ${*}
+echo "Starting ${IMAGE_TAG} with ${prog} ${*}" >&2
+docker run ${args[*]} ${IMAGE_TAG} ${prog} "${@}"
 
 exit $?
 
