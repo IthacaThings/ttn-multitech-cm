@@ -24,6 +24,8 @@
     owner: root
     group: root
   when: hostname is defined
+  notify:
+    - Restart monit
 
 - name: hostname Set hostname
   shell: "hostname -F /etc/hostname"
