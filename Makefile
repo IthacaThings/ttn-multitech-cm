@@ -30,6 +30,11 @@ export TAGS=
 export TARGET=conduits
 TIMEOUT=60
 OPTIONS=
+ifeq (${TTN_ANSIBLE_IN_DOCKER},)
+  RUN=bin/run
+else
+  RUN=
+endif
 
 #
 # figure out the inventory.

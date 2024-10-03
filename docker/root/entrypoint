@@ -15,5 +15,15 @@ export ANSIBLE_HOME=/tmp/ansible_home
 mkdir ${ANSIBLE_HOME}
 chown ${USER} ${ANSIBLE_HOME}
 export ANSIBLE_SSH_CONTROL_PATH_DIR=${ANSIBLE_HOME}/cp
+export TTN_ANSIBLE_IN_DOCKER=docker
 
-gosu ${USER} ${*}
+# Ensure we are logged in if we are running ansible-playbook
+if [ "${1}" = "ansible-playbook" ]; then
+    ttn-lw-cli --log.level error gateways list 2>&1 > /dev/null
+    if [ $? -ne 0 ]; then
+	echo "ttn-lw-cli does not appear to be logged in" >&2
+	exit 1
+    fi
+fi
+
+gosu ${USER} "${@}"
