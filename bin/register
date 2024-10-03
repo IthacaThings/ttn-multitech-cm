@@ -378,6 +378,7 @@ def check_output(binary, noop, command):
 
     cmd = list()
     cmd.append(binary)
+    cmd.extend(["--log.level", "warn"])
     cmd.extend(command)
 
     logging.debug("DBG: %s", " ".join(cmd))

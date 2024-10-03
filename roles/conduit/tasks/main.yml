@@ -171,7 +171,12 @@
 #	Install and configure TTN packet forwarder
 #
 - name: main Set up TTN packet forwarder
-  import_tasks: ttn.yml
+  block:
+    - name: main import ttn.yml
+      import_tasks: ttn.yml
+  rescue:
+    - debug:
+        msg: "main: TTN setup failed, continuing"
   tags:
     - ttn
 
@@ -179,7 +184,11 @@
 #	Set up ssh_tunnel (autossh)
 #
 - name: main Set up ssh_tunnel (autossh)
-  import_tasks: ssh_tunnel.yml
+  block:
+    - import_tasks: ssh_tunnel.yml
+  rescue:
+    - debug:
+        msg: "main: SSH tunnel setup failed, continuing..."
   tags:
     - ssh_tunnel
     - monit
