@@ -122,7 +122,7 @@ ANSIBLE_DEPENDS_OLD = python-async \
 	python-pycurl
 
 # now that we know the inventory, get the hosts.
-HOSTS=$(shell ansible --inventory ${INVENTORY} --list-hosts ${TARGET} | sed -e 's/^ *//' -e '/^hosts ([0-9]*):/d')
+HOSTS=$(shell ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} ${RUN} ansible --inventory ${INVENTORY} --list-hosts ${TARGET} 2>/dev/null | sed -e 's/^ *//' -e '/^hosts ([0-9]*):/d')
 
 # set the default playbook parameters
 PLAYBOOK_ARGS=-T ${TIMEOUT} --inventory ${INVENTORY} $${TAGS:+-t $${TAGS}} $${TARGET:+-l $${TARGET}} ${OPTIONS}
@@ -130,64 +130,72 @@ PLAYBOOK_ARGS=-T ${TIMEOUT} --inventory ${INVENTORY} $${TAGS:+-t $${TAGS}} $${TA
 all::	apply
 
 ping: ${CATALOG}
-	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
-		ansible --inventory ${INVENTORY} -o -m ping ${OPTIONS} ${TARGET}
+	@ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
+		${RUN} \
+		ansible --inventory ${INVENTORY} -o -m ansible.builtin.ping ${OPTIONS} ${TARGET}
 
 test:	${CATALOG}
-	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
+	@ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
+		${RUN} \
 		ansible-playbook ${PLAYBOOK_ARGS} -C site.yml
 
 test-debug:	${CATALOG}
-	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
+	@ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
+		${RUN} \
 		ansible-playbook ${PLAYBOOK_ARGS} -vvv -C site.yml
 
 list-hosts: true
 	@echo "${HOSTS}"
 
 list-tags: ${CATALOG}
-	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
+	@ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
+		${RUN} \
 		ansible-playbook ${PLAYBOOK_ARGS} --list-tags site.yml
 
 syntax-check: ${CATALOG}
-	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
+	@ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
+		${RUN} \
 		ansible-playbook ${PLAYBOOK_ARGS} --syntax-check site.yml
 
 apply: ${CATALOG}
-	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
+	@ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
+		${RUN} \
 		ansible-playbook ${PLAYBOOK_ARGS} site.yml
 
 retry: site.retry ${CATALOG}
-	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
+	@ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
+		${RUN} \
 		ansible-playbook ${PLAYBOOK_ARGS} -l @site.retry site.yml
 
 apply-debug: ${CATALOG}
-	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
+	@ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
+		${RUN} \
 		ansible-playbook ${PLAYBOOK_ARGS} -vvv site.yml
 
 dump-config: ${CATALOG}
-	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
+	@ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
+		${RUN} \
 		ansible-config dump --only-changed
 
 # Grab configs from all nodes
 gather: ${CATALOG}
-	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
-		ansible-playbook ${PLAYBOOK_ARGS} -t ping -C site.yml -l conduits
+	@ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
+		${RUN} \
+		ansible --inventory ${INVENTORY} -o -m ansible.builtin.setup ${OPTIONS} ${TARGET}
 
 # Ensure all ansible dependiences are installed (useful if the list gets updated)
-ansible-setup:
-	ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
-		ansible --inventory ${INVENTORY} -o ${OPTIONS} ${TARGET} --become -m shell -a "opkg update; opkg install ${ANSIBLE_DEPENDS_COMMON}; opkg install ${ANSIBLE_DEPENDS_OLD} || exit 0"
+ansible-setup: ${CATALOG}
+	@ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
+		${RUN} \
+		ansible --inventory ${INVENTORY} -o ${OPTIONS} ${TARGET} --become -m ansible.builtin.shell -a "opkg update; opkg install ${ANSIBLE_DEPENDS_COMMON}; opkg install ${ANSIBLE_DEPENDS_OLD} || exit 0"
 
 # Lint
 lint:
-	ansible-lint
+	${RUN} \
+		ansible-lint
 
-# Collect logs from gateways
-fetch-logs:
-	@for target in ${HOSTS}; do mkdir -p logs/$${target}; done
-	@ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
-		ansible --inventory ${INVENTORY} -o ${OPTIONS} ${TARGET} --become -m synchronize -a 'mode=pull src=/var/log/lora-pkt-fwd.log* dest="logs/{{ ansible_hostname }}/" delete=yes'
-
+run:	${CATALOG}
+	@ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} ${RUN}
 ${CATALOG}:	true
 	@mkdir -p ${CATALOG} 2>/dev/null || exit 0
 
