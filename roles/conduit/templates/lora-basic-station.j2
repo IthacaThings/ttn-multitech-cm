@@ -125,6 +125,15 @@ do_start() {
     done
 
     #
+    # reset concentrator
+    #
+    echo -n "Resetting concentrator: "
+    /usr/sbin/mts-io-sysfs store lora/reset 0
+    /usr/sbin/mts-io-sysfs store lora/reset 1
+    sleep 1
+    echo "DONE"
+
+    #
     # start packet forwarder
     #
     echo -n "Starting $NAME: "
