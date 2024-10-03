@@ -171,7 +171,12 @@
 #	Install and configure TTN packet forwarder
 #
 - name: main Set up TTN packet forwarder
-  import_tasks: ttn.yml
+  block:
+    - name: main import ttn.yml
+      import_tasks: ttn.yml
+  rescue:
+    - debug:
+        msg: "main: TTN setup failed, continuing"
   tags:
     - ttn
 
