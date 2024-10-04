@@ -100,7 +100,7 @@ done
 # Mount the directory with our configuration files
 if [ -n "${TTN_ORG}" -o -d .ttn_org ]; then
     if [ -n "${TTN_ORG}" ]; then
-	path = $(realpath ${TTN_ORG})
+	path=$(realpath ${TTN_ORG})
     else
 	path=$(realpath .ttn_org)
     fi
