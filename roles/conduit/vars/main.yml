@@ -27,11 +27,11 @@ set_gps: "{{ true if use_gps and have_gps else false }}"
 
 # Accumulate list of authorized keys
 authorized_keys_list:
-  - "{{ authorized_keys }}"	# XXX - What if this is empty?
+  - "{{ authorized_keys }}" # XXX - What if this is empty?
   - "{% for group in group_names %}{% if 'authorized_keys_' ~ group in vars %}{{ vars['authorized_keys_' ~ group] }}{% endif %}{% endfor %}"
 
 # Accumulate list of authorized keys
 gateway_collaborators_list:
-  - "{{ gateway_collaborators }}"	# XXX - What if this is empty?
+  - "{{ gateway_collaborators }}" # XXX - What if this is empty?
   - "{% for group in group_names %}{% if 'gateway_collaborators_' ~ group in vars %}{{ vars['gateway_collaborators_' ~ group] }}{% endif %}{% endfor %}"
 
