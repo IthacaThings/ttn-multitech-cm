@@ -21,6 +21,9 @@ jobs:
       - name: Run syntax-check
         run: |
           bin/run make syntax-check
+      - name: Run playbook-vars
+        run: |
+          bin/run bin/playbook_vars
 #      - name: Run ansible-lint
 #        run: |
 #          bin/run make lint

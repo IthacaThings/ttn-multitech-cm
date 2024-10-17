@@ -1,0 +1,129 @@
+#!/usr/bin/env python3
+
+"""
+Find all defined playbook variables in config files.
+
+The output of this can be used as an artifact for input into config repo validation.
+"""
+
+import argparse
+import logging
+import os
+import sys
+import yaml
+
+def parse_options():
+    """ Figure out what we should do """
+
+    parser = argparse.ArgumentParser(description="A program to build host related files")
+
+    #	Debugging
+    group = parser.add_argument_group("Debugging options")
+    group.add_argument("-d", "--debug",
+                       dest="debug", default=False,
+                       action='store_true',
+                       help="print debugging messages")
+    group.add_argument("--nodebug",
+                       dest="debug",
+                       action='store_false',
+                       help="print debugging messages")
+    group.add_argument("-v", "--verbose",
+                       dest="verbose", default=False,
+                       action='store_true',
+                       help="print verbose messages")
+    group.add_argument("-n", "--noop",
+                       dest="noop", default=False,
+                       action='store_true',
+                       help="Don't make changes, just list what we are going to do")
+
+    #	Options
+    group = parser.add_argument_group("Configuration options")
+    group.add_argument("--roles_dir",
+                       default="roles",
+                       help="Roles directory")
+
+    options = parser.parse_args()
+
+    if options.debug:
+        options.verbose = options.debug
+
+    return options
+
+def init_logging(options):
+    """ Set up logging """
+
+    logger = logging.getLogger()
+    logger.handlers = []
+    logger.addHandler(logging.StreamHandler())
+    if options.debug:
+        logger.setLevel('DEBUG')
+    elif options.verbose:
+        logger.setLevel('INFO')
+    else:
+        logger.setLevel('WARNING')
+
+    return logger
+
+def main():
+    """ Main Line """
+
+    options = parse_options()
+    init_logging(options)
+
+    rc = 0
+    var_names = {}
+
+    for role_name in os.listdir(options.roles_dir):
+        if role_name.startswith("."):
+            continue
+        role_path = os.path.join(options.roles_dir, role_name)
+        if not os.path.isdir(role_path):
+            continue
+        logging.debug("Found role %s", role_path)
+        var_names[role_name] = []
+        for subdir_name in ["vars", "defaults"]:
+            subdir = os.path.join(role_path, subdir_name)
+            if not os.path.isdir(subdir):
+                continue
+            for file_name in os.listdir(subdir):
+                if not file_name.endswith(".yml"):
+                    continue
+                file_path = os.path.join(subdir, file_name)
+                if not os.path.isfile(file_path):
+                    continue
+                logging.debug("Reading: %s", file_path)
+                try:
+                    with open(file_path, 'r') as fp:
+                        data = yaml.safe_load(fp)
+                except yaml.YAMLError as error:
+                    logging.warning("%s", error)
+                    rc = 1
+                    continue
+                if data is None:
+                    continue
+                for var_name in data.keys():
+                    if var_name.startswith("ansible_"):
+                        continue
+                    if var_name in var_names[role_name]:
+                        logging.warning("Duplicate definition of %s found in %s",
+                                        var_name,
+                                        file_path)
+                        rc = 1
+                        continue
+                    var_names[role_name].append(var_name)
+
+    for role_name, role_vars in sorted(var_names.items()):
+        print(f"{role_name}:")
+        for var_name in sorted(role_vars):
+            print(f"	{var_name}")
+
+    return rc
+
+try:
+    sys.exit(main())
+except TimeoutError:
+    print("Timeout")
+    sys.exit(1)
+except KeyboardInterrupt:
+    print()
+    sys.exit(1)
