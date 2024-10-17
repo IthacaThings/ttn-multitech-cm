@@ -152,6 +152,12 @@ list-tags: ${CATALOG}
 		${RUN} \
 		ansible-playbook ${PLAYBOOK_ARGS} --list-tags site.yml
 
+list-vars: ${CATALOG}
+	@ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
+         ANSIBLE_NOCOLOR=True \
+		${RUN} \
+		ansible --inventory ${INVENTORY} -o -m debug -a "var=hostvars[inventory_hostname]" ${OPTIONS} ${TARGET} | bin/vars-helper
+
 syntax-check: ${CATALOG}
 	@ANSIBLE_CACHE_PLUGIN_CONNECTION=${CATALOG} \
 		${RUN} \

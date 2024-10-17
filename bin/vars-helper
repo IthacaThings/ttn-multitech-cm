@@ -1,0 +1,25 @@
+#!/usr/bin/env python3
+
+import fileinput
+import json
+import re
+import yaml
+
+VAR_RE = re.compile(r"(\S+)\s\| SUCCESS => (.*)$")
+
+hosts = {}
+
+for line in fileinput.input():
+    match = VAR_RE.match(line.strip())
+    if not match:
+        continue
+    raw_data = json.loads(match.group(2))
+    data = raw_data['hostvars[inventory_hostname]']
+    for key, value in data.copy().items():
+        if key.startswith("ansible_") or key.startswith("inventory_"):
+            data.pop(key)
+        if key in ["group_names", "groups", "omit", "playbook_dir"]:
+            data.pop(key)
+    hosts[match.group(1)] = data
+
+print(yaml.dump(hosts))

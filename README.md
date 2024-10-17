@@ -504,6 +504,12 @@ Output a list of all the hosts defiled in *hosts* or *inventory*
 
 List the tags available
 
+#### list-vars
+
+List the defined variables for the given targets. These are output in
+YAML format. Note that some expansion may have been performed on the
+input data by ansible.
+
 #### retry
 
 Retry the hosts that failed as specified in @site.retry
