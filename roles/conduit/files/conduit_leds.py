@@ -513,7 +513,8 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("")
         LEDs(MTSIO())
-    except Exception:
+    except Exception as exc:
+        logging.exception(exc)
         LEDs(MTSIO())
 
     sys.exit(rc)
