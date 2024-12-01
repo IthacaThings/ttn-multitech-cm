@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#remote_server_connect.sh connect to remote server for ssh tunnel back
+#Start conduit_leds as a service
 
 ### BEGIN INIT INFO
 # Provides:          conduit_leds
@@ -8,7 +8,7 @@
 # Required-Stop:     $local_fs $network $syslog $dbus
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Description:       ssh to remote system for reverse tunnel and remote control
+# Description:       Display connection status in Conduit LEDs
 ### END INIT INFO
 
 PATH="/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin"

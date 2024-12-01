@@ -240,7 +240,7 @@ def daemonize():
 def parse_args():
     """ What do we need to do """
 
-    parser = argparse.ArgumentParser(description="Check for errors in Basic Station log")
+    parser = argparse.ArgumentParser(description="Display connection status in Conduit LEDs")
 
     #   Debugging
     group = parser.add_argument_group("Debugging options")
