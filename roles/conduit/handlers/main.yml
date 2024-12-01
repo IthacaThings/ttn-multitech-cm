@@ -53,6 +53,12 @@
   include_tasks: restart_tunnel.yml
 
 #
+#       Restart conduit_leds
+#
+- name: restart conduit_leds
+  include_tasks: restart_conduit_leds.yml
+
+#
 #	Restart sshd after config changes
 #
 - name: Restart ssh

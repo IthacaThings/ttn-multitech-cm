@@ -195,6 +195,16 @@
     - setup
 
 #
+#	Secure ssh
+#
+- name: main Set up conduit_leds
+  import_tasks: conduit_leds.yml
+  when: ansible_local.conduit.hw_version.startswith("MTCDT-")
+  tags:
+    - conduit_leds
+    - setup
+
+#
 #	Set up monit
 #
 - name: main Set up moniit
