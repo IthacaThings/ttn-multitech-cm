@@ -114,6 +114,7 @@ class Defaults(object):
                     for quote in ["'", '"']:
                         if value.startswith(quote) and value.endswith(quote):
                             value = value[1:-1]
+                            break
                 except AttributeError:
                     pass
                 self.vars[match.group('name')] = value
