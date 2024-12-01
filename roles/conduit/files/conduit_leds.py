@@ -25,11 +25,13 @@ SOFTWARE.
 """
 
 # cat /sys/devices/platform/mts-io/led-{a, b, c, d} aka {cd, sig1, sig2, sig3}
+# Currently for python2
 
 import argparse
 from contextlib import contextmanager
 import errno
 import fcntl
+import ipaddress
 import logging
 from logging.handlers import SysLogHandler
 import os
@@ -359,6 +361,11 @@ def check_lora(options, device_path):
 
     return True
 
+# PPPd assigns one of the following addresses until we receive one (add ppp interface index)
+HISADDR_STATIC = ipaddress.ip_address(u"10.64.64.64")
+HISADDR_DYNAMIC = ipaddress.ip_address(u"10.112.112.112")
+PPP_RE = re.compile(r'ppp(?P<index>\d+)$')
+
 def check_ppp(options):
     """ Check status of ppp connection """
 
@@ -373,14 +380,18 @@ def check_ppp(options):
 
     peer_addr = None
     for ifname, ifaddrs in psutil.net_if_addrs().items():
-        if ifname != "ppp0":
+        match = PPP_RE.match(ifname)
+        if not match:
             continue
+        ppp_ifnum = int(match.group('index'))
         for ifaddr in ifaddrs:
             if ifaddr.family != socket.AF_INET:
                 continue
             if ifaddr.ptp is None:
                 continue
-            if ifaddr.ptp == "10.64.64.64":
+            if ifaddr.ptp in [str(HISADDR_STATIC + ppp_ifnum), str(HISADDR_DYNAMIC + ppp_ifnum)]:
+                # Remote has not given us an address yet
+                logging.debug("check_ppp: Remote has not provided an address for %s: %s", ifname, ifaddr.ptp)
                 continue
             peer_addr = ifaddr.ptp
         break
