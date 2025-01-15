@@ -105,7 +105,7 @@
     - set_fact:
         gw_key: "{{ key_data.key }}"
         gw_key_id: "{{ key_data.id }}"
-  when: key_data_json is defined and key_data_json is success
+  when: key_data_json is changed and key_data_json is success
 
 - name: ttnv3 Get the packet forwarder global config file
   block:
