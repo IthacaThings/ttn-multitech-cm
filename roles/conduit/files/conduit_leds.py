@@ -499,8 +499,9 @@ def main():
                     logging.debug("Flashing LEDs")
                     leds.flashall()
                 duration = min(5.0, next_time - time.time())
-                logging.debug("Sleeping for %f seconds", duration)
-                time.sleep(duration)
+                if duration > 0:
+                    logging.debug("Sleeping for %f seconds", duration)
+                    time.sleep(duration)
     except LockFileTimeout:
         logging.critical("Another instance of %s is running", progname)
         return 1
