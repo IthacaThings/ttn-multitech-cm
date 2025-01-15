@@ -1,0 +1,28 @@
+---
+
+- name: conduit_leds /var/config/local/sbin/conduit_leds
+  copy:
+    dest: /var/config/local/sbin/conduit_leds
+    src: conduit_leds.py
+    mode: "0755"
+    owner: root
+    group: root
+  notify: restart conduit_leds
+
+- name: conduit_leds /var/config/init.d/conduit_leds
+  copy:
+    dest: /var/config/init.d/conduit_leds
+    src: conduit_leds.initd
+    mode: "0755"
+    owner: root
+    group: root
+  notify: restart conduit_leds
+
+- name: conduit_leds Link /etc/init.d/conduit_leds to /var/config/init.d/conduit_leds
+  file:
+    dest: /etc/init.d/conduit_leds
+    state: link
+    src: /var/config/init.d/conduit_leds
+    force: yes
+  notify: restart conduit_leds
+...

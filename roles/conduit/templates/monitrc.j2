@@ -89,6 +89,14 @@ check process sshd PIDFILE /var/run/sshd.pid
     start program = "/etc/init.d/sshd start" with timeout 15 seconds
     stop program = "/etc/init.d/sshd stop"
 
+{% if ansible_facts['ansible_local'].conduit.hw_version.startswith("MTCDT-") -%}
+# Monitor conduit_leds
+check process conduit_leds PIDFILE /var/run/conduit_leds.pid
+    if does not exist for {{ monit_process_period }} then restart
+    start program = "/etc/init.d/conduit_leds start" with timeout 15 seconds
+    stop program = "/etc/init.d/conduit_leds stop"
+{% endif -%}
+
 # Monitor system directory checksums
 check program check_system_md5  with path /usr/local/lib/check_system_md5
     every "{{ 60 | random(seed=inventory_hostname) }} * * * *"

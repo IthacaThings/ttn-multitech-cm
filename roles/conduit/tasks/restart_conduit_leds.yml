@@ -1,0 +1,13 @@
+---
+
+#
+#	Restart the SSH conduit_leds and wait for it to come back
+#
+
+- name: restart_conduit_leds Update rc.d to start conduit_leds
+  ansible.builtin.shell: "update-rc.d -f conduit_leds remove; update-rc.d conduit_leds defaults 10 50"
+
+- name: restart_conduit_leds Restart conduit_leds
+  ansible.builtin.command: /etc/init.d/conduit_leds restart
+
+...
