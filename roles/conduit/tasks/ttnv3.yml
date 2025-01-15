@@ -85,7 +85,7 @@
         global_conf: "{{ get_config.json }}"
   rescue:
     - set_fact:
-        gw_key:
+        gw_key: None
   when: gw_key is defined
 
 - name: ttnv3 Generate a key if we do not have one
@@ -96,7 +96,7 @@
   register: key_data_json
   throttle: 1
   notify: TTNv3 cleanup
-  when: gw_key is not defined or get_config is not succeeded
+  when: gw_key|default(None) == None or get_config is not succeeded
 
 - name: ttnv3 Extract the key and key_id
   block:
@@ -105,7 +105,7 @@
     - set_fact:
         gw_key: "{{ key_data.key }}"
         gw_key_id: "{{ key_data.id }}"
-  when: gw_key is not defined and key_data_json is success
+  when: key_data_json is defined and key_data_json is success
 
 - name: ttnv3 Get the packet forwarder global config file
   block:
