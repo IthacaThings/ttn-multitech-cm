@@ -193,3 +193,5 @@ monit_ppp_pidfile: "/var/run/{{ monit_ppp_if }}.pid"
 monit_ppp_initscript: "ppp"
 monit_ppp_start: '"/etc/init.d/{{ monit_ppp_initscript }} start" with timeout 15 seconds'
 monit_ppp_stop: '"/etc/init.d/{{ monit_ppp_initscript }} stop"'
+
+validate_certificates: true
