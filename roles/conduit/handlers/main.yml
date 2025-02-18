@@ -93,6 +93,7 @@
     name: pppd
     enabled: no
     state: stopped
+  ignore_errors: true
 
 #
 #	opkg handlers
