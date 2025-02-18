@@ -128,7 +128,7 @@
 
 - name: ppp Remove /var/config/monit/monit.d/ppp.monit
   file:
-    path: /var/config/monit/monit.d/ppp/monit
+    path: /var/config/monit/monit.d/ppp.monit
     state: absent
   notify:
     - Restart monit
