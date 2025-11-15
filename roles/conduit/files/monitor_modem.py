@@ -50,7 +50,7 @@ if not hasattr(socket, 'SO_BINDTODEVICE'):
 try:
     FileNotFoundError
 except NameError:
-    FileNotFoundError = IOError    
+    FileNotFoundError = IOError
 
 class LockFileTimeout(Exception):
     def __init__(self, error):
@@ -332,7 +332,7 @@ def read_routes(options):
     """ Read the routing table """
 
     _rt = []
- 
+
     with open("/proc/net/route", "r") as fp:
         header = []
         for line in fp:
@@ -345,7 +345,7 @@ def read_routes(options):
             route = Route(header, parts)
             _rt.append(route)
 
-    return _rt            
+    return _rt
 
 def ppp_on_boot(options, enable):
     """ Link or unlink system ppp startup script """
@@ -378,7 +378,7 @@ def ppp_on_boot(options, enable):
             logging.error("Error un-linking %s",
                           options.ppp_on_boot,
                           error)
-        
+
 def check_modem(options):
     """ Run a set of checks """
 
