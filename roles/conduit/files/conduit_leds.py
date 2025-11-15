@@ -35,12 +35,10 @@ import ipaddress
 import logging
 from logging.handlers import SysLogHandler
 import os
-import pprint
 import psutil
 import re
 import socket
 import stat
-import struct
 import subprocess
 import sys
 import time
@@ -83,7 +81,7 @@ def pidfilelock(name):
         fcntl.flock(lock_file, fcntl.LOCK_UN)
         os.unlink(pidfile_path)
         lock_file.close()
-               
+
 class Defaults(object):
     """ Read a /etc/defaults file """
 
@@ -145,7 +143,7 @@ class MTSIO(object):
 
         with open(os.path.join(self.ROOT, name), "w") as fp:
             fp.write("%s\n" % value)
-        
+
 class LEDs(object):
     """ Control LEDs """
 
@@ -211,7 +209,7 @@ def daemonize():
             # exit first parent
             sys.exit(0)
     except OSError as err:
-        logging.exception("First fork failed")
+        logging.exception("First fork failed: %s", err)
         return False
 
     # decouple from parent environment
@@ -225,7 +223,7 @@ def daemonize():
             # exit from second parent
             sys.exit(0)
     except OSError as err:
-        logging.exception("Second fork failed")
+        logging.exception("Second fork failed: %s", err)
         return False
 
     # redirect standard file descriptors
@@ -401,7 +399,7 @@ def check_ppp(options):
         logging.debug("check_ppp: No valid peer address found")
         return False
 
-    return True    
+    return True
 
 def process(options, leds, device_path):
     """ Check all the services """
@@ -482,7 +480,7 @@ def main():
         logging.warning("No device found for %s", lora_hwversion)
 
     try:
-        with pidfilelock(progname) as pid_file:
+        with pidfilelock(progname):
             leds = LEDs(mtsio)
 
             # XXX - Spread the tests out over 1/4 of the interval?
