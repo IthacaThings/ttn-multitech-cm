@@ -15,9 +15,9 @@ set httpd
 
 # Monitor the system
 check system $HOST
-    if loadavg (1min) > 2 then alert
-    if loadavg (5min) > 4 then alert
-    if memory usage > 25% then alert
+    if loadavg (1min) > {{ monit_loadavg_1m }} then alert
+    if loadavg (5min) > {{ monit_loadavg_5m }} then alert
+    if memory usage > {{ monit_memory_usage }} then alert
 
 # Event Queue
 set eventqueue basedir {{ monit_eventqueue }}
