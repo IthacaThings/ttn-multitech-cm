@@ -1,0 +1,13 @@
+---
+
+#
+#	Configure monitor_modem service and restart it
+#
+
+- name: restart_monitor_modem Update rc.d to start monitor_modem
+  ansible.builtin.shell: "update-rc.d -f monitor_modem remove; update-rc.d monitor_modem defaults 10 50"
+
+- name: restart_monitor_modem Restart monitor_modem
+  ansible.builtin.command: /etc/init.d/monitor_modem restart
+
+...

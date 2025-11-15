@@ -59,6 +59,12 @@
   include_tasks: restart_conduit_leds.yml
 
 #
+#       Restart monitor_modem
+#
+- name: restart monitor_modem
+  include_tasks: restart_monitor_modem.yml
+
+#
 #	Restart sshd after config changes
 #
 - name: Restart ssh
