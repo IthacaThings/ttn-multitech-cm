@@ -43,6 +43,8 @@ import subprocess
 import sys
 import time
 
+cached_ip = None
+
 class LockFileTimeout(Exception):
     def __init__(self, error):
         self.value = error
