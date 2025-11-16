@@ -48,6 +48,10 @@
     - use_cellular
     - cellular_apn is defined
 
+#
+#	Setup PPP scripts
+#
+
 - name: ppp Set /var/config/ppp/peers/provider
   ansible.builtin.file:
     path: /var/config/ppp/peers/provider
