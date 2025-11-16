@@ -59,7 +59,7 @@
 
 - name: ppp Set provider
   lineinfile:
-    path: /etc/ppp/ppp_on_boot
+    path: /var/config/ppp/ppp_on_boot
     regexp: '^\$PPPD call '
     line: '$PPPD call {{ cellular_provider }}'
   notify: Start ppp
