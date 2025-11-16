@@ -70,7 +70,7 @@ def pidfilelock(name):
             if err.errno != errno.EAGAIN:
                 raise err
             else:
-                logging.debug("Timeout trying to lock", pidfile_path)
+                logging.debug("Timeout trying to lock: %s", pidfile_path)
                 time.sleep(1)
                 time_left -= 1
                 if time_left == 0:
