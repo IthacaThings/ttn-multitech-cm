@@ -24,23 +24,14 @@
     state: link
     src: /var/config/ppp/ppp_on_boot
     force: true
-  when: ppp_on_boot.stat.islnk is defined and not ppp_on_boot.stat.islnk
+  when:
+    - ppp_on_boot.stat.lnk_target is not defined or ppp_on_boot.stat.lnk_target != '/var/config/ppp/ppp_on_boot'
 
 - name: ppp Make /var/config/ppp/ppp_on_boot executable when we are using cellular
   file:
     dest: /var/config/ppp/ppp_on_boot
-    mode: "755"
+    mode: "{{ '0755' if use_cellular and cellular_provider is defined else '0644' }}"
   notify: Start ppp
-  when:
-    - use_cellular
-    - cellular_provider is defined
-  
-- name: ppp Make /var/config/ppp/ppp_on_boot not executable when we are not using cellular
-  file:
-    dest: /var/config/ppp/ppp_on_boot
-    mode: "644"
-  notify: Stop ppp
-  when: use_cellular == False or cellular_provider is not defined
 
 #
 #	Set or reset APN
@@ -57,15 +48,28 @@
     - use_cellular
     - cellular_apn is defined
 
-- name: ppp Set provider
+#
+#	Setup PPP scripts
+#
+
+- name: ppp Set /var/config/ppp/peers/provider
+  ansible.builtin.file:
+    path: /var/config/ppp/peers/provider
+    state: "{{ 'link' if use_cellular and cellular_provider is defined else 'absent' }}"
+    src: "/var/config/ppp/peers/{{ cellular_provider }}"
+  notify: Start ppp
+
+- name: ppp Restore default provider in /var/config/ppp/ppp_on_boot
   lineinfile:
     path: /var/config/ppp/ppp_on_boot
     regexp: '^\$PPPD call '
-    line: '$PPPD call {{ cellular_provider }}'
-  notify: Start ppp
-  when:
-    - use_cellular
-    - cellular_provider is defined
+    line: '$PPPD call provider'
+
+- name: ppp make /var/config/ppp/ppp_on_boot a script
+  lineinfile:
+    path: /var/config/ppp/ppp_on_boot
+    regexp: '/bin/sh$'
+    line: '#!/bin/sh'
 
 #
 #	Set PPP configuration options
