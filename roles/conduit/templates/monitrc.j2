@@ -97,6 +97,14 @@ check process conduit_leds PIDFILE /var/run/conduit_leds.pid
     stop program = "/etc/init.d/conduit_leds stop"
 {% endif -%}
 
+{% if 'modem_at0' in ansible_facts['ansible_local'].dev -%}
+# Monitor monitor_modem
+check process monitor_modem PIDFILE /var/run/monitor_modem.pid
+    if does not exist for {{ monit_process_period }} then restart
+    start program = "/etc/init.d/monitor_modem start" with timeout 15 seconds
+    stop program = "/etc/init.d/monitor_modem stop"
+{% endif -%}
+
 # Monitor system directory checksums
 check program check_system_md5  with path /usr/local/lib/check_system_md5
     every "{{ 60 | random(seed=inventory_hostname) }} * * * *"

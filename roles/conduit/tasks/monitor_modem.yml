@@ -52,5 +52,5 @@
   notify:
     - Update system checksum file
   when: "'modem_at0' not in ansible_local.dev"
-  
+
 ...

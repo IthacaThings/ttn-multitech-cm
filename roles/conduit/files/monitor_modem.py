@@ -288,6 +288,8 @@ def set_rpfilter(options, value, interfaces):
     """ Set values of rp_filter on the specified interface(s) """
 
     for interface in interfaces:
+        if not interface:
+            continue
         try:
             with open("/proc/sys/net/ipv4/conf/%s/rp_filter" % interface, "w") as fp:
                 fp.write(str(value))
@@ -445,27 +447,20 @@ def pppd(options, enable):
             logging.error("%s: %s", " ".join(cmd), error)
             pass
 
-    for service in [ 'ppp0', 'pppd']:
-        cmd = ["monit", "unmonitor", service]
-        try:
-            logging.debug("Unonitoring %s", service)
-            subprocess.check_call(cmd)
-        except subprocess.CalledProcessError as error:
-            logging.error("%s: %s", " ".join(cmd), error)
-            pass
+        for service in [ 'ppp0', 'pppd']:
+            cmd = ["monit", "unmonitor", service]
+            try:
+                logging.debug("Unonitoring %s", service)
+                subprocess.check_call(cmd)
+            except subprocess.CalledProcessError as error:
+                logging.error("%s: %s", " ".join(cmd), error)
+                pass
 
-def main():
-    """It all happens here"""
+def find_default_interface(options):
+    """ Read the routing table and figure out if we have a non-ppp
+    interface with a default route.  This will tell us which is the
+    primary interface. """
 
-    options = parse_args()
-
-    if not options.foreground:
-        if not daemonize():
-            return 1
-
-    # Read the routing table and figure out if we have a non-ppp
-    # interface with a default route.  This will tell us which is the
-    # primary interface.
     rt = read_routes(options)
     for route in rt:
         if route.Flags & 0x3 != 0x3:
@@ -474,45 +469,72 @@ def main():
             continue
         if route.Iface == "ppp0":
             continue
-        default_interface = route.Iface
-        logging.info("Using a default interface of %s", default_interface)
-        break
-    else:
-        logging.fatal("Unable to find a non-ppp interface with a default route")
+        logging.info("Using a default interface of %s", route.Iface)
+        return route.Iface
+
+    logging.info("Unable to find a non-ppp interface with a default route")
+    return None
+
+def main():
+    """It all happens here"""
+
+    progname = os.path.basename(sys.argv[0])
+
+    options = parse_args()
+
+    if not options.foreground:
+        if not daemonize():
+            return 1
+
+    try:
+        with pidfilelock(progname):
+            default_interface = find_default_interface(options)
+
+            # Set rp_filter to allow RFC3704 Losse Reverse Path Each so we can
+            # receive pings that are not from the expected interface
+            set_rpfilter(options, 2, ["all", "default", default_interface, "ppp0"])
+
+            seq = -1
+            while time.sleep(options.interval) is None:
+                logging.debug("check_modem")
+
+                new_default_interface = find_default_interface(options)
+                if default_interface and new_default_interface != default_interface:
+                    set_rpfilter(options, 2, [new_default_interface])
+
+                    default_interface = new_default_interface
+                    if not default_interface:
+                        logging.warning("No default interface, starting pppd")
+                        pppd(options, True)
+                        continue
+
+                have_modem, have_sim = check_modem(options)
+                if not have_modem or not have_sim:
+                    logging.warning("No Modem or SIM, stopping pppd")
+                    pppd(options, False)
+                    continue
+
+                # Test ping response of default_interface
+                # Seq is a unsigned 16 bit integer
+                responses = 0
+                for ping in range(options.pings):
+                    seq = seq + 1 if seq < 65535 else 0
+                    logging.debug("send_icmp (seq %d) via %s", seq, default_interface)
+                    if icmp_echo(options.hostname, interface=default_interface, seq=seq):
+                        responses += 1
+                        time.sleep(.1)
+                # Call it good if we get 80% of our pings back
+                if responses >= float(options.pings) * 0.80:
+                    logging.warning("Received response on %s, stopping pppd", default_interface)
+                    pppd(options, False)
+                    continue
+
+                logging.warning("No response received on %s, starting pppd", default_interface)
+                pppd(options, True)
+                continue
+    except LockFileTimeout:
+        logging.critical("Another instance of %s is running", progname)
         return 1
-
-    # Set rp_filter to allow RFC3704 Losse Reverse Path Each so we can
-    # receive pings that are not from the expected interface
-    set_rpfilter(options, 2, ["all", "default", default_interface, "ppp0"])
-
-    seq = -1
-    while time.sleep(options.interval) is None:
-
-        logging.debug("check_modem")
-        have_modem, have_sim = check_modem(options)
-        if not have_modem or not have_sim:
-            logging.warning("NO Modem or SIM, stopping pppd")
-            pppd(options, False)
-            continue
-
-        # Test ping response of default_interface
-        # Seq is a unsigned 16 bit integer
-        responses = 0
-        for ping in range(options.pings):
-            seq = seq + 1 if seq < 65535 else 0
-            logging.debug("send_icmp (seq %d) via %s", seq, default_interface)
-            if icmp_echo(options.hostname, interface=default_interface, seq=seq):
-                responses += 1
-            time.sleep(.1)
-        # Call it good if we get 80% of our pings back
-        if responses >= float(options.pings) * 0.80:
-            logging.warning("Received response on %s, stopping pppd", default_interface)
-            pppd(options, False)
-            continue
-
-        logging.warning("No response received on %s, starting pppd", default_interface)
-        pppd(options, True)
-        continue
 
     return 0
 
@@ -526,70 +548,3 @@ if __name__ == "__main__":
         logging.exception(exc)
 
     sys.exit(rc)
-
-
-
-# # # # XXX Adapt this and keep track of connection duration (by address and port)
-
-def parse_ip_port(hex_ip, hex_port):
-    ip = socket.inet_ntoa(struct.pack("<L", int(hex_ip, 16)))
-    port = int(hex_port, 16)
-    return ipaddress.ip_address(ip), port
-
-def get_inode_to_process():
-    """Return dict mapping socket inode -> (pid, process_name)."""
-    inode_map = {}
-    for pid in filter(str.isdigit, os.listdir("/proc")):
-        fd_dir = os.path.join("/proc", pid, "fd")
-        comm_file = os.path.join("/proc", pid, "comm")
-        try:
-            with open(comm_file, "r") as f:
-                pname = f.read().strip()
-        except IOError:
-            pname = "unknown"
-        try:
-            for fd in os.listdir(fd_dir):
-                path = os.path.join(fd_dir, fd)
-                try:
-                    target = os.readlink(path)
-                    if target.startswith("socket:["):
-                        inode = target[8:-1]
-                        inode_map[inode] = (int(pid), pname)
-                except OSError:
-                    continue
-        except OSError:
-            continue
-    return inode_map
-
-def get_established_tcp_connections():
-    results = []
-    inode_map = get_inode_to_process()
-    with open("/proc/net/tcp", "r") as f:
-        next(f)  # skip header
-        for line in f:
-            parts = line.split()
-            local_ip, local_port = parts[1].split(":")
-            remote_ip, remote_port = parts[2].split(":")
-            state = parts[3]
-            inode = parts[9]
-            if state != "01":  # only ESTABLISHED
-                continue
-            lip, lport = parse_ip_port(local_ip, local_port)
-            rip, rport = parse_ip_port(remote_ip, remote_port)
-            proc = inode_map.get(inode, (None, None))
-            results.append({
-                "local": (str(lip), lport),
-                "remote": (str(rip), rport),
-                "pid": proc[0],
-                "program": proc[1]
-            })
-    return results
-
-# Example usage
-if __name__ == "__main__":
-    conns = get_established_tcp_connections()
-    for c in conns:
-        print("%s:%d -> %s:%d (pid=%s, program=%s)" %
-              (c["local"][0], c["local"][1],
-               c["remote"][0], c["remote"][1],
-               c["pid"], c["program"]))

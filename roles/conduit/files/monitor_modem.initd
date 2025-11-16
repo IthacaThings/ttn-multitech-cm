@@ -12,7 +12,7 @@
 ### END INIT INFO
 
 PATH="/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin"
-NAME=monitor_mondem
+NAME=monitor_modem
 DAEMON=/usr/local/sbin/monitor_modem
 PIDFILE=/var/run/${NAME}.pid
 DAEMON_ARGS=
@@ -27,7 +27,7 @@ fi
 [ -x ${DAEMON} ] || exit 0
 
 is_running() {
-    pgrep -F ${PIDFILE} > /dev/null
+    pgrep -F ${PIDFILE} > /dev/null 2>&1
 }
 
 start() {
@@ -53,9 +53,18 @@ case "$1" in
 	start
 	;;
     status)
-	is_running
+	if is_running; then
+	   echo "${NAME} is running with PID $(cat ${PIDFILE})" >&2
+	else
+	    echo "${NAME} is not running" >&2
+	    exit 1
+	fi
 	;;
     *)
-	echo "Usage: $0 {start|stop|status|restart}"
+	echo "Usage: $0 {start|stop|status|restart}" >&2
+	exit 2
+	;;
 esac
+
+exit 0
 #=========================================
