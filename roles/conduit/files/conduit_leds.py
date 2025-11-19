@@ -55,26 +55,29 @@ class LockFileTimeout(Exception):
 def pidfilelock(name):
     """ Context to lock a pid file """
 
-    time_left = 30
+    time_end = time.clock() + 30
     pidfile_path = os.path.join("/var/run", name + ".pid")
-    lock_file = open(pidfile_path, 'w+')
+    fd = os.open(pidfile_path, os.O_RDWR | os.O_CREAT, 0o644)
+    lock_file = os.fdopen(fd, "r+")
     while True:
         try:
             logging.debug("Attempting to lock %s", pidfile_path)
             fcntl.flock(lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            lock_file.write(str(os.getpid()) + '\n')
-            lock_file.flush()
-            logging.debug("Wrote %d to %s", os.getpid(), pidfile_path)
-            break
         except IOError as err:
             if err.errno != errno.EAGAIN:
                 raise err
-            else:
-                logging.debug("Timeout trying to lock: %s", pidfile_path)
-                time.sleep(1)
-                time_left -= 1
-                if time_left == 0:
-                    raise LockFileTimeout("Unable to lock %s" % pidfile_path)
+            logging.debug("Timeout trying to lock: %s", pidfile_path)
+            time.sleep(1)
+            if time.clock() >= time_end:
+                raise LockFileTimeout("Unable to lock %s" % pidfile_path)
+            continue
+        else:
+            lock_file.seek(0)
+            lock_file.truncate()
+            lock_file.write("%d\n" % os.getpid())
+            lock_file.flush()
+            os.fsync(fd)
+            logging.debug("Wrote %d to %s", os.getpid(), pidfile_path)
 
     try:
         yield lock_file
@@ -319,17 +322,18 @@ def check_tunnel(options):
         if not cached_ip:
             logging.info("check_tunnel: Unable to resolve %s", remote_host)
             return False
-        remote_host = cached_ip
-        logging.info("check_tunnel: Using cached IP %s", remote_host)
+        remote_ip = cached_ip
+        logging.info("check_tunnel: Using cached IP %s", remote_ip)
 
-    for conn in psutil.net_connections():
-        if conn.type == socket.SOCK_STREAM and conn.status == psutil.CONN_ESTABLISHED and conn.raddr == (remote_ip, local_port):
-            logging.info("check_tunnel: Found connection to %s(%s):%s with PID %d",
-                         remote_host,
-                         remote_ip,
-                         local_port,
-                         conn.pid)
-            return True
+    if remote_ip:
+        for conn in psutil.net_connections():
+            if conn.type == socket.SOCK_STREAM and conn.status == psutil.CONN_ESTABLISHED and conn.raddr == (remote_ip, local_port):
+                logging.info("check_tunnel: Found connection to %s(%s):%s with PID %d",
+                             remote_host,
+                             remote_ip,
+                             local_port,
+                             conn.pid)
+                return True
 
     logging.info("check_tunnel: No connection found to %s(%s):%s", remote_host, remote_ip, local_port)
     return False
