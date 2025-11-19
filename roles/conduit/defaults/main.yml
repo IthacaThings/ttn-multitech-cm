@@ -90,6 +90,8 @@ ssh_tunnel_ssh_key: /etc/ssh/ssh_host_rsa_key
 ssh_tunnel_daemon: /usr/bin/autossh
 ssh_tunnel_ssh_port: 22
 ssh_tunnel_base_port: 0
+ssh_tunnel_first_poll: 120
+ssh_tunnel_poll: 60
 
 # Static Nameserver defaults
 resolv_conf_static: /var/config/network/resolv.conf-static

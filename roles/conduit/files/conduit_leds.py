@@ -55,7 +55,7 @@ class LockFileTimeout(Exception):
 def pidfilelock(name):
     """ Context to lock a pid file """
 
-    time_end = time.clock() + 30
+    time_end = time.time() + 30
     pidfile_path = os.path.join("/var/run", name + ".pid")
     fd = os.open(pidfile_path, os.O_RDWR | os.O_CREAT, 0o644)
     lock_file = os.fdopen(fd, "r+")
@@ -68,7 +68,7 @@ def pidfilelock(name):
                 raise err
             logging.debug("Timeout trying to lock: %s", pidfile_path)
             time.sleep(1)
-            if time.clock() >= time_end:
+            if time.time() >= time_end:
                 raise LockFileTimeout("Unable to lock %s" % pidfile_path)
             continue
         else:
@@ -78,6 +78,7 @@ def pidfilelock(name):
             lock_file.flush()
             os.fsync(fd)
             logging.debug("Wrote %d to %s", os.getpid(), pidfile_path)
+            break
 
     try:
         yield lock_file
