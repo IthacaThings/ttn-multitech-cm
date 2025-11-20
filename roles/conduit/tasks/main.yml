@@ -1,6 +1,15 @@
 ---
 
 #
+#
+#
+- name: main Create list of failed sections
+  ansible.builtin.set_fact:
+    rescued: []
+  tags:
+    - always
+
+#
 #	Build the list of authorized keys
 #
 - name: main Build list of authorized keys
@@ -177,6 +186,10 @@
   rescue:
     - debug:
         msg: "main: TTN setup failed, continuing"
+    - ansible.builtin.set_fact:
+        rescued: "{{ rescued + ['ttn'] }}"
+      changed_when: true
+      notify: Rescued sections
   tags:
     - ttn
 
@@ -189,26 +202,62 @@
   rescue:
     - debug:
         msg: "main: SSH tunnel setup failed, continuing..."
+    - ansible.builtin.set_fact:
+        rescued: "{{ rescued + ['ssh_tunnel'] }}"
+      notify: Rescued sections
   tags:
     - ssh_tunnel
     - monit
     - setup
 
 #
-#	Secure ssh
+#	Enable status leds
 #
 - name: main Set up conduit_leds
-  import_tasks: conduit_leds.yml
-  when: ansible_local.conduit.hw_version.startswith("MTCDT-")
+  block:
+    - name: import conduit_leds.yml
+      import_tasks: conduit_leds.yml
+      when: ansible_local.conduit.hw_version.startswith("MTCDT-")
+  rescue:
+    - debug:
+        msg: "main: conduit_leds setup failed, continuing..."
+    - ansible.builtin.set_fact:
+        rescued: "{{ rescued + ['conduit_leds'] }}"
+      notify: Rescued sections
   tags:
     - conduit_leds
+    - setup
+
+#
+#	Enable modem monitoring
+#
+- name: main Set up monitor_modem
+  block:
+    - name: import monitor_modem.yml
+      import_tasks: monitor_modem.yml
+  rescue:
+    - debug:
+        msg: "main: monitor_modem setup failed, continuing..."
+    - ansible.builtin.set_fact:
+        rescued: "{{ rescued + ['monitor_modem'] }}"
+      notify: Rescued sections
+  tags:
+    - monitor_modem
     - setup
 
 #
 #	Set up monit
 #
 - name: main Set up moniit
-  import_tasks: monit.yml
+  block:
+    - name: import monit.yml
+      import_tasks: monit.yml
+  rescue:
+    - debug:
+        msg: "main: monit setup failed, continuing..."
+    - ansible.builtin.set_fact:
+        rescued: "{{ rescued + ['monit'] }}"
+      notify: Rescued sections
   tags:
     - monit
     - setup
