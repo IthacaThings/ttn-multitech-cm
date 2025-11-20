@@ -47,6 +47,9 @@ is_running() {
 }
 
 start() {
+    for env in $(set | grep -E '^AUTOSSH_'); do
+	eval export ${env}
+    done
     start-stop-daemon --start --quiet --exec ${DAEMON} -- ${DAEMON_ARGS}
 }
 
