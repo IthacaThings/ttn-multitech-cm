@@ -455,7 +455,7 @@ def init_logging(options):
 def main():
     """It all happens here"""
 
-    progname = os.path.basename(sys.argv[0])
+    progname = os.path.splitext(os.path.basename(sys.argv[0]))[0]
 
     options = parse_args()
 
