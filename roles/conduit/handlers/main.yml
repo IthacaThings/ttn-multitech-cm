@@ -124,3 +124,10 @@
 
 - name: Update system checksum file
   include_tasks: update_checksums.yml
+
+#
+#	Summary
+#
+- name: Rescued sections
+  ansible.builtin.debug:
+    msg: "Failed sections: {{ rescued | join(', ') }}"
