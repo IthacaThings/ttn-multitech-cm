@@ -56,7 +56,7 @@
   ansible.builtin.file:
     path: /var/config/ppp/peers/provider
     state: "{{ 'link' if use_cellular and cellular_provider is defined else 'absent' }}"
-    src: "/var/config/ppp/peers/{{ cellular_provider }}"
+    src: "{{ '/var/config/ppp/peers/' + cellular_provider if use_cellular and cellular_provider is defined else '' }}"
   notify: Start ppp
 
 - name: ppp Restore default provider in /var/config/ppp/ppp_on_boot
