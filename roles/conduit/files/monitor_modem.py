@@ -595,7 +595,7 @@ class IfState(object):
         self.link_state = True
         self.seen = False
         self.seq = -1
-        self.responding = False
+        self.responding = None
 
     def __str__(self):
         return "%s: %s ignore: %f state: %s, seen: %s, seq: %d, responding: %s" % (
@@ -652,7 +652,6 @@ def process_interface(options, if_state):
             responses += 1
             time.sleep(.1)
         if shutdown_requested:
-            if_state.responding = False
             return
 
         # Call it good if we get 80% of our pings back
@@ -726,7 +725,7 @@ def process(options, progname):
                 logging.info("%s: responding", if_name)
 
                 # Restarte if it's now responding
-                if not was_responding:
+                if was_responding is False:
                     do_restart = True
                 continue
 
