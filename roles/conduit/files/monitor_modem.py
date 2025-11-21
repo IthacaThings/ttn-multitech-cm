@@ -212,8 +212,8 @@ def parse_args():
     if options.noop:
         options.debug = True
 
-    # Init Logging
-    init_logging(options)
+    if options.debug:
+        options.verbose = True
 
     return options
 
@@ -223,11 +223,18 @@ def init_logging(options):
     logger = logging.getLogger()
     logger.handlers = []
     syslog_format = '%s[%%(process)s]: %%(message)s' % (os.path.basename(sys.argv[0]))
-    syslog_handler = SysLogHandler(address="/dev/log",
-                                   facility=SysLogHandler.LOG_DAEMON)
-    syslog_handler.setFormatter(logging.Formatter(syslog_format))
     if not sys.stdout.isatty():
-        logger.addHandler(syslog_handler)
+        # Repeat until syslog is available
+        while True:
+            try:
+                syslog_handler = SysLogHandler(address="/dev/log",
+                                               facility=SysLogHandler.LOG_DAEMON)
+            except FileNotFoundError:
+                time.sleep(1)
+            else:
+                break
+            syslog_handler.setFormatter(logging.Formatter(syslog_format))
+            logger.addHandler(syslog_handler)
     else:
         logger.addHandler(logging.StreamHandler(stream=sys.stdout))
 
@@ -778,6 +785,9 @@ def main():
     if not options.foreground:
         if not daemonize():
             return 1
+
+    # Do this after daemonize or we'll hang the system startup.
+    init_logging(options)
 
     # Register signal handlers once (in your main code)
     signal.signal(signal.SIGTERM, catch_interrupt)

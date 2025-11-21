@@ -45,6 +45,11 @@ import time
 
 cached_ip = None
 
+try:
+    FileNotFoundError
+except NameError:
+    FileNotFoundError = IOError
+
 class LockFileTimeout(Exception):
     def __init__(self, error):
         self.value = error
@@ -292,9 +297,6 @@ def parse_args():
     if options.noop:
         options.debug = True
 
-    # Init Logging
-    init_logging(options)
-
     return options
 
 def check_tunnel(options):
@@ -437,10 +439,18 @@ def init_logging(options):
     logger = logging.getLogger()
     logger.handlers = []
     syslog_format = '%s[%%(process)s]: %%(message)s' % (os.path.basename(sys.argv[0]))
-    syslog_handler = SysLogHandler(address="/dev/log",
-                                   facility=SysLogHandler.LOG_DAEMON)
-    syslog_handler.setFormatter(logging.Formatter(syslog_format))
     if not sys.stdout.isatty():
+        # Repeat until syslog is available
+        while True:
+            try:
+                syslog_handler = SysLogHandler(address="/dev/log",
+                                               facility=SysLogHandler.LOG_DAEMON)
+            except FileNotFoundError as error:
+                print("%s" % error)
+                time.sleep(1)
+            else:
+                break
+        syslog_handler.setFormatter(logging.Formatter(syslog_format))
         logger.addHandler(syslog_handler)
     else:
         logger.addHandler(logging.StreamHandler(stream=sys.stdout))
@@ -462,6 +472,9 @@ def main():
     if not options.foreground:
         if not daemonize():
             return 1
+
+    # Do this after daemonize or we'll hang the system startup.
+    init_logging(options)
 
     mtsio = MTSIO()
 
