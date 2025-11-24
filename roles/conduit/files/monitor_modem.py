@@ -455,7 +455,7 @@ def ppp_on_boot(options, enable):
         if ppp_on_boot_stat.st_mode & 0o111 != 0o111:
             try:
                 os.chmod(options.ppp_on_boot, 0o755)
-                logging.info("ppp_on_boot: %s set to executable", options.ppp_on_boot)
+                logging.warning("ppp_on_boot: %s set to executable", options.ppp_on_boot)
             except OSError as error:
                 logging.error("Error making %s executable: %s",
                               options.ppp_on_boot,
@@ -465,7 +465,7 @@ def ppp_on_boot(options, enable):
     if ppp_on_boot_stat.st_mode & 0o111 != 0:
         try:
             os.chmod(options.ppp_on_boot, 0o644)
-            logging.info("ppp_on_boot: %s set to non-executable", options.ppp_on_boot)
+            logging.warning("ppp_on_boot: %s set to non-executable", options.ppp_on_boot)
         except OSError as error:
             logging.error("Error making %s non-executable: %s",
                               options.ppp_on_boot,
@@ -654,11 +654,13 @@ def process_interface(options, if_state):
         if shutdown_requested:
             return
 
-        # Call it good if we get 80% of our pings back
-        if responses >= float(options.pings) * 0.80:
-            logging.info("Received response on %s, pppd not needed", if_state.name)
-            if_state.responding = True
-            return
+    # Call it good if we get 80% of our pings back
+    if responses >= float(options.pings) * 0.80:
+        logging.warning("Received %d/%d responses on %s, pppd not needed",
+                        responses,
+                        options.pings,
+                        if_state.name)
+        if_state.responding = True
 
     return
 
@@ -675,7 +677,7 @@ def process(options, progname):
 
         have_modem, have_sim = check_modem(options)
         if not have_modem or not have_sim:
-            logging.info("No Modem or SIM, stopping pppd")
+            logging.warning("No Modem or SIM, stopping pppd")
             ppp_on_boot(options, False)
             pppd(options, False)
             continue
@@ -707,7 +709,7 @@ def process(options, progname):
             if default_if_name == "ppp0":
                 # No, tell ppp to stop
                 ppp_new_state = False
-                logging.info("%s: up, telling ppp to stop", if_name)
+                logging.warning("%s: up, telling ppp to stop", if_name)
                 continue
             if default_if_name != if_name:
                 # Not at us, continue
@@ -746,13 +748,14 @@ def process(options, progname):
         pppd(options, ppp_new_state)
 
         if do_restart:
+            logging.warning("Restarting services")
             cmd = [options.change_script]
             env = os.environ.copy()
             env["METHOD"] = "monitor_modem"
             if active_ifs:
                 env["IFACE"] = ", ".join(list(active_ifs))
             try:
-                logging.warning("Running %s", " ".join(cmd))
+                logging.info("Running %s", " ".join(cmd))
                 subprocess.check_call(cmd, env=env)
             except subprocess.CalledProcessError as error:
                 logging.error("%s: %s", " ".join(cmd), error)
@@ -766,10 +769,11 @@ def process(options, progname):
                               " ".join(list(tunnel_addrs)),
                               " ".join(list(active_addresses)))
                 if not active_addresses.intersection(tunnel_addrs):
+                    logging.warning("No tunnel sources from active addresses, restarting")
                     # No tunnel connections from an active interface
                     cmd = ["/etc/init.d/ssh_tunnel", "restart"]
                     try:
-                        logging.warning("Running %s", " ".join(cmd))
+                        logging.info("Running %s", " ".join(cmd))
                         subprocess.check_call(cmd)
                     except subprocess.CalledProcessError as error:
                         logging.error("%s: %s", " ".join(cmd), error)
