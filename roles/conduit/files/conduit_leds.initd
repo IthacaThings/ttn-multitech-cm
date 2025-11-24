@@ -40,21 +40,46 @@ stop() {
 
 case "$1" in
     start)
-	is_running || start
+	if is_running; then
+	    echo "${NAME} is already running: $(pgrep -F ${PIDFILE} -a)" >&2
+	    exit 1
+	fi
+	echo "Starting ${NAME}" >&2
+	start
 	;;
     stop)
-	stop
+	if is_running; then
+	    echo "Stopping ${NAME}" >&2
+	    stop
+	else
+	    echo "${NAME} is not running" >&2
+	fi
 	;;
     restart|reload)
-	nohup ${0} do_restart
-	;;
-    do_restart)
-	stop
+	if is_running; then
+	    echo "Stopping ${NAME}" >&2
+	    stop
+	else
+	    echo "${NAME} is not running" >&2
+	fi
+
+	# Wait for it to stop
+	tries=10
+	while is_running; do
+	    if [ "${tries}" -eq 0 ]; then
+		echo "${NAME} failed to stop" >&2
+		exit 1
+	    fi
+	    tries=$((tries - 1))
+	    sleep 1
+	done
+
+	echo "Starting ${NAME}" >&2
 	start
 	;;
     status)
 	if is_running; then
-	   echo "${NAME} is running with PID $(cat ${PIDFILE})" >&2
+	   echo "${NAME} is running with PID $(pgrep -F ${PIDFILE} -a)" >&2
 	else
 	    echo "${NAME} is not running" >&2
 	    exit 1
