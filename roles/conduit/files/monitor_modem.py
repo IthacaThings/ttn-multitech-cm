@@ -221,7 +221,6 @@ def init_logging(options):
     """ Set up logging """
 
     logger = logging.getLogger()
-    logger.handlers = []
     syslog_format = '%s[%%(process)s]: %%(message)s' % (os.path.basename(sys.argv[0]))
     if not sys.stdout.isatty():
         # Repeat until syslog is available
@@ -229,13 +228,16 @@ def init_logging(options):
             try:
                 syslog_handler = SysLogHandler(address="/dev/log",
                                                facility=SysLogHandler.LOG_DAEMON)
-            except FileNotFoundError:
+            except FileNotFoundError as err:
+                logging.warning("Unable to open /dev/log: %s, waiting", err)
                 time.sleep(1)
             else:
                 break
-            syslog_handler.setFormatter(logging.Formatter(syslog_format))
-            logger.addHandler(syslog_handler)
+        syslog_handler.setFormatter(logging.Formatter(syslog_format))
+        logger.handlers = []
+        logger.addHandler(syslog_handler)
     else:
+        logger.handlers = []
         logger.addHandler(logging.StreamHandler(stream=sys.stdout))
 
     if options.debug:
