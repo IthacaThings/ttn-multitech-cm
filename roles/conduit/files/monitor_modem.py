@@ -341,14 +341,24 @@ def icmp_echo(dst_name, interface=None, payload=b'hello', id_=None, seq=1):
             if not ready:
                 logging.debug("icmp_echo: timeout")
                 return False
-        except (IOError, OSError):
+        except select.error:
+            if shutdown_requested:
+                return
             continue
 
         # Read pending packets
         while True:
+            if shutdown_requested:
+                return
+
             try:
                 recv_packet, addr = sock.recvfrom(65535, socket.MSG_DONTWAIT)
-            except (OSError, IOError):
+            except socket.error as err:
+                if err[0] == errno.EINTR:
+                    continue
+                if err[0] in (errno.EAGAIN, errno.EWOULDBLOCK):
+                    return False
+                logging.warning("recvfrom returns: %s", err)
                 return False
 
             iph_len = (struct.unpack("!B", recv_packet[:1])[0] & 0xf) * 4
