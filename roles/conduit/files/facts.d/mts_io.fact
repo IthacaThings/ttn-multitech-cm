@@ -1,0 +1,15 @@
+#!/bin/bash
+
+cd /sys/devices/platform/mts-io || exit 1
+
+devs=$(find * -type f | (
+    comma=
+    while read dev; do
+	echo -n "${comma}\"${dev//-/_}\": \"$(cat ${dev} 2>/dev/null)\""
+	comma=", "
+    done
+))
+
+echo '{'
+echo "	${devs}"
+echo '}'
