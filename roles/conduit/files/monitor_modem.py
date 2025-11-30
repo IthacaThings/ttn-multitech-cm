@@ -714,7 +714,10 @@ def process(options, progname):
 
             # Check if we are supposed to be ignoring this link
             if if_state.ignore_time > time.time():
-                logging.info("%s: ignoring", if_name)
+                logging.warning("%s: ignoring until %s",
+                                if_name,
+                                time.strftime("%Y-%m-%d %H:%M:%S",
+                                              time.localtime(if_state.ignore_time)))
                 continue
 
             # Does the default route point here?
@@ -785,11 +788,11 @@ def process(options, progname):
 
             if active_addresses:
                 tunnel_addrs = tunnel_addresses(options)
-                logging.debug("Checkting that tunnel sources %s is in %s",
+                logging.debug("Checking that tunnel sources %s is in %s",
                               " ".join(list(tunnel_addrs)),
                               " ".join(list(active_addresses)))
                 if not active_addresses.intersection(tunnel_addrs):
-                    logging.warning("No tunnel sources from active addresses, restarting")
+                    logging.warning("No ssh_tunnel sources from active addresses, restarting")
                     # No tunnel connections from an active interface
                     cmd = ["/etc/init.d/ssh_tunnel", "restart"]
                     try:
@@ -812,7 +815,8 @@ def main():
     # Do this after daemonize or we'll hang the system startup.
     init_logging(options)
 
-    # Register signal handlers once (in your main code)
+    logging.warning("%s: Started", progname)
+
     signal.signal(signal.SIGTERM, catch_interrupt)
     signal.signal(signal.SIGINT, catch_interrupt)
 
