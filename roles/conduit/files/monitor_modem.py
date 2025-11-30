@@ -38,7 +38,6 @@ import psutil
 import select
 import signal
 import socket
-import stat
 import struct
 import subprocess
 import sys
@@ -439,8 +438,8 @@ def get_broadcast_interfaces():
         # Check carrier
         carrier_file = "/sys/class/net/{}/carrier".format(iface)
         try:
-            with open(carrier_file, 'r') as f:
-                carrier = f.read().strip()
+            with open(carrier_file, 'r') as fp:
+                carrier = fp.read().strip()
                 if carrier != '1':
                     continue
         except IOError:
