@@ -525,12 +525,13 @@ def check_modem(options):
         try:
             output = subprocess.check_output(cmd)
             logging.debug("check_modem: %s returned: %s", " ".join(cmd), output)
+            if "+CPIN: READY" in output:
+                have_sim = True
         except subprocess.CalledProcessError as error:
-            logging.debug("check_modem: %s returned: %s", " ".join(cmd), error)
-        if "+CPIN: READY" in output:
-            have_sim = True
+            logging.warning("check_modem: %s returned: %s", " ".join(cmd), error)
 
     logging.debug("have_modem: %s, have_sim: %s", have_modem, have_sim)
+
     return have_modem, have_sim
 
 def pppd(options, enable):
