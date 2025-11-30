@@ -187,9 +187,9 @@ def parse_args():
                        dest="foreground", default=False,
                        action='store_true',
                        help="Do not fork; run in foreground")
-    group.add_argument("--modem",
-                       dest="modem", default="/dev/modem_at1",
-                        help="Modem device for Cell service")
+    group.add_argument("--has-radio",
+                       dest="has_radio", default="/sys/devices/platform/mts-io/has-radio",
+                        help="Device file that indicates presence of modem")
     group.add_argument("--real-ppp-on-boot",
                        default="/var/config/ppp/ppp_on_boot",
                        help="Where to link /etc/ppp_on_boot to when enabling ppp")
@@ -514,11 +514,10 @@ def check_modem(options):
 
     have_modem = False
     try:
-        modem_stat = os.stat(options.modem)
-        if stat.S_ISCHR(modem_stat.st_mode):
-            have_modem = True
-    except OSError as error:
-        logging.error("Unable to stat %s: %s", options.modem, error)
+        with open(options.has_radio, "r") as fp:
+            have_modem = fp.read().strip() == '1'
+    except IOError as error:
+        logging.error("Reading %s: %s", options.has_radio, error)
 
     have_sim = False
     if have_modem:
