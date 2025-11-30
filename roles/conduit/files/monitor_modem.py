@@ -607,6 +607,7 @@ class IfState(object):
         self.seen = False
         self.seq = -1
         self.responding = None
+        self.missed_cycles = None
 
     def __str__(self):
         return "%s: %s ignore: %f state: %s, seen: %s, seq: %d, responding: %s" % (
@@ -672,6 +673,7 @@ def process_interface(options, if_state):
                         options.pings,
                         if_state.name)
         if_state.responding = True
+        if_state.missed_cycles = 0
 
     return
 
@@ -735,16 +737,23 @@ def process(options, progname):
 
             if if_state.responding:
                 ppp_new_state = False
-                logging.info("%s: responding", if_name)
 
                 # Restarte if it's now responding
                 if was_responding is False:
+                    logging.info("%s: is now responding", if_name)
                     do_restart = True
                 continue
 
-            # Not responding, ignore it for a while
-            logging.info("%s: not responding, ignoring", if_name)
-            if_state.ignore_time = time.time() + options.ignore_link_time
+            # Fail a few times before we mark it down?
+
+            if_state.missed_cycles += 1
+            if if_state.missed_cycles > 4:
+                # Not responding, ignore it for a while
+                if_state.ignore_time = time.time() + options.ignore_link_time
+                logging.warning("%s: not responding, ignoring until: %s",
+                                if_name,
+                                time.strftime("%Y-%m-%d %H:%M:%S",
+                                              time.localtime(if_state.ignore_time)))
 
         # Mark current link state
         active_addresses = set()
