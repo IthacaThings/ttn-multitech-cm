@@ -171,9 +171,6 @@ def parse_args():
                        help="Don't send notifications, just list what we are going to do")
 
     group = parser.add_argument_group("Options")
-    group.add_argument("--pidfile",
-                       dest="pidfile", default="/var/run/conduit_leds.pid",
-                       help="Location of the PID file")
     group.add_argument("--interval",
                        default=60.0, type=float,
                        help="Seconds to wait between checks")
@@ -199,10 +196,13 @@ def parse_args():
     group.add_argument("--change-script",
                        default="/var/config/ifup_restart",
                        help="Script to run when status changes")
+    group.add_argument("--want-ppp-file",
+                       default="/var/run/using_ppp",
+                       help="File to exist if we want to be using PPP")
     group.add_argument("--ignore-link-time",
                        default=60*60*3,
                        type=int,
-                       help="How often to retry broadcase interfaces if they did not work when we tried them")
+                       help="How often (in seconds) to retry broadcast interfaces if they did not work when we tried them")
 
     # Parse args
     options = parser.parse_args()
@@ -535,7 +535,10 @@ def check_modem(options):
     return have_modem, have_sim
 
 def pppd(options, enable):
-    """ Start or stop pppd """
+    """ Start or stop pppd
+
+    Returns True if state was changed.
+    """
 
     logging.debug("pppd(%s)", enable)
 
@@ -548,6 +551,15 @@ def pppd(options, enable):
         ppp_is_running = False
 
     if enable:
+        # Tell conduit_leds that we want PPP
+        try:
+            fd = os.open(options.want_ppp_file, os.O_CREAT|os.O_EXCL|os.O_WRONLY, 0o644)
+            with os.fdopen(fd, 'w') as fp:
+                fp.write("1\n")
+        except OSError as error:
+            if error.errno != errno.EEXIST:
+                logging.error("Writing %s: %s", options.want_ppp_file, error)
+
         if not ppp_is_running:
             cmd = ["/etc/init.d/ppp", "start"]
             try:
@@ -572,6 +584,15 @@ def pppd(options, enable):
             return True
 
         return False
+
+    # We do not want PPP
+
+    # Inform conduit_leds
+    try:
+        os.unlink(options.want_ppp_file)
+    except OSError as error:
+        if error.errno != errno.ENOENT:
+            logging.error("Deleting %s: %s", options.want_ppp_file, error)
 
     if ppp_is_running:
         cmd = ["/etc/init.d/ppp", "stop"]
@@ -747,8 +768,7 @@ def process(options, progname):
                     do_restart = True
                 continue
 
-            # Fail a few times before we mark it down?
-
+            # Fail a few times before we mark it down
             if_state.missed_cycles += 1
             if if_state.missed_cycles > 4:
                 # Not responding, ignore it for a while

@@ -283,9 +283,9 @@ def parse_args():
                        dest="foreground", default=False,
                        action='store_true',
                        help="Do not fork; run in foreground")
-    group.add_argument("--modem",
-                       dest="modem", default="/dev/modem_at0",
-                        help="Modem device for Cell service")
+    group.add_argument("--want-ppp-file",
+                       default="/var/run/using_ppp",
+                       help="File to exist if we want to be using PPP")
 
     # Parse args
     options = parser.parse_args()
@@ -365,48 +365,16 @@ def check_lora(options, device_path):
 
     return True
 
-# PPPd assigns one of the following addresses until we receive one (add ppp interface index)
-HISADDR_STATIC = ipaddress.ip_address(u"10.64.64.64")
-HISADDR_DYNAMIC = ipaddress.ip_address(u"10.112.112.112")
-PPP_RE = re.compile(r'ppp(?P<index>\d+)$')
-
-def check_ppp(options):
-    """ Check status of ppp connection """
+def check_ppp(options, mtsio):
+    """ Check if monitor_modem wants PPP to be running """
 
     try:
-        modem_stat = os.stat(options.modem)
-        if not stat.S_ISCHR(modem_stat.st_mode):
-            logging.debug("check_ppp: %s not a character device", options.modem)
-            return False
-    except OSError as error:
-        logging.debug("check_ppp: %s: %s", options.modem, error)
+        return stat.S_ISREG(os.stat(options.want_ppp_file).st_mode)
+    except OSError:
+        # Not using PPP
         return False
 
-    peer_addr = None
-    for ifname, ifaddrs in psutil.net_if_addrs().items():
-        match = PPP_RE.match(ifname)
-        if not match:
-            continue
-        ppp_ifnum = int(match.group('index'))
-        for ifaddr in ifaddrs:
-            if ifaddr.family != socket.AF_INET:
-                continue
-            if ifaddr.ptp is None:
-                continue
-            if ifaddr.ptp in [str(HISADDR_STATIC + ppp_ifnum), str(HISADDR_DYNAMIC + ppp_ifnum)]:
-                # Remote has not given us an address yet
-                logging.debug("check_ppp: Remote has not provided an address for %s: %s", ifname, ifaddr.ptp)
-                continue
-            peer_addr = ifaddr.ptp
-        break
-
-    if not peer_addr:
-        logging.debug("check_ppp: No valid peer address found")
-        return False
-
-    return True
-
-def process(options, leds, device_path):
+def process(options, mtsio, leds, device_path):
     """ Check all the services """
 
     if check_dns(options):
@@ -424,7 +392,7 @@ def process(options, leds, device_path):
     else:
         leds.clear(LEDs.LED_B)
 
-    if check_ppp(options):
+    if check_ppp(options, mtsio):
         leds.set(LEDs.LED_A)
     else:
         leds.clear(LEDs.LED_A)
@@ -509,7 +477,7 @@ def main():
                     while time.time() > next_time:
                         next_time += options.interval
                     logging.debug("Checking status")
-                    process(options, leds, device_path)
+                    process(options, mtsio, leds, device_path)
                 else:
                     logging.debug("Flashing LEDs")
                     leds.flashall()
