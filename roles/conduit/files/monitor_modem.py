@@ -746,7 +746,7 @@ def process(options, progname):
             if default_if_name == "ppp0":
                 # No, tell ppp to stop
                 ppp_new_state = False
-                logging.warning("%s: up, telling ppp to stop", if_name)
+                logging.warning("%s: up, ppp is not needed", if_name)
                 continue
             if default_if_name != if_name:
                 # Not at us, continue
@@ -788,7 +788,7 @@ def process(options, progname):
                 active_ifs.add(if_name)
 
         # Ensure pppd is in the correct state
-        pppd(options, ppp_new_state)
+        ppp_state_changed = pppd(options, ppp_new_state)
 
         if do_restart:
             logging.warning("Restarting services")
@@ -803,16 +803,18 @@ def process(options, progname):
             except subprocess.CalledProcessError as error:
                 logging.error("%s: %s", " ".join(cmd), error)
         else:
-            if ppp_new_state:
-                active_addresses = get_ppp_addresses()
+            if ppp_new_state and not ppp_state_changed:
+                active_addresses.update(get_ppp_addresses())
 
             if active_addresses:
                 tunnel_addrs = tunnel_addresses(options)
-                logging.debug("Checking that tunnel sources %s is in %s",
+                logging.debug("Checking that tunnel sources (%s) is in (%s)",
                               " ".join(list(tunnel_addrs)),
                               " ".join(list(active_addresses)))
                 if not active_addresses.intersection(tunnel_addrs):
-                    logging.warning("No ssh_tunnel sources from active addresses, restarting")
+                    logging.warning("No ssh_tunnel sources (%s) from active addresses (%s), restarting",
+                                    " ".join(list(tunnel_addrs)),
+                                    " ".join(list(active_addresses)))
                     # No tunnel connections from an active interface
                     cmd = ["/etc/init.d/ssh_tunnel", "restart"]
                     try:
