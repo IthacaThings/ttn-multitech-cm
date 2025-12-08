@@ -488,7 +488,7 @@ def tunnel_addresses(options):
     addresses = set()
 
     try:
-        dst_ip = resolve_with_timeout(options.hostname, timeout=1)
+        dst_ip = resolve_with_timeout(options.hostname, timeout=5)
     except DNSTimeout:
         return addresses
     else:
