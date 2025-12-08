@@ -471,20 +471,27 @@ def main():
             # XXX - Spread the tests out over 1/4 of the interval?
             # XXX - Ping the remote side of the PPP connection?  Requires exec
 
-            next_time = time.time()
-            while True:
-                if time.time() > next_time:
-                    while time.time() > next_time:
-                        next_time += options.interval
-                    logging.debug("Checking status")
-                    process(options, mtsio, leds, device_path)
-                else:
-                    logging.debug("Flashing LEDs")
-                    leds.flashall()
-                duration = min(5.0, next_time - time.time())
-                if duration > 0:
-                    logging.debug("Sleeping for %f seconds", duration)
-                    time.sleep(duration)
+            try:
+                next_time = time.time()
+                while True:
+                    if time.time() > next_time:
+                        while time.time() > next_time:
+                            next_time += options.interval
+                        logging.debug("Checking status")
+                        process(options, mtsio, leds, device_path)
+                    else:
+                        logging.debug("Flashing LEDs")
+                        leds.flashall()
+                    duration = min(5.0, next_time - time.time())
+                    if duration > 0:
+                        logging.debug("Sleeping for %f seconds", duration)
+                        time.sleep(duration)
+            except KeyboardInterrupt:
+                print("")
+                LEDs(MTSIO())
+            except Exception as exc:
+                logging.exception(exc)
+                LEDs(MTSIO())
     except LockFileTimeout:
         logging.critical("Another instance of %s is running", progname)
         return 1
@@ -496,9 +503,5 @@ if __name__ == "__main__":
         rc = main()
     except KeyboardInterrupt:
         print("")
-        LEDs(MTSIO())
-    except Exception as exc:
-        logging.exception(exc)
-        LEDs(MTSIO())
 
     sys.exit(rc)

@@ -123,7 +123,7 @@ On Conduits (not Conduit APs), the LED indications are:
 |--------|------------------------------------------------------------------------------------------------------|
 | Status | Blinks twice a second when the OS is running                                                         |
 | LS     | Blicks every couple seconds when Cellular modem is connected                                         |
-| A      | PPP has an IP address asssigned                                                                      |
+| A      | We are trying to use PPP                                                                             |
 | B      | An SSH tunnel connection to the jump host is in Established state                                    |
 | C      | A packet forwarder is running and has the LoRa device open (does not work on I2C cards running mp) N |
 | D      | DNS resolution of google.com works                                                                   |
