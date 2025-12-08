@@ -31,7 +31,6 @@ import argparse
 from contextlib import contextmanager
 import errno
 import fcntl
-import ipaddress
 import logging
 from logging.handlers import SysLogHandler
 import os
@@ -274,9 +273,6 @@ def parse_args():
                        help="Don't send notifications, just list what we are going to do")
 
     group = parser.add_argument_group("Options")
-    group.add_argument("--pidfile",
-                       dest="pidfile", default="/var/run/conduit_leds.pid",
-                       help="Location of the PID file")
     group.add_argument("--interval",
                        default=60.0, type=float,
                        help="Seconds to wait between checks")
