@@ -1,9 +1,9 @@
 #!/bin/sh
 #
-#Start conduit_leds as a service
+#Start monitor_modem as a service
 
 ### BEGIN INIT INFO
-# Provides:          conduit_leds
+# Provides:          monitor_modem
 # Required-Start:    $local_fs $network $syslog $dbus
 # Required-Stop:     $local_fs $network $syslog $dbus
 # Default-Start:     2 3 4 5
@@ -12,8 +12,8 @@
 ### END INIT INFO
 
 PATH="/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin"
-NAME=conduit_leds
-DAEMON=/usr/local/sbin/conduit_leds
+NAME=monitor_modem
+DAEMON=/usr/local/sbin/monitor_modem
 PIDFILE=/var/run/${NAME}.pid
 DAEMON_ARGS=
 

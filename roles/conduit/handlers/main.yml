@@ -6,7 +6,7 @@
 #
 - name: update rc
   shell: "for init in ttn-pkt-forwarder lora-basic-station; do update-rc.d -f ${init} remove; test -f /etc/init.d/${init} && update-rc.d ${init} defaults 95 30 || true; done"
-  
+
 #
 #	Restart the packet forwarder
 #
@@ -37,7 +37,7 @@
   debug:
     msg: "Please go to https://console.thethingsnetwork.org/gateways
  and update the antenna Altitude and Placement your gateways.  The
- API does not allow these parameters to be set" 
+ API does not allow these parameters to be set"
   run_once: true
 
 #
@@ -59,6 +59,12 @@
   include_tasks: restart_conduit_leds.yml
 
 #
+#       Restart monitor_modem
+#
+- name: restart monitor_modem
+  include_tasks: restart_monitor_modem.yml
+
+#
 #	Restart sshd after config changes
 #
 - name: Restart ssh
@@ -67,7 +73,7 @@
   ignore_errors: true
 
 #
-#	Remind 
+#	Remind
 #
 - name: interface reboot
   debug:
@@ -118,3 +124,10 @@
 
 - name: Update system checksum file
   include_tasks: update_checksums.yml
+
+#
+#	Summary
+#
+- name: Rescued sections
+  ansible.builtin.debug:
+    msg: "Failed sections: {{ rescued | join(', ') }}"

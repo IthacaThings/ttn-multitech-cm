@@ -53,8 +53,8 @@
 
 - name: time Ensure /var/config/default/ntpd.default exists
   copy:
-    src: /etc/default/ntpd.default
-    dest: /var/config/default/ntpd.default
+    src: /etc/default/ntpd
+    dest: /var/config/default/ntpd
     remote_src: yes
     force: no
   notify:
@@ -64,7 +64,7 @@
   file:
     dest: /etc/default/ntpd
     state: link
-    src: /var/config/default/ntpd.default
+    src: /var/config/default/ntpd
     force: yes
   notify:
     - restart ntpd
@@ -76,12 +76,19 @@
 
 - name: time Prevent ntpd from hanging on boot when net is down
   lineinfile:
-    dest: /var/config/default/ntpd.default
+    dest: /var/config/default/ntpd
     regexp: "^SET_SYSTEM_CLOCK="
     line: "SET_SYSTEM_CLOCK={{ set_system_clock }}"
     state: present
   notify:
     - restart ntpd
+    - Update system checksum file
+
+- name: time Clean up turds
+  ansible.builtin.file:
+    path: /var/config/default/ntpd.default
+    state: absent
+  notify:
     - Update system checksum file
 
 #

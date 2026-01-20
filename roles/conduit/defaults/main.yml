@@ -90,6 +90,8 @@ ssh_tunnel_ssh_key: /etc/ssh/ssh_host_rsa_key
 ssh_tunnel_daemon: /usr/bin/autossh
 ssh_tunnel_ssh_port: 22
 ssh_tunnel_base_port: 0
+ssh_tunnel_first_poll: 120
+ssh_tunnel_poll: 60
 
 # Static Nameserver defaults
 resolv_conf_static: /var/config/network/resolv.conf-static
@@ -176,11 +178,16 @@ monit_pktfwd_stop: '"/etc/init.d/{{ monit_pktfwd_initscript }} stop"'
 monit_pktfwd_restart: '"/etc/init.d/{{ monit_pktfwd_initscript }} restart"'
 monit_pktfwd_reboot: 'exec "/sbin/reboot"'
 
+# Monit loadavg
+monit_loadavg_1m: 2
+monit_loadavg_5m: 4
+monit_memory_usage: 30%
+
 # Monitor space on /
 monit_root_test: "usage > 50%"
 
 # Monitor space on /var/config
-monit_config_test: "usage > 15%"
+monit_config_test: "usage > 20%"
 
 # Monitor space on /var/volatile
 monit_volatile_test: "usage > 75%"

@@ -1,8 +1,8 @@
 check network "{{ monit_ppp_if }}" with interface "{{ monit_ppp_if }}"
-#    if failed link then restart
+    if link up then exec "/usr/bin/env METHOD=monit IFACE=ppp0 /var/config/ifup_restart"
     if changed link capacity then alert
 
-check process pppd MATCHING "^/usr/sbin/pppd call {{ cellular_provider }}$"
+check process pppd MATCHING "^(/usr/sbin/)?pppd call provider$"
     if does not exist for 1 cycles then restart
     start program = {{ monit_ppp_start }}
     stop program = {{ monit_ppp_stop }}

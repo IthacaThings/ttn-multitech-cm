@@ -31,19 +31,23 @@ import argparse
 from contextlib import contextmanager
 import errno
 import fcntl
-import ipaddress
 import logging
 from logging.handlers import SysLogHandler
 import os
-import pprint
 import psutil
 import re
 import socket
 import stat
-import struct
 import subprocess
 import sys
 import time
+
+cached_ip = None
+
+try:
+    FileNotFoundError
+except NameError:
+    FileNotFoundError = IOError
 
 class LockFileTimeout(Exception):
     def __init__(self, error):
@@ -55,26 +59,30 @@ class LockFileTimeout(Exception):
 def pidfilelock(name):
     """ Context to lock a pid file """
 
-    time_left = 30
+    time_end = time.time() + 30
     pidfile_path = os.path.join("/var/run", name + ".pid")
-    lock_file = open(pidfile_path, 'w+')
+    fd = os.open(pidfile_path, os.O_RDWR | os.O_CREAT, 0o644)
+    lock_file = os.fdopen(fd, "r+")
     while True:
         try:
             logging.debug("Attempting to lock %s", pidfile_path)
             fcntl.flock(lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            lock_file.write(str(os.getpid()) + '\n')
-            lock_file.flush()
-            logging.debug("Wrote %d to %s", os.getpid(), pidfile_path)
-            break
         except IOError as err:
             if err.errno != errno.EAGAIN:
                 raise err
-            else:
-                logging.debug("Timeout trying to lock", pidfile_path)
-                time.sleep(1)
-                time_left -= 1
-                if time_left == 0:
-                    raise LockFileTimeout("Unable to lock %s" % pidfile_path)
+            logging.debug("Timeout trying to lock: %s", pidfile_path)
+            time.sleep(1)
+            if time.time() >= time_end:
+                raise LockFileTimeout("Unable to lock %s" % pidfile_path)
+            continue
+        else:
+            lock_file.seek(0)
+            lock_file.truncate()
+            lock_file.write("%d\n" % os.getpid())
+            lock_file.flush()
+            os.fsync(fd)
+            logging.debug("Wrote %d to %s", os.getpid(), pidfile_path)
+            break
 
     try:
         yield lock_file
@@ -83,7 +91,7 @@ def pidfilelock(name):
         fcntl.flock(lock_file, fcntl.LOCK_UN)
         os.unlink(pidfile_path)
         lock_file.close()
-               
+
 class Defaults(object):
     """ Read a /etc/defaults file """
 
@@ -145,7 +153,7 @@ class MTSIO(object):
 
         with open(os.path.join(self.ROOT, name), "w") as fp:
             fp.write("%s\n" % value)
-        
+
 class LEDs(object):
     """ Control LEDs """
 
@@ -211,7 +219,7 @@ def daemonize():
             # exit first parent
             sys.exit(0)
     except OSError as err:
-        logging.exception("First fork failed")
+        logging.exception("First fork failed: %s", err)
         return False
 
     # decouple from parent environment
@@ -225,7 +233,7 @@ def daemonize():
             # exit from second parent
             sys.exit(0)
     except OSError as err:
-        logging.exception("Second fork failed")
+        logging.exception("Second fork failed: %s", err)
         return False
 
     # redirect standard file descriptors
@@ -265,9 +273,6 @@ def parse_args():
                        help="Don't send notifications, just list what we are going to do")
 
     group = parser.add_argument_group("Options")
-    group.add_argument("--pidfile",
-                       dest="pidfile", default="/var/run/conduit_leds.pid",
-                       help="Location of the PID file")
     group.add_argument("--interval",
                        default=60.0, type=float,
                        help="Seconds to wait between checks")
@@ -278,18 +283,15 @@ def parse_args():
                        dest="foreground", default=False,
                        action='store_true',
                        help="Do not fork; run in foreground")
-    group.add_argument("--modem",
-                       dest="modem", default="/dev/modem_at0",
-                        help="Modem device for Cell service")
+    group.add_argument("--want-ppp-file",
+                       default="/var/run/using_ppp",
+                       help="File to exist if we want to be using PPP")
 
     # Parse args
     options = parser.parse_args()
 
     if options.noop:
         options.debug = True
-
-    # Init Logging
-    init_logging(options)
 
     return options
 
@@ -319,17 +321,18 @@ def check_tunnel(options):
         if not cached_ip:
             logging.info("check_tunnel: Unable to resolve %s", remote_host)
             return False
-        remote_host = cached_ip
-        logging.info("check_tunnel: Using cached IP %s", remote_host)
+        remote_ip = cached_ip
+        logging.info("check_tunnel: Using cached IP %s", remote_ip)
 
-    for conn in psutil.net_connections():
-        if conn.type == socket.SOCK_STREAM and conn.status == psutil.CONN_ESTABLISHED and conn.raddr == (remote_ip, local_port):
-            logging.info("check_tunnel: Found connection to %s(%s):%s with PID %d",
-                         remote_host,
-                         remote_ip,
-                         local_port,
-                         conn.pid)
-            return True
+    if remote_ip:
+        for conn in psutil.net_connections():
+            if conn.type == socket.SOCK_STREAM and conn.status == psutil.CONN_ESTABLISHED and conn.raddr == (remote_ip, local_port):
+                logging.info("check_tunnel: Found connection to %s(%s):%s with PID %d",
+                             remote_host,
+                             remote_ip,
+                             local_port,
+                             conn.pid)
+                return True
 
     logging.info("check_tunnel: No connection found to %s(%s):%s", remote_host, remote_ip, local_port)
     return False
@@ -362,48 +365,16 @@ def check_lora(options, device_path):
 
     return True
 
-# PPPd assigns one of the following addresses until we receive one (add ppp interface index)
-HISADDR_STATIC = ipaddress.ip_address(u"10.64.64.64")
-HISADDR_DYNAMIC = ipaddress.ip_address(u"10.112.112.112")
-PPP_RE = re.compile(r'ppp(?P<index>\d+)$')
-
-def check_ppp(options):
-    """ Check status of ppp connection """
+def check_ppp(options, mtsio):
+    """ Check if monitor_modem wants PPP to be running """
 
     try:
-        modem_stat = os.stat(options.modem)
-        if not stat.S_ISCHR(modem_stat.st_mode):
-            logging.debug("check_ppp: %s not a character device", options.modem)
-            return False
-    except OSError as error:
-        logging.debug("check_ppp: %s: %s", options.modem, error)
+        return stat.S_ISREG(os.stat(options.want_ppp_file).st_mode)
+    except OSError:
+        # Not using PPP
         return False
 
-    peer_addr = None
-    for ifname, ifaddrs in psutil.net_if_addrs().items():
-        match = PPP_RE.match(ifname)
-        if not match:
-            continue
-        ppp_ifnum = int(match.group('index'))
-        for ifaddr in ifaddrs:
-            if ifaddr.family != socket.AF_INET:
-                continue
-            if ifaddr.ptp is None:
-                continue
-            if ifaddr.ptp in [str(HISADDR_STATIC + ppp_ifnum), str(HISADDR_DYNAMIC + ppp_ifnum)]:
-                # Remote has not given us an address yet
-                logging.debug("check_ppp: Remote has not provided an address for %s: %s", ifname, ifaddr.ptp)
-                continue
-            peer_addr = ifaddr.ptp
-        break
-
-    if not peer_addr:
-        logging.debug("check_ppp: No valid peer address found")
-        return False
-
-    return True    
-
-def process(options, leds, device_path):
+def process(options, mtsio, leds, device_path):
     """ Check all the services """
 
     if check_dns(options):
@@ -421,7 +392,7 @@ def process(options, leds, device_path):
     else:
         leds.clear(LEDs.LED_B)
 
-    if check_ppp(options):
+    if check_ppp(options, mtsio):
         leds.set(LEDs.LED_A)
     else:
         leds.clear(LEDs.LED_A)
@@ -430,14 +401,23 @@ def init_logging(options):
     """ Set up logging """
 
     logger = logging.getLogger()
-    logger.handlers = []
     syslog_format = '%s[%%(process)s]: %%(message)s' % (os.path.basename(sys.argv[0]))
-    syslog_handler = SysLogHandler(address="/dev/log",
-                                   facility=SysLogHandler.LOG_DAEMON)
-    syslog_handler.setFormatter(logging.Formatter(syslog_format))
     if not sys.stdout.isatty():
+        # Repeat until syslog is available
+        while True:
+            try:
+                syslog_handler = SysLogHandler(address="/dev/log",
+                                               facility=SysLogHandler.LOG_DAEMON)
+            except FileNotFoundError as err:
+                logging.warning("Unable to open /dev/log: %s, waiting", err)
+                time.sleep(1)
+            else:
+                break
+        syslog_handler.setFormatter(logging.Formatter(syslog_format))
+        logger.handlers = []
         logger.addHandler(syslog_handler)
     else:
+        logger.handlers = []
         logger.addHandler(logging.StreamHandler(stream=sys.stdout))
 
     if options.debug:
@@ -450,13 +430,16 @@ def init_logging(options):
 def main():
     """It all happens here"""
 
-    progname = os.path.basename(sys.argv[0])
+    progname = os.path.splitext(os.path.basename(sys.argv[0]))[0]
 
     options = parse_args()
 
     if not options.foreground:
         if not daemonize():
             return 1
+
+    # Do this after daemonize or we'll hang the system startup.
+    init_logging(options)
 
     mtsio = MTSIO()
 
@@ -482,26 +465,33 @@ def main():
         logging.warning("No device found for %s", lora_hwversion)
 
     try:
-        with pidfilelock(progname) as pid_file:
+        with pidfilelock(progname):
             leds = LEDs(mtsio)
 
             # XXX - Spread the tests out over 1/4 of the interval?
             # XXX - Ping the remote side of the PPP connection?  Requires exec
 
-            next_time = time.time()
-            while True:
-                if time.time() > next_time:
-                    while time.time() > next_time:
-                        next_time += options.interval
-                    logging.debug("Checking status")
-                    process(options, leds, device_path)
-                else:
-                    logging.debug("Flashing LEDs")
-                    leds.flashall()
-                duration = min(5.0, next_time - time.time())
-                if duration > 0:
-                    logging.debug("Sleeping for %f seconds", duration)
-                    time.sleep(duration)
+            try:
+                next_time = time.time()
+                while True:
+                    if time.time() > next_time:
+                        while time.time() > next_time:
+                            next_time += options.interval
+                        logging.debug("Checking status")
+                        process(options, mtsio, leds, device_path)
+                    else:
+                        logging.debug("Flashing LEDs")
+                        leds.flashall()
+                    duration = min(5.0, next_time - time.time())
+                    if duration > 0:
+                        logging.debug("Sleeping for %f seconds", duration)
+                        time.sleep(duration)
+            except KeyboardInterrupt:
+                print("")
+                LEDs(MTSIO())
+            except Exception as exc:
+                logging.exception(exc)
+                LEDs(MTSIO())
     except LockFileTimeout:
         logging.critical("Another instance of %s is running", progname)
         return 1
@@ -513,9 +503,5 @@ if __name__ == "__main__":
         rc = main()
     except KeyboardInterrupt:
         print("")
-        LEDs(MTSIO())
-    except Exception as exc:
-        logging.exception(exc)
-        LEDs(MTSIO())
 
     sys.exit(rc)

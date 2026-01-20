@@ -125,6 +125,11 @@ do_start() {
     done
 
     #
+    # copy mlinux-version info
+    #
+    echo "$(head -1 /etc/mlinux-version) - $(opkg status lora-basic-station | sed -n '/Version:/s/Version: //p')" > ${run_dir}/1/version.txt
+
+    #
     # reset concentrator
     #
     echo -n "Resetting concentrator: "

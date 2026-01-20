@@ -15,9 +15,9 @@ set httpd
 
 # Monitor the system
 check system $HOST
-    if loadavg (1min) > 2 then alert
-    if loadavg (5min) > 4 then alert
-    if memory usage > 25% then alert
+    if loadavg (1min) > {{ monit_loadavg_1m }} then alert
+    if loadavg (5min) > {{ monit_loadavg_5m }} then alert
+    if memory usage > {{ monit_memory_usage }} then alert
 
 # Event Queue
 set eventqueue basedir {{ monit_eventqueue }}
@@ -95,6 +95,14 @@ check process conduit_leds PIDFILE /var/run/conduit_leds.pid
     if does not exist for {{ monit_process_period }} then restart
     start program = "/etc/init.d/conduit_leds start" with timeout 15 seconds
     stop program = "/etc/init.d/conduit_leds stop"
+{% endif -%}
+
+{% if 'modem_at0' in ansible_facts['ansible_local'].dev -%}
+# Monitor monitor_modem
+check process monitor_modem PIDFILE /var/run/monitor_modem.pid
+    if does not exist for {{ monit_process_period }} then restart
+    start program = "/etc/init.d/monitor_modem start" with timeout 15 seconds
+    stop program = "/etc/init.d/monitor_modem stop"
 {% endif -%}
 
 # Monitor system directory checksums

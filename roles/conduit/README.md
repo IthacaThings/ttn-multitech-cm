@@ -114,6 +114,26 @@ The following tags can be used to run a subset of the playbook.
 	<dd>Sets up an ssh tunnel back to a control host<dd>
 </dl>
 
+LED Status
+----------
+
+On Conduits (not Conduit APs), the LED indications are:
+
+| LED    | Meaning                                                                                              |
+|--------|------------------------------------------------------------------------------------------------------|
+| Status | Blinks twice a second when the OS is running                                                         |
+| LS     | Blicks every couple seconds when Cellular modem is connected                                         |
+| A      | We are trying to use PPP                                                                             |
+| B      | An SSH tunnel connection to the jump host is in Established state                                    |
+| C      | A packet forwarder is running and has the LoRa device open (does not work on I2C cards running mp) N |
+| D      | DNS resolution of google.com works                                                                   |
+
+The A-D LEDs are the ones on the right and have different lables on
+older Conduits (CD and one to 3 bars).
+
+The A-D LEDs reverse periodically to indicate that the check program
+is running.
+
 License
 -------
 
@@ -123,4 +143,3 @@ Author Information
 ------------------
 
 Jeffrey Honig <jch@honig.net>
-

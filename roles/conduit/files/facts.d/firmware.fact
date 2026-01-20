@@ -2,12 +2,11 @@
 
 import json
 import os
-import sys
 
 if os.path.isdir("/lib/firmware"):
     all_files = []
     for realroot, dirs, files in os.walk("/lib/firmware", topdown=True):
-        if realroot is "/lib/firmware":
+        if realroot == "/lib/firmware":
             root = ""
         else:
             root = realroot.replace("/lib/firmware/", "")
@@ -16,7 +15,3 @@ if os.path.isdir("/lib/firmware"):
 
     if len(all_files):
         print(json.dumps(all_files, indent=4))
-        
-
-
-

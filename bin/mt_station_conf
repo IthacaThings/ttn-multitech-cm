@@ -109,6 +109,10 @@ def parse_args():
     group.add_argument("--log-file",
                        dest="log_file",
                        help="Log file name")
+    group.add_argument("--tc-timeout",
+                       dest="tc_timeout",
+                       type=int,
+                       help="Set tc_timeout value in seconds")
 
     options = parser.parse_args()
     if options.debug:
@@ -164,6 +168,13 @@ def main():
     if options.gps:
         data['station_conf']['gps'] = options.gps
         data['station_conf']['pps'] = "fuzzy" if options.fuzzy_pps else "gps"
+    if options.tc_timeout:
+        for key in data['station_conf'].keys():
+            if key.lower() == "tc_timeout":
+                data['station_conf'][key] = "%ds" % options.tc_timeout
+                break
+        else:
+            data['station.conf']["tc_timeout"] = "%ds" % options.tc_timeout
 
     print(json.dumps(data, indent=4))
 

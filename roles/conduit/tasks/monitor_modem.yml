@@ -1,0 +1,56 @@
+---
+
+- name: monitor_modem /var/config/local/sbin/monitor_modem
+  ansible.builtin.copy:
+    dest: /var/config/local/sbin/monitor_modem
+    src: monitor_modem.py
+    mode: "0755"
+    owner: root
+    group: root
+  notify:
+    - restart monitor_modem
+    - Update system checksum file
+  when: ansible_local.mts_io.has_radio == "1"
+
+- name: monitor_modem /var/config/init.d/monitor_modem
+  ansible.builtin.copy:
+    dest: /var/config/init.d/monitor_modem
+    src: monitor_modem.initd
+    mode: "0755"
+    owner: root
+    group: root
+  notify:
+    - restart monitor_modem
+    - Update system checksum file
+  when: ansible_local.mts_io.has_radio == "1"
+
+- name: monitor_modem Link /etc/init.d/monitor_modem to /var/config/init.d/monitor_modem
+  ansible.builtin.file:
+    path: /etc/init.d/monitor_modem
+    state: link
+    src: /var/config/init.d/monitor_modem
+    force: yes
+  notify:
+    - restart monitor_modem
+    - Update system checksum file
+  when: ansible_local.mts_io.has_radio == "1"
+
+- name: monitor_modem Remove if a modem is not present
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+    force: yes
+  loop:
+    - /var/config/local/sbin/monitor_modem
+    - /var/config/init.d/monitor_modem
+  notify:
+    - Update system checksum file
+  when: ansible_local.mts_io.has_radio == "0"
+
+- name: monitor_modem Delete service if modem not present
+  ansible.builtin.shell: "update-rc.d -f monitor_modem remove"
+  notify:
+    - Update system checksum file
+  when: ansible_local.mts_io.has_radio == "0"
+
+...
