@@ -141,6 +141,14 @@ class GatewayV3(object):
         return self._data.get('ids', {}).get('eui')
 
     @property
+    def description(self):
+        return self._data.get('description')
+
+    @property
+    def name(self):
+        return self._data.get('name')
+
+    @property
     def router(self):
         return self._data.get('gateway_server_address')
 
@@ -158,6 +166,10 @@ class GatewayV3(object):
     def altitude(self):
         altitude = self._data.get('antennas', [])[0].get('location', {}).get('altitude')
         return int(altitude) if altitude else None
+
+    @property
+    def placement(self):
+        return self._data.get('antenna', {}).get('placement', 'PLACEMENT_UNKNOWN')
 
     @property
     def name(self):
@@ -208,8 +220,10 @@ class GatewayV3(object):
             cmd.extend(["--organization-id", self._options.organization_id])
         if self._options.user_id:
             cmd.extend(["--user-id", self._options.user_id])
-        if self._options.description:
-            cmd.extend(["--name", self._options.description])
+        if self._options.description is not None:
+            cmd.extend(["--description", self._options.description])
+        if self._options.name is not None:
+            cmd.extend(["--name", self._options.name])
         if self._options.latitude:
             cmd.extend(["--antenna.location.latitude", str(self._options.latitude)])
         if self._options.longitude:
@@ -220,6 +234,8 @@ class GatewayV3(object):
             cmd.extend(["--version-ids.brand-id", self._options.brand.lower()])
         if self._options.model:
             cmd.extend(["--version-ids.model-id", self._options.model.lower()])
+        if self._optionas.placement:
+            cmd.extend("--antenna.placement", self._options.placement)
 
         try:
             output = check_output(self._options.binary, self._options.noop, cmd)
@@ -250,8 +266,10 @@ class GatewayV3(object):
             changes.extend(["--antenna.location.longitude", str(self._options.longitude)])
         if self._options.altitude and self.altitude != self._options.altitude:
             changes.extend(["--antenna.location.altitude", str(self._options.altitude)])
-        if self._options.description and self.name != self._options.description:
-            changes.extend(["--name", self._options.description])
+        if self._options.description and self.description != self._options.description:
+            changes.extend(["--description", self._options.description])
+        if self._options.name and self.name != self._options.name:
+            changes.extend(["--name", self._options.name])
         if self._options.brand and self.brand.lower() != self._options.brand.lower():
             changes.extend(["--version-ids.brand-id", self._options.brand.lower()])
         if self._options.model and self.model.lower() != self._options.model.lower():
@@ -263,6 +281,8 @@ class GatewayV3(object):
         if self.update_location_from_status != self._options.update_location_from_status:
             changes.append("--update_location_from_status=%s" %
                            json.dumps(self._options.update_location_from_status))
+        if self._options.placement and  self.placement != self._options.placement:
+            changes.append('--antenna.placement=%s' % self._options.placement)
 
         if not changes:
             return
@@ -470,6 +490,14 @@ def parse_args():
     group.add_argument("--altitude",
                        dest="altitude", type=int,
                        help="Altitude of the conduit (in meters)")
+    group.add_argument("--name",
+                       dest="name",
+                       help="Gateway name")
+    group.add_argument("--placement",
+                       dest="placement",
+                       type=str.upper,
+                       choices=["PLACEMENT_UNKNOWN", "INDOOR", "OUTDOOR"],
+                       help="Antennal placement")
     group.add_argument("--collaborators",
                        dest="collaborators", type=json.loads, default=[],
                        help="Collaborators in JSON format")
