@@ -46,8 +46,12 @@ ansible_port: 22
 # serial console access to the gateway
 # mlinux_version 3.3.7
 
-# Descriptive location of the gateway
+# Descriptive location of the gateway (the TTN gateway name)
 description: Test node in Org
+# Optional longer description (the TTN gateway description)
+#extended_description: On the roof of the Org building, facing north
+# Antenna placement: INDOOR, OUTDOOR or PLACEMENT_UNKNOWN
+#placement: OUTDOOR
 
 # Location can be set and will be used as "fake" GPS data if the GPS
 # card is not being used.
