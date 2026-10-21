@@ -529,8 +529,14 @@ LoRa Basic Station is not affected, since it trusts only the root in
 `/var/config/lora/tc.trust`. The fix protects other TLS clients on
 the gateway (`curl`, `opkg`, Python) that use the system store.
 
-To test a gateway, both of these should fail certificate
-verification:
+The playbook verifies the fix on every run: it fails if any root in
+`untrusted_ca_certificates` is still in
+`/etc/ssl/certs/ca-certificates.crt`. This check is local and does not
+need network access.
+
+To test a gateway over the network, both of these should fail with
+exit code 60 (certificate verification failed). Exit code 0 means the
+gateway is vulnerable; other codes are connectivity problems:
 
 ```sh
 curl -o /dev/null https://dv-g3b-emudhra.we-have-a-problem.com/

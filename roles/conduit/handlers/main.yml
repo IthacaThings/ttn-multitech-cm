@@ -47,12 +47,6 @@
   service: name=ntpd state=restarted
 
 #
-#       Rebuild the system CA certificate store
-#
-- name: update ca certificates
-  command: update-ca-certificates --fresh
-
-#
 #       Restart ssh_tunnel
 #
 - name: restart ssh_tunnel
