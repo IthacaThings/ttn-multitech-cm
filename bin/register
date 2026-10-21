@@ -169,11 +169,7 @@ class GatewayV3(object):
 
     @property
     def placement(self):
-        return self._data.get('antenna', {}).get('placement', 'PLACEMENT_UNKNOWN')
-
-    @property
-    def name(self):
-        return self._data.get('name')
+        return self._data.get('antennas', [])[0].get('placement', 'PLACEMENT_UNKNOWN')
 
     @property
     def brand(self):
@@ -234,8 +230,8 @@ class GatewayV3(object):
             cmd.extend(["--version-ids.brand-id", self._options.brand.lower()])
         if self._options.model:
             cmd.extend(["--version-ids.model-id", self._options.model.lower()])
-        if self._optionas.placement:
-            cmd.extend("--antenna.placement", self._options.placement)
+        if self._options.placement:
+            cmd.extend(["--antenna.placement", self._options.placement])
 
         try:
             output = check_output(self._options.binary, self._options.noop, cmd)

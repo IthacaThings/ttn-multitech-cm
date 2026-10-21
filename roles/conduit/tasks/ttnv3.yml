@@ -21,8 +21,8 @@
         {{ '--status-public' if status_public else '--status-private' }}
         {{ '--location-public' if location_public else '--location-private' }}
         --router {{ router_v3 }}
-        {{ '--description ' + (description | default('') | quote) if name is defined else '' }}
-        --name {{ name | default(description) | quote }}
+        --name {{ description | quote }}
+        {{ '--description ' + (extended_description | quote) if extended_description is defined and extended_description else '' }}
         --brand {{ gateway_brand | quote }}
         --model {{ gateway_model | quote }}
         --antenna-type {{ antenna_type | quote }}
