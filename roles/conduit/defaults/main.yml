@@ -202,3 +202,8 @@ monit_ppp_start: '"/etc/init.d/{{ monit_ppp_initscript }} start" with timeout 15
 monit_ppp_stop: '"/etc/init.d/{{ monit_ppp_initscript }} stop"'
 
 validate_certificates: true
+
+# CA certificates (as named in /etc/ca-certificates.conf) to distrust
+untrusted_ca_certificates:
+  - mozilla/Comodo_AAA_Services_root.crt  # eMudhra compromise, 2026-10
+  - mozilla/emSign_ECC_Root_CA_-_G3.crt  # eMudhra compromise, 2026-10

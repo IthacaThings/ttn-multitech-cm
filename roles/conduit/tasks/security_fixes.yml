@@ -1,0 +1,19 @@
+---
+
+#
+#	Distrust compromised CA root certificates
+#
+
+# backrefs: only modify existing entries, never add new ones
+- name: security_fixes Disable untrusted CA certificates
+  lineinfile:
+    dest: /etc/ca-certificates.conf
+    regexp: "^!?{{ item | regex_escape }}$"
+    line: "!{{ item }}"
+    backrefs: yes
+  with_items: "{{ untrusted_ca_certificates }}"
+  notify:
+    - update ca certificates
+    - Update system checksum file
+
+...

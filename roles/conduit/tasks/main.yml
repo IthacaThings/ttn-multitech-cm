@@ -144,7 +144,16 @@
   tags:
     - sshd
     - setup
-  
+
+#
+#	Security fixes
+#
+- name: main Apply security fixes
+  import_tasks: security_fixes.yml
+  tags:
+    - security-fixes
+    - setup
+
 #
 #	Stop any services we don't want
 #
