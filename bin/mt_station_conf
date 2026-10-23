@@ -28,6 +28,7 @@ from __future__ import print_function
 import argparse
 import json
 import logging
+import os
 import re
 import sys
 
@@ -86,10 +87,13 @@ def parse_args():
     #	Options
     group = parser.add_argument_group("Configuration options")
     group.add_argument("--url",
-                       dest="url", required=True,
-                       help="URL of the file")
+                       dest="url",
+                       help="Upstream URL of the file")
+    group.add_argument("--file",
+                       dest="file",
+                       help="Cached copy of the file, used instead of --url if present")
     group.add_argument("--routerid",
-                       dest="routerid", type=eui, required=True,
+                       dest="routerid", type=eui,
                        help="Router EUI")
     group.add_argument("--gps",
                        dest="gps",
@@ -114,9 +118,28 @@ def parse_args():
                        type=int,
                        help="Set tc_timeout value in seconds")
 
+    group = parser.add_argument_group("Cache options")
+    group = group.add_mutually_exclusive_group()
+    group.add_argument("--check",
+                       dest="check", default=False,
+                       action='store_true',
+                       help="Report if --file differs from --url")
+    group.add_argument("--update",
+                       dest="update", default=False,
+                       action='store_true',
+                       help="Replace --file with the contents of --url")
+
     options = parser.parse_args()
     if options.debug:
         options.verbose = options.debug
+    if options.check or options.update:
+        if not options.url or not options.file:
+            parser.error("--check and --update require --url and --file")
+    else:
+        if not options.url and not options.file:
+            parser.error("--url or --file is required")
+        if not options.routerid:
+            parser.error("--routerid is required")
 
     return options
 
@@ -133,23 +156,77 @@ def init_logging(options):
     else:
         logger.setLevel('WARNING')
 
+def fetch(url):
+    """ Fetch the upstream file, returning the raw content """
+
+    response = requests.get(url, timeout=30)
+    logging.debug("Response %s: %s", response.status_code, response.reason)
+    response.raise_for_status()
+
+    return response.content
+
+def parse(content):
+    """ Parse the file, which MT sometimes posts with a BOM """
+
+    return json.loads(content.decode('utf-8-sig'))
+
+def check(options):
+    """ Compare the cached copy with upstream """
+
+    try:
+        upstream = fetch(options.url)
+    except requests.exceptions.RequestException as error:
+        print("Unable to check %s: %s" % (options.url, error))
+        return 1
+
+    try:
+        with open(options.file, "rb") as filep:
+            cached = filep.read()
+    except IOError as error:
+        print("No cached copy of %s: %s" % (options.url, error))
+        return 1
+
+    if parse(cached) != parse(upstream):
+        print("%s has changed from cached copy %s, run %s --update --url %s --file %s" %
+              (options.url, options.file, sys.argv[0], options.url, options.file))
+        return 1
+
+    return 0
+
+def update(options):
+    """ Replace the cached copy with upstream """
+
+    try:
+        upstream = fetch(options.url)
+        parse(upstream)
+    except (requests.exceptions.RequestException, ValueError) as error:
+        sys.exit(error)
+
+    if not options.noop:
+        with open(options.file, "wb") as filep:
+            filep.write(upstream)
+
+    return 0
+
 def main():
     """ Figure out what we should do """
 
     options = parse_args()
     init_logging(options)
 
+    if options.check:
+        return check(options)
+    if options.update:
+        return update(options)
+
     try:
-        response = requests.get(options.url)
-        logging.debug("Response %s: %s", response.status_code, response.reason)
-        response.raise_for_status()
-        data = response.json()
-    except ValueError:
-        data = json.loads(response.content.decode('utf-8-sig'))
-    except requests.exceptions.HTTPError as error:
+        if options.file and os.path.exists(options.file):
+            with open(options.file, "rb") as filep:
+                data = parse(filep.read())
+        else:
+            data = parse(fetch(options.url))
+    except (requests.exceptions.RequestException, ValueError) as error:
         sys.exit(error)
-    except requests.exceptions.RequestException as error:
-        raise
 
     for section in ['station_conf','SX1301_conf']:
         if section not in data:
@@ -168,13 +245,20 @@ def main():
     if options.gps:
         data['station_conf']['gps'] = options.gps
         data['station_conf']['pps'] = "fuzzy" if options.fuzzy_pps else "gps"
+        data['SX1301_conf']['pps'] = True
+    else:
+        # Without a GPS, disable PPS on the radio.  Basic Station 2.0.5
+        # rejects station.conf if station_conf.pps is not a string, so
+        # leave that out.
+        data['station_conf'].pop('pps', None)
+        data['SX1301_conf']['pps'] = False
     if options.tc_timeout:
         for key in data['station_conf'].keys():
             if key.lower() == "tc_timeout":
                 data['station_conf'][key] = "%ds" % options.tc_timeout
                 break
         else:
-            data['station.conf']["tc_timeout"] = "%ds" % options.tc_timeout
+            data['station_conf']["TC_TIMEOUT"] = "%ds" % options.tc_timeout
 
     print(json.dumps(data, indent=4))
 
