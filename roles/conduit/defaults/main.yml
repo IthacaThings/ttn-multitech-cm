@@ -51,10 +51,14 @@ autoquit_threshold: 5
 
 # Basic station
 # Basic station stuff
+# Upstream station.conf templates.  We use the cached copies in
+# basic_station_conf_dir and warn if upstream has changed.
 basic_station_conf_url:
-  mtcdt: "http://www.multitech.net/developer/wp-content/uploads/2021/08/mtcdt-station.conf_.txt"
-  mtcap: "http://www.multitech.net/developer/wp-content/uploads/2020/06/mtcap-station.conf_.txt"
+  mtcdt: "https://raw.githubusercontent.com/MultiTechSystems/multitech-gateway-tx-power-tables/main/mtcdt-station.conf"
+  mtcap: "https://raw.githubusercontent.com/MultiTechSystems/multitech-gateway-tx-power-tables/main/mtcap-station.conf"
+  # No MTCAP2 station.conf on GitHub and no cached copy; multitech.net now returns 403 for this
   mtcap2: "http://www.multitech.net/developer/wp-content/uploads/2021/08/mtcap2station.conf_.txt"
+basic_station_conf_dir: "{{ role_path }}/files/station_conf"
 
 basic_cert_url: https://letsencrypt.org/certs/isrgrootx1.pem
 basic_log_level: INFO,S2E:VERBOSE

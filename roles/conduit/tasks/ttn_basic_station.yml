@@ -34,6 +34,30 @@
     - forwader_version is defined
     - ansible_local.opkg.lora_basic_station is not defined or ansible_local.opkg.lora_basic_station != forwarder_version
 
+# Use our cached copies, but let us know if upstream has changed
+- name: ttn_basic_station Check cached station.conf files against upstream
+  local_action:
+    module: command
+    args:
+      "bin/mt_station_conf --check
+      --url {{ item.value }}
+      --file {{ basic_station_conf_dir }}/{{ item.key }}-station.conf"
+  loop: "{{ basic_station_conf_url | dict2items }}"
+  when: (basic_station_conf_dir + '/' + item.key + '-station.conf') is file
+  run_once: true
+  check_mode: false
+  register: station_conf_check
+  changed_when: false
+  failed_when: false
+
+- name: ttn_basic_station Warn about changed upstream station.conf files
+  debug:
+    msg: "WARNING: {{ [item.stdout, item.stderr, item.msg] | select | first }}"
+  loop: "{{ station_conf_check.results | selectattr('rc', 'defined') | rejectattr('rc', 'equalto', 0) | list }}"
+  loop_control:
+    label: "{{ item.item.key }}"
+  run_once: true
+
 # We have a program below because MT posted the data in an invalid format
 - name: ttn_basic_station Fetch and update station.conf
   block:
@@ -47,6 +71,7 @@
         module: command
         args:
           "bin/mt_station_conf --url {{ basic_station_conf_url[conduit_type] }}
+          --file {{ basic_station_conf_dir }}/{{ conduit_type }}-station.conf
           --routerid {{ ansible_local.lora.eui }}
           --log-file {{ basic_log_file }}
           --log-level {{ basic_log_level }}
