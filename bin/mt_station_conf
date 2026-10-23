@@ -245,6 +245,13 @@ def main():
     if options.gps:
         data['station_conf']['gps'] = options.gps
         data['station_conf']['pps'] = "fuzzy" if options.fuzzy_pps else "gps"
+        data['SX1301_conf']['pps'] = True
+    else:
+        # Without a GPS, disable PPS on the radio.  Basic Station 2.0.5
+        # rejects station.conf if station_conf.pps is not a string, so
+        # leave that out.
+        data['station_conf'].pop('pps', None)
+        data['SX1301_conf']['pps'] = False
     if options.tc_timeout:
         for key in data['station_conf'].keys():
             if key.lower() == "tc_timeout":

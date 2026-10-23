@@ -21,8 +21,9 @@ lora_hostname_delete: "{{ lora_eui if forwarder_variant == 'mp' else hostname }}
 # Is ssh_tunnel enabled
 ssh_tunnel_daemon_args: "-f -M {{ ssh_tunnel_keepalive_base_port }} -o ServerAliveInterval=30 -o StrictHostKeyChecking=no"
 
-# Is the GPS present?
-have_gps: "{{ gps_device in ansible_local.dev }}"
+# Is the GPS present?  Some Conduits have a gps0 device without a GPS
+# behind it, so also check the hardware capability.
+have_gps: "{{ gps_device in ansible_local.dev and ansible_local.mts_io['capability/gps'] | default('1') == '1' }}"
 set_gps: "{{ true if use_gps and have_gps else false }}"
 
 # Accumulate list of authorized keys
