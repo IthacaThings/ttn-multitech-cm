@@ -48,5 +48,24 @@
     state=present
   notify: Restart ssh
   tags: sshd
-  
+
+# Drop dead tunnel sessions quickly.  When a gateway changes networks
+# its old session keeps the tunnel port until sshd notices it is gone,
+# and the gateway can not reconnect until then.
+- name: Detect dead client connections
+  ansible.builtin.lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: "^#?{{ item.key }}\\s"
+    line: "{{ item.key }} {{ item.value }}"
+    insertbefore: "^Match"
+    state: present
+    validate: /usr/sbin/sshd -t -f %s
+  loop:
+    - key: ClientAliveInterval
+      value: "{{ sshhost_client_alive_interval }}"
+    - key: ClientAliveCountMax
+      value: "{{ sshhost_client_alive_count_max }}"
+  notify: Restart ssh
+  tags: sshd
+
 # tasks file for sshhost
