@@ -30,23 +30,37 @@ set mmonit {{ monit_mmonit_url }}
 #
 #	Monitor networking
 #
+#	monitor_network checks connectivity and touches a file in
+#	/run/monitor_network each time a check succeeds, so these checks
+#	only look at file ages and never block on the network.  The
+#	ages also catch a hung or dead monitor_network.  "for 2 cycles"
+#	guards against NTP stepping the clock at boot.
+#
 
-# Monitor a host for network reachability
-{% if monit_ping_host is defined %}
-check host {{ monit_ping_host }} address {{ monit_ping_host }}
-    if failed ping
-{% if monit_ping_count is defined %}
-        count {{ monit_ping_count }}
-{% endif %}
-        for {{ monit_ping_alert_cycles }} cycles
-        then alert
-    if failed ping
-{% if monit_ping_count is defined %}
-        count {{ monit_ping_count }}
-{% endif %}
-        for {{ monit_ping_reboot_cycles }} cycles
-        then {{ monit_ping_action }}
-{% endif %}
+# Monitor monitor_network
+check process monitor_network PIDFILE /var/run/monitor_network.pid
+    if does not exist for {{ monit_process_period }} then restart
+    start program = "/etc/init.d/monitor_network start" with timeout 15 seconds
+    stop program = "/etc/init.d/monitor_network stop"
+
+# Informational: never reboots
+check file nexthop with path /run/monitor_network/nexthop.ok
+    if timestamp > {{ conduit_monitor_network_alert_after }} for 2 cycles then alert
+
+# Any sign of the internet: a ping reply, the tunnel, or TTN
+check file internet with path /run/monitor_network/internet.ok
+    if timestamp > {{ conduit_monitor_network_alert_after }} for 2 cycles then alert
+    if timestamp > {{ conduit_monitor_network_reboot_after }} for 2 cycles
+        then exec "{{ conduit_monit_reboot_command }} no-internet"
+
+{% if ssh_tunnel_enabled -%}
+check file tunnel with path /run/monitor_network/tunnel.ok
+    if timestamp > {{ conduit_monitor_network_tunnel_alert_after }} for 2 cycles then alert
+
+{% endif -%}
+# Alert only: a TTN outage must not reboot every gateway at once
+check file ttn with path /run/monitor_network/ttn.ok
+    if timestamp > {{ conduit_monitor_network_ttn_alert_after }} for 2 cycles then alert
 
 #
 #	Monitor root filesystem
@@ -88,14 +102,6 @@ check process sshd PIDFILE /var/run/sshd.pid
     if does not exist for {{ monit_process_period }} then restart
     start program = "/etc/init.d/sshd start" with timeout 15 seconds
     stop program = "/etc/init.d/sshd stop"
-
-{% if ansible_facts['ansible_local'].conduit.hw_version.startswith("MTCDT-") -%}
-# Monitor conduit_leds
-check process conduit_leds PIDFILE /var/run/conduit_leds.pid
-    if does not exist for {{ monit_process_period }} then restart
-    start program = "/etc/init.d/conduit_leds start" with timeout 15 seconds
-    stop program = "/etc/init.d/conduit_leds stop"
-{% endif -%}
 
 {% if 'modem_at0' in ansible_facts['ansible_local'].dev -%}
 # Monitor monitor_modem

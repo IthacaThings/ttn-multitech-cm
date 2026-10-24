@@ -1,0 +1,26 @@
+#!/bin/sh
+#
+#	Record why we are rebooting, then reboot.
+#
+#	/var/log is tmpfs, so append the reason, the uptime and the
+#	network monitor's status to its persistent log first.  monit
+#	runs this for every reboot it triggers.
+#
+
+LOG=/var/config/log/monitor_network.log
+STATUS=/run/monitor_network/status
+
+reason="${*:-unknown}"
+
+mkdir -p "$(dirname ${LOG})"
+{
+    echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) reboot: ${reason}, up $(cut -d' ' -f1 /proc/uptime)s"
+    if [ -r ${STATUS} ]; then
+	sed 's/^/    /' ${STATUS}
+    fi
+} >> ${LOG}
+sync
+
+logger -t reboot_with_reason -p daemon.crit "Rebooting: ${reason}"
+
+exec /sbin/reboot

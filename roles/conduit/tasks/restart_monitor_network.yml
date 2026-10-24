@@ -1,0 +1,15 @@
+---
+
+#
+# Configure the monitor_network service and restart it
+#
+
+- name: restart_monitor_network | Update rc.d to start monitor_network
+  ansible.builtin.shell: "update-rc.d -f monitor_network remove; update-rc.d monitor_network defaults 10 50"
+  changed_when: true
+
+- name: restart_monitor_network | Restart monitor_network
+  ansible.builtin.command: /etc/init.d/monitor_network restart
+  changed_when: true
+
+...

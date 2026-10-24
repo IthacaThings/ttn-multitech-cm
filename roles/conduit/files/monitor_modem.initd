@@ -8,7 +8,7 @@
 # Required-Stop:     $local_fs $network $syslog $dbus
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Description:       Display connection status in Conduit LEDs
+# Description:       Monitor the cellular modem and PPP
 ### END INIT INFO
 
 PATH="/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin"
@@ -18,30 +18,59 @@ PIDFILE=/var/run/${NAME}.pid
 DAEMON_ARGS=
 
 # source function library
+# shellcheck source=/dev/null
 . /etc/init.d/functions
 
 if [ -r /etc/default/${NAME} ]; then
+        # shellcheck source=/dev/null
         . /etc/default/${NAME}
 fi
 
 [ -x ${DAEMON} ] || exit 0
 
+# Print the daemon's PID if the pidfile names a running ${DAEMON}, so a
+# stale pidfile whose PID has been reused doesn't count
+daemon_pid() {
+    pid=$(cat ${PIDFILE} 2>/dev/null) || return 1
+    [ -n "${pid}" ] && [ -r "/proc/${pid}/cmdline" ] || return 1
+    tr '\0' ' ' < "/proc/${pid}/cmdline" | grep -q -F "${DAEMON}" || return 1
+    echo "${pid}"
+}
+
 is_running() {
-    pgrep -F ${PIDFILE} > /dev/null 2>&1
+    daemon_pid > /dev/null
 }
 
 start() {
+    # DAEMON_ARGS holds several arguments
+    # shellcheck disable=SC2086
     start-stop-daemon --start --quiet -p ${PIDFILE} --exec ${DAEMON} -- ${DAEMON_ARGS}
 }
 
+# Wait for the daemon to exit, and kill it if that takes more than 30
+# seconds.  Done here because busybox's start-stop-daemon, which is
+# first in PATH, ignores --retry.
 stop() {
-    start-stop-daemon --stop --quiet --p ${PIDFILE}
+    pid=$(daemon_pid) || return 0
+    kill -TERM "${pid}"
+    tries=30
+    while [ "${tries}" -gt 0 ] && kill -0 "${pid}" 2>/dev/null; do
+	sleep 1
+	tries=$((tries - 1))
+    done
+    if kill -0 "${pid}" 2>/dev/null; then
+	echo "${NAME} did not exit, killing it" >&2
+	kill -KILL "${pid}"
+	sleep 1
+    fi
+    # A killed daemon leaves its pidfile behind
+    is_running || rm -f ${PIDFILE}
 }
 
 case "$1" in
     start)
 	if is_running; then
-	    echo "${NAME} is already running: $(pgrep -F ${PIDFILE} -a)" >&2
+	    echo "${NAME} is already running with PID $(daemon_pid)" >&2
 	    exit 1
 	fi
 	echo "Starting ${NAME}" >&2
@@ -62,24 +91,16 @@ case "$1" in
 	else
 	    echo "${NAME} is not running" >&2
 	fi
-
-	# Wait for it to stop
-	tries=10
-	while is_running; do
-	    if [ "${tries}" -eq 0 ]; then
-		echo "${NAME} failed to stop" >&2
-		exit 1
-	    fi
-	    tries=$((tries - 1))
-	    sleep 1
-	done
-
+	if is_running; then
+	    echo "${NAME} failed to stop" >&2
+	    exit 1
+	fi
 	echo "Starting ${NAME}" >&2
 	start
 	;;
     status)
 	if is_running; then
-	   echo "${NAME} is running with PID $(pgrep -F ${PIDFILE} -a)" >&2
+	   echo "${NAME} is running with PID $(daemon_pid)" >&2
 	else
 	    echo "${NAME} is not running" >&2
 	    exit 1
