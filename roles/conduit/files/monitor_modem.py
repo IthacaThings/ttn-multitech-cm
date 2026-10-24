@@ -199,10 +199,18 @@ def parse_args():
     group.add_argument("--want-ppp-file",
                        default="/var/run/using_ppp",
                        help="File to exist if we want to be using PPP")
+    group.add_argument("--fail-cycles",
+                       default=3,
+                       type=int,
+                       help="Failed cycles in a row before switching to ppp")
+    group.add_argument("--ppp-hold-time",
+                       default=60*10,
+                       type=int,
+                       help="Seconds to stay on ppp before retrying a broadcast interface; doubles each time the retry fails")
     group.add_argument("--ignore-link-time",
                        default=60*60*3,
                        type=int,
-                       help="How often (in seconds) to retry broadcast interfaces if they did not work when we tried them")
+                       help="Maximum seconds to stay on ppp before retrying a broadcast interface")
 
     # Parse args
     options = parser.parse_args()
@@ -314,6 +322,14 @@ def icmp_echo(dst_name, interface=None, payload=b'hello', id_=None, seq=1):
     packet = header + payload
 
     try:
+        return _icmp_echo(sock, dst_name, packet, id_, seq)
+    finally:
+        sock.close()
+
+def _icmp_echo(sock, dst_name, packet, id_, seq):
+    """ Send an echo request on sock and wait for its reply """
+
+    try:
         dst_ip = resolve_with_timeout(dst_name, timeout=1)
     except DNSTimeout:
         return False
@@ -324,7 +340,7 @@ def icmp_echo(dst_name, interface=None, payload=b'hello', id_=None, seq=1):
     t0 = time.time()
     try:
         sock.sendto(packet, (dst_ip, 0))
-    except socket.gaierror as error:
+    except socket.error as error:
         logging.error("sendto error: %s", error)
         return False
 
@@ -342,21 +358,23 @@ def icmp_echo(dst_name, interface=None, payload=b'hello', id_=None, seq=1):
                 return False
         except select.error:
             if shutdown_requested:
-                return
+                return False
             continue
 
-        # Read pending packets
+        # Read pending packets.  A raw socket sees every ICMP packet,
+        # including replies to other programs' pings, so when the
+        # queue is empty go back to waiting for ours.
         while True:
             if shutdown_requested:
-                return
+                return False
 
             try:
                 recv_packet, addr = sock.recvfrom(65535, socket.MSG_DONTWAIT)
             except socket.error as err:
-                if err[0] == errno.EINTR:
+                if err.errno == errno.EINTR:
                     continue
-                if err[0] in (errno.EAGAIN, errno.EWOULDBLOCK):
-                    return False
+                if err.errno in (errno.EAGAIN, errno.EWOULDBLOCK):
+                    break
                 logging.warning("recvfrom returns: %s", err)
                 return False
 
@@ -367,10 +385,8 @@ def icmp_echo(dst_name, interface=None, payload=b'hello', id_=None, seq=1):
             r_type, r_code, r_chksum, r_id, r_seq = struct.unpack("!BBHHH", icmp_packet[:8])
             logging.debug("RECV type %d code %d id %d seq %d", r_type, r_code, r_id, r_seq)
 
-            if r_type == 0 and r_id == id_ and r_seq == seq:
+            if r_type == 0 and r_id == id_ and r_seq == seq and addr[0] == dst_ip:
                 return True
-
-    return False
 
 def get_ppp_addresses():
     """
@@ -628,17 +644,23 @@ class IfState(object):
         self.seen = False
         self.seq = -1
         self.responding = None
-        self.missed_cycles = None
+        self.missed_cycles = 0
+        # Set when ppp was stopped to retry this link
+        self.retrying = False
+        # How long to stay on ppp when this link fails
+        self.hold_time = None
 
     def __str__(self):
-        return "%s: %s ignore: %f state: %s, seen: %s, seq: %d, responding: %s" % (
+        return "%s: %s ignore: %f state: %s, seen: %s, seq: %d, responding: %s, missed: %d, retrying: %s" % (
             self.name,
             self.address,
             self.ignore_time - time.time(),
             self.link_state,
             self.seen,
             self.seq,
-            self.responding)
+            self.responding,
+            self.missed_cycles,
+            self.retrying)
 
 def get_interface_for_dest(dest_ip):
     """
@@ -694,7 +716,11 @@ def process_interface(options, if_state):
                         options.pings,
                         if_state.name)
         if_state.responding = True
-        if_state.missed_cycles = 0
+    else:
+        logging.warning("Received %d/%d responses on %s",
+                        responses,
+                        options.pings,
+                        if_state.name)
 
     return
 
@@ -735,18 +761,20 @@ def process(options, progname):
 
             # Check if we are supposed to be ignoring this link
             if if_state.ignore_time > time.time():
-                logging.warning("%s: ignoring until %s",
-                                if_name,
-                                time.strftime("%Y-%m-%d %H:%M:%S",
-                                              time.localtime(if_state.ignore_time)))
+                logging.info("%s: using ppp until %s",
+                             if_name,
+                             time.strftime("%Y-%m-%d %H:%M:%S",
+                                           time.localtime(if_state.ignore_time)))
                 continue
 
             # Does the default route point here?
             default_if_name = get_interface_for_dest("1.1.1.1")
             if default_if_name == "ppp0":
-                # No, tell ppp to stop
+                # No.  pppd replaced our default route, so the only way
+                # to test this link is to stop ppp and try it next cycle.
                 ppp_new_state = False
-                logging.warning("%s: up, ppp is not needed", if_name)
+                if_state.retrying = True
+                logging.warning("%s: stopping ppp to retry this link", if_name)
                 continue
             if default_if_name != if_name:
                 # Not at us, continue
@@ -761,22 +789,40 @@ def process(options, progname):
 
             if if_state.responding:
                 ppp_new_state = False
+                if_state.missed_cycles = 0
 
-                # Restarte if it's now responding
-                if was_responding is False:
+                # Restart services if we are back from ppp
+                if was_responding is False and if_state.hold_time is not None:
                     logging.info("%s: is now responding", if_name)
                     do_restart = True
+                if_state.retrying = False
+                if_state.hold_time = None
                 continue
 
-            # Fail a few times before we mark it down
+            # One bad cycle is not enough to switch to ppp, unless we
+            # just stopped ppp to retry this link
             if_state.missed_cycles += 1
-            if if_state.missed_cycles > 4:
-                # Not responding, ignore it for a while
-                if_state.ignore_time = time.time() + options.ignore_link_time
-                logging.warning("%s: not responding, ignoring until: %s",
+            if not if_state.retrying and if_state.missed_cycles < options.fail_cycles:
+                ppp_new_state = False
+                logging.warning("%s: not responding (%d of %d cycles), not switching to ppp yet",
                                 if_name,
-                                time.strftime("%Y-%m-%d %H:%M:%S",
-                                              time.localtime(if_state.ignore_time)))
+                                if_state.missed_cycles,
+                                options.fail_cycles)
+                continue
+
+            # Use ppp, and leave this link alone for a while.  Each
+            # failed retry doubles the time, up to ignore_link_time.
+            if if_state.hold_time is None:
+                if_state.hold_time = options.ppp_hold_time
+            elif if_state.retrying:
+                if_state.hold_time = min(if_state.hold_time * 2, options.ignore_link_time)
+            if_state.ignore_time = time.time() + if_state.hold_time
+            if_state.missed_cycles = 0
+            if_state.retrying = False
+            logging.warning("%s: not responding, using ppp until %s",
+                            if_name,
+                            time.strftime("%Y-%m-%d %H:%M:%S",
+                                          time.localtime(if_state.ignore_time)))
 
         # Mark current link state
         active_addresses = set()
