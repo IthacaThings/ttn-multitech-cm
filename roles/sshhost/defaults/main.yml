@@ -4,3 +4,8 @@
 ansible_become: true
 ansible_become_user: root
 ansible_become_method: sudo
+
+# sshd drops a client that doesn't answer this many keepalives sent
+# this many seconds apart
+sshhost_client_alive_interval: 15
+sshhost_client_alive_count_max: 3
