@@ -159,11 +159,27 @@ monit_poll: 60
 monit_eventqueue: /var/monit
 monit_email: monit@ttni.tech
 
-# Ping a host and reboot if it is not reacable for a period of time
-monit_ping_host: 8.8.8.8
-monit_ping_alert_cycles: 2
-monit_ping_reboot_cycles: 30
-monit_ping_action: 'exec "/sbin/reboot"'
+# Record why we rebooted (/var/log does not survive a reboot)
+conduit_monit_reboot_command: /usr/local/lib/reboot_with_reason
+
+#
+# Network monitor (monitor_network), replaces monit's ping check and
+# conduit_leds.  See issue #137.
+#
+
+# IPv4 and/or IPv6 addresses; the internet is up if any answers.
+# monit_ping_host is honoured for older host_vars.
+conduit_monitor_network_ping_hosts: "{{ [monit_ping_host] if monit_ping_host is defined else ['8.8.8.8', '1.1.1.1', '9.9.9.9'] }}"
+# Seconds between rounds of checks
+conduit_monitor_network_interval: 30
+# Seconds between TLS probes of router_v3 while the forwarder is connected
+conduit_monitor_network_ttn_probe_interval: 600
+# How long before monit alerts
+conduit_monitor_network_alert_after: 3 minutes
+conduit_monitor_network_tunnel_alert_after: 10 minutes
+conduit_monitor_network_ttn_alert_after: 5 minutes
+# How long without any sign of the internet before monit reboots
+conduit_monitor_network_reboot_after: 45 minutes
 
 # How long a process can be offline before we restart
 monit_process_period: "1 cycles"
@@ -176,7 +192,7 @@ monit_pktfwd_logfile: "{{ '/var/log/lora-pkt-fwd.log' if forwarder_variant != 'b
 monit_pktfwd_start: '"/etc/init.d/{{ monit_pktfwd_initscript }} start" with timeout 15 seconds'
 monit_pktfwd_stop: '"/etc/init.d/{{ monit_pktfwd_initscript }} stop"'
 monit_pktfwd_restart: '"/etc/init.d/{{ monit_pktfwd_initscript }} restart"'
-monit_pktfwd_reboot: 'exec "/sbin/reboot"'
+monit_pktfwd_reboot: 'exec "{{ conduit_monit_reboot_command }} packet-forwarder"'
 
 # Monit loadavg
 monit_loadavg_1m: 2
@@ -191,7 +207,7 @@ monit_config_test: "usage > 20%"
 
 # Monitor space on /var/volatile
 monit_volatile_test: "usage > 75%"
-monit_volatile_action: 'exec "/sbin/reboot"'
+monit_volatile_action: 'exec "{{ conduit_monit_reboot_command }} volatile-full"'
 monit_volatile_period: "60 cycles"
 
 # PPP

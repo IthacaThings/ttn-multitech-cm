@@ -211,21 +211,22 @@
     - setup
 
 #
-#	Enable status leds
+#	Monitor the network for monit, and show status on the LEDs
 #
-- name: main Set up conduit_leds
+- name: main Set up monitor_network
   block:
-    - name: import conduit_leds.yml
-      import_tasks: conduit_leds.yml
-      when: ansible_local.conduit.hw_version.startswith("MTCDT-")
+    - name: import monitor_network.yml
+      import_tasks: monitor_network.yml
   rescue:
     - debug:
-        msg: "main: conduit_leds setup failed, continuing..."
+        msg: "main: monitor_network setup failed, continuing..."
     - ansible.builtin.set_fact:
-        rescued: "{{ rescued + ['conduit_leds'] }}"
+        rescued: "{{ rescued + ['monitor_network'] }}"
       notify: Rescued sections
   tags:
+    - monitor_network
     - conduit_leds
+    - monit
     - setup
 
 #
