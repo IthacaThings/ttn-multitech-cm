@@ -53,10 +53,10 @@
   include_tasks: restart_tunnel.yml
 
 #
-#       Restart conduit_leds
+#       Restart monitor_network
 #
-- name: restart conduit_leds
-  include_tasks: restart_conduit_leds.yml
+- name: Restart monitor_network
+  ansible.builtin.include_tasks: restart_monitor_network.yml
 
 #
 #       Restart monitor_modem
@@ -111,8 +111,19 @@
 #
 #	Monit handlers
 #
+# Not "/etc/init.d/monit restart": it starts the new monit before the
+# old one has exited ("monit quit" doesn't wait), which can leave no
+# monit running.
 - name: Restart monit
-  service: name=monit state=restarted
+  ansible.builtin.shell: |
+    monit quit || true
+    tries=30
+    while [ "${tries}" -gt 0 ] && pgrep -x monit > /dev/null; do
+      sleep 1
+      tries=$((tries - 1))
+    done
+    monit
+  changed_when: true
 
 - name: monit monitor check_pktfwdlog
   shell: "monit monitor check_pktfwdlog"
