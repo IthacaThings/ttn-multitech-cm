@@ -1,0 +1,46 @@
+---
+
+#
+#	Distrust compromised CA root certificates
+#
+
+# backrefs: only modify existing entries, never add new ones
+- name: security_fixes Disable untrusted CA certificates
+  ansible.builtin.lineinfile:
+    dest: /etc/ca-certificates.conf
+    regexp: "^!?{{ item | regex_escape }}$"
+    line: "!{{ item }}"
+    backrefs: true
+  with_items: "{{ untrusted_ca_certificates }}"
+  register: untrusted_ca_conf
+  notify:
+    - Update system checksum file
+
+# Not a handler, so the bundle is rebuilt before we verify it
+- name: security_fixes Rebuild the CA certificate bundle  # noqa no-handler
+  ansible.builtin.command: update-ca-certificates --fresh
+  changed_when: true
+  when: untrusted_ca_conf is changed
+
+# Fail if any untrusted root that is still on disk is in the bundle
+- name: security_fixes Verify untrusted CA certificates are not in the bundle
+  ansible.builtin.shell: |
+    bundle=/etc/ssl/certs/ca-certificates.crt
+    tmp=$(mktemp -d)
+    trap 'rm -rf $tmp' EXIT
+    awk -v d="$tmp" '/BEGIN CERT/{n++} n{print > (d "/" n ".pem")}' $bundle
+    fps=$(for f in $tmp/*.pem; do openssl x509 -noout -fingerprint -sha256 -in $f; done)
+    rc=0
+    for c in {{ untrusted_ca_certificates | map('quote') | join(' ') }}; do
+        f=/usr/share/ca-certificates/$c
+        [ -f "$f" ] || continue
+        fp=$(openssl x509 -noout -fingerprint -sha256 -in "$f")
+        case "$fps" in
+            *"$fp"*) echo "$c is still trusted"; rc=1 ;;
+        esac
+    done
+    exit $rc
+  changed_when: false
+  when: untrusted_ca_certificates | length > 0
+
+...
