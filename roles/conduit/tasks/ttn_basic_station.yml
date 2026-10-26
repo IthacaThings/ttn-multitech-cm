@@ -157,13 +157,15 @@
     state: stopped
   ignore_errors: true
 
-- name: ttn_basic_station  Disable ttn-pkt-forwarder
-  lineinfile:
-    dest=/etc/default/ttn-pkt-forwarder
-    regexp="^ENABLED="
-    line='ENABLED="no"'
-    state=present
-  ignore_errors: true
+# The init script reads /etc/default/$NAME, i.e. ttn-packet-forwarder
+- name: ttn_basic_station Disable ttn-pkt-forwarder
+  ansible.builtin.copy:
+    content: |
+      ENABLED="no"
+    dest: /etc/default/ttn-packet-forwarder
+    mode: "0644"
+    owner: root
+    group: root
 
 # The file module does not expand wildcards, so find those first
 - name: ttn_basic_station Find packet forwarder files to remove
@@ -180,6 +182,7 @@
     name: "{{ item }}"
     state: absent
   loop: "{{ ['/etc/init.d/ttn-pkt-forwarder',
+             '/etc/default/ttn-pkt-forwarder',
              '/var/config/init.d/ttn-pkt-forwarder',
              '/var/config/lora/global_conf.json',
              '/var/config/lora/local_conf.json',

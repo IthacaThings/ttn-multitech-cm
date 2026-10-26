@@ -5,8 +5,9 @@
 echo "Running 15restore"
 
 if [ -L /etc/init.d/ttn-pkt-forwarder ]; then
-    echo "Configuring ttn-pkt-forwader to start"
-    sed -i '/^ENABLED=/s/no/yes/' /etc/default/ttn-pkt-forwarer
+    echo "Configuring ttn-pkt-forwarder to start"
+    # Its init script reads /etc/default/ttn-packet-forwarder
+    echo 'ENABLED="yes"' > /etc/default/ttn-packet-forwarder
     update-rc.d -f ttn-pkt-forwarder remove
     update-rc.d ttn-pkt-forwarder defaults 95 30
 
@@ -20,11 +21,7 @@ elif [ -L /etc/init.d/lora-basic-station ]; then
     update-rc.d lora-basic-station defaults 95 30
 
     echo "Configuring ttn-pkt-forwarder not to start"
-    if [ -f /etc/default/ttn-pkt-forwarder ]; then
-	sed -i '/^ENABLED=/s/yes/no/' /etc/default/ttn-pkt-forwarder
-    else
-	echo 'ENABLED="no"' > /etc/default/ttn-pkt-forwarder
-    fi
+    echo 'ENABLED="no"' > /etc/default/ttn-packet-forwarder
     update-rc.d -f ttn-pkt-forwarder remove
 fi
 

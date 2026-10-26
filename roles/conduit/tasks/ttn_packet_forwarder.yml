@@ -105,11 +105,13 @@
     - update rc
     - restart ttn-pkt-forwarder
 
-- name: ttn_packet_forwarder Install /etc/default/ttn-pkt-forwarder
-  copy:
-    src: "{{ role_path }}/files/default.enabled"
-    dest: /etc/default/ttn-pkt-forwarder
-    mode: "0755"
+# The init script reads /etc/default/$NAME, i.e. ttn-packet-forwarder
+- name: ttn_packet_forwarder Enable it in /etc/default/ttn-packet-forwarder
+  ansible.builtin.copy:
+    content: |
+      ENABLED="yes"
+    dest: /etc/default/ttn-packet-forwarder
+    mode: "0644"
     owner: root
     group: root
   notify:
@@ -207,6 +209,7 @@
     state: absent
   loop: "{{ ['/etc/init.d/lora-basic-station',
              '/var/config/init.d/lora-basic-station',
+             '/etc/default/ttn-pkt-forwarder',
              '/var/config/lora/config.yml',
              '/var/config/lora/local_conf.json-opkg',
              '/var/config/lora/samples',
