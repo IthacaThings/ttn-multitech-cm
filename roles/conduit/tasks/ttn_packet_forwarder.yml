@@ -191,17 +191,25 @@
         state: absent
   when: forwarder_variant == "mp" and forwarder_version is version('3.0.25', '>=')
 
+# The file module does not expand wildcards, so find those first
+- name: ttn_packet_forwarder Find Basic Station files to remove
+  ansible.builtin.find:
+    paths: "{{ item.path }}"
+    patterns: "{{ item.pattern }}"
+  loop:
+    - { path: /var/config/lora, pattern: "tc.*" }
+    - { path: /var/log, pattern: "basic-station.log*" }
+  register: conduit_packet_forwarder_old_files
+
 - name: ttn_packet_forwarder Remove some files
   file:
     name: "{{ item }}"
     state: absent
-  loop:
-    - /etc/init.d/lora-basic-station
-    - /var/config/init.d/lora-basic-station
-    - /var/config/lora/config.yml
-    - /var/config/lora/local_conf.json-opkg
-    - /var/config/lora/samples
-    - /var/config/lora/station.conf
-    - /var/config/lora/tc.*
-    - /var/log/basic-station.log*
+  loop: "{{ ['/etc/init.d/lora-basic-station',
+             '/var/config/init.d/lora-basic-station',
+             '/var/config/lora/config.yml',
+             '/var/config/lora/local_conf.json-opkg',
+             '/var/config/lora/samples',
+             '/var/config/lora/station.conf']
+            + conduit_packet_forwarder_old_files.results | map(attribute='files') | flatten | map(attribute='path') | list }}"
 ...

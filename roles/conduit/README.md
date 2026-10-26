@@ -80,6 +80,10 @@ The following setup must be set up performed on the Contduit:
   default */etc/ca-certificates.conf* takes the package's version and
   rebuilds the CA bundle, and */var/config/lora/local_conf.json* keeps
   ours
+- **forwarder_version**: For **basic**, the full opkg version of
+  *lora-basic-station* to install, e.g. **2.0.5-8-r3.1**.  If it is
+  not set, the newest version in the feeds is installed and kept up to
+  date
 - **conduit_monitor_network_ping_hosts**: IPv4 or IPv6 addresses that
   *monitor_network* pings.  Defaults to **[monit_ping_host]** if that
   is set, otherwise 8.8.8.8, 1.1.1.1 and 9.9.9.9

@@ -1,38 +1,43 @@
 ---
 
-# XXX - Should we just fetch the package ourselves?
+#
+#	With forwarder_version (the full opkg version, e.g. 2.0.5-8-r3.1)
+#	install exactly that version, and packages.yml leaves it alone.
+#	Without it, install it if it is missing, and packages.yml keeps it
+#	up to date.
+#
 
-# XXX - TODO - Switch version and test this code
-
-- name: ttn_basic_station Stop lora-basic if we are updating it
+- name: ttn_basic_station Stop lora-basic-station if we are changing its version
   service:
     name: lora-basic-station
     state: stopped
   ignore_errors: true
   when:
-    - forwader_version is defined
-    - ansible_local.opkg.lora_basic_station is defined and ansible_local.opkg.lora_basic_station != forwarder_version
+    - forwarder_version is defined
+    - ansible_local.opkg.lora_basic_station is defined
+    - ansible_local.opkg.lora_basic_station != forwarder_version
 
-- name: ttn_basic_station Uninstall old version of lora_basic_station
+- name: ttn_basic_station Uninstall other versions of lora-basic-station
   opkg:
-    name: lora_basic_station
+    name: lora-basic-station
     state: absent
     force: remove
   notify:
     - Restart lora-basic-station
   when:
-    - forwader_version is defined
-    - ansible_local.opkg.lora_basic_station is not defined or ansible_local.opkg.lora_basic_station != forwarder_version
+    - forwarder_version is defined
+    - ansible_local.opkg.lora_basic_station is defined
+    - ansible_local.opkg.lora_basic_station != forwarder_version
 
-- name: ttn_basic_station Install the desired version of lora_basic_station
+- name: ttn_basic_station Install lora-basic-station
   opkg:
-    name: "lora_basic_station=={{ forwarder_version }}"
+    name: "lora-basic-station{{ '=' + forwarder_version if forwarder_version is defined else '' }}"
     state: present
   notify:
+    - Reload facts
     - Restart lora-basic-station
-  when:
-    - forwader_version is defined
-    - ansible_local.opkg.lora_basic_station is not defined or ansible_local.opkg.lora_basic_station != forwarder_version
+  when: ansible_local.opkg.lora_basic_station is not defined or
+    (forwarder_version is defined and ansible_local.opkg.lora_basic_station != forwarder_version)
 
 - name: ttn_basic_station Restart lora-basic-station if packages.yml upgraded it
   ansible.builtin.command: "true"
@@ -160,16 +165,24 @@
     state=present
   ignore_errors: true
 
+# The file module does not expand wildcards, so find those first
+- name: ttn_basic_station Find packet forwarder files to remove
+  ansible.builtin.find:
+    paths: "{{ item.path }}"
+    patterns: "{{ item.pattern }}"
+  loop:
+    - { path: /var/config, pattern: "*.ipk" }
+    - { path: /var/log, pattern: "lora-pkt-fwd.log*" }
+  register: conduit_basic_station_old_files
+
 - name: ttn_basic_station Remove some files
   file:
     name: "{{ item }}"
     state: absent
-  loop:
-    - /etc/init.d/ttn-pkt-forwarder
-    - /var/config/*.ipk
-    - /var/config/init.d/ttn-pkg-forwarder
-    - /var/config/lora/global_conf.json
-    - /var/config/lora/local_conf.json
-    - /var/config/lora/samples
-    - /var/log/ttn-pkg-fwd.log*
+  loop: "{{ ['/etc/init.d/ttn-pkt-forwarder',
+             '/var/config/init.d/ttn-pkt-forwarder',
+             '/var/config/lora/global_conf.json',
+             '/var/config/lora/local_conf.json',
+             '/var/config/lora/samples']
+            + conduit_basic_station_old_files.results | map(attribute='files') | flatten | map(attribute='path') | list }}"
 ...
