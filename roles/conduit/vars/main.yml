@@ -13,6 +13,11 @@ forwarder_installed_version: "{{ ansible_local.opkg.poly_packet_forwarder if ans
 
 forwarder_installed: "{{ forwarder_installed_package }}_{{ forwarder_installed_version }}"
 
+# Packages Ansible needs on the version being installed (or, without
+# mlinux_version, the one installed).  ansible_depends_old
+# (python-async, python-pycurl) is not in the feeds from mLinux 5 on.
+ansible_depends_target: "{{ ansible_depends + (ansible_depends_old if (mlinux_version | default(ansible_local.mlinux.version | default('0'))) is version('5', '<') else []) }}"
+
 # Local and on-gateway name of the mLinux image; the suffix keeps the
 # -devel and release images of a version apart
 mlinux_upgrade_file: "{{ mlinux_upgrade_bin }}_{{ mlinux_version }}{{ mlinux_feed_suffix }}"

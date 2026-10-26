@@ -14,9 +14,8 @@
   notify:
     - Reload facts
     - opkg clean
-  loop:
-    - "{{ ansible_depends }}"
-    - "{{ ansible_depends_old }}"
+  # ansible_depends_old is not in the feeds from mLinux 5 on
+  loop: "{{ [ansible_depends] + ([ansible_depends_old] if (ansible_local.mlinux.version | default('0')) is version('5', '<') else []) }}"
 
 - name: ansible /var/config/ansible
   file:

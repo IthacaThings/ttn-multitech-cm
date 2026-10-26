@@ -33,6 +33,25 @@
     owner: root
     group: root
 
+# /etc/opkg is lost on a reflash; restore.d/02feeds uses this to point
+# the new image at our feeds before restore.init runs opkg.  It must
+# be in place before mlinux-upgrade flashes, so it is written here.
+- name: preserve /var/config/opkg
+  ansible.builtin.file:
+    path: /var/config/opkg
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: preserve /var/config/opkg/feeds
+  ansible.builtin.template:
+    src: opkg-feeds.j2
+    dest: /var/config/opkg/feeds
+    mode: "0644"
+    owner: root
+    group: root
+
 - name: preserve Install restore scripts
   template:
     src: "{{ item }}.j2"
@@ -41,6 +60,7 @@
     owner: root
     group: root
   with_items:
+    - 02feeds
     - 05restore
     - 15restore
 

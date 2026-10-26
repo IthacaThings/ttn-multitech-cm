@@ -111,6 +111,14 @@ Packages installed in /opt (such as the Kersing packet forwarder) are
 not preserved and are re-installed by Ansible after a firmware
 upgrade.
 
+The opkg feed configuration in */etc/opkg* is not preserved either,
+and a new image points at MultiTech's feeds. Ansible keeps the feeds
+to use (base URL, `mlinux_feed_suffix` and the TTNI feed) in
+*/var/config/opkg/feeds*, and on the first boot after a firmware
+upgrade *restore.d/02feeds* points the image's feed configuration at
+them, with the version of the new image, before anything installs
+packages.
+
 When upgrading to an image that does not contain the preserve script,
 it is necessary to log into the gateway and manually run the restore
 script (/var/config/restore_config).  This repo attempts to log in and

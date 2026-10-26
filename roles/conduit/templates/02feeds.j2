@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# Point opkg at our feeds before anything after a reflash uses them.
+# The image's feed config points at MultiTech's; keep its feed names
+# and replace the URL, using the version of the new image.
+
+echo "Running 02feeds"
+
+FEEDS=/var/config/opkg/feeds
+if [ ! -f "${FEEDS}" ]; then
+    echo "No ${FEEDS}, leaving the opkg feeds alone"
+    exit 0
+fi
+. "${FEEDS}"
+
+version=$(sed -n -e 's/^mLinux //p' /etc/mlinux-version)
+sed -i -e "s%https*://[^ ]*/feeds/${version}/%${MLINUX_FEED_BASE}/${version}${MLINUX_FEED_SUFFIX}/%" \
+    /etc/opkg/mlinux-feed.conf
+echo "${TTNI_FEED}" > /etc/opkg/ttni-feed.conf
+
+echo "opkg feeds:"
+grep -h '^src' /etc/opkg/mlinux-feed.conf /etc/opkg/ttni-feed.conf
+
+echo "Finished 02feeds"
