@@ -745,6 +745,25 @@ def resolve(hostname):
     return Result("ok", " ".join(addresses), addresses)
 
 
+def check_resolver(path="/etc/resolv.conf"):
+    """
+    Which resolv.conf is in use and its name servers.  pppd's scripts
+    replace it with a link to ppp's copy, and do not always put the
+    original back.
+    """
+
+    real = os.path.realpath(path)
+    try:
+        with open(path) as fp:
+            servers = [fields[1] for fields in (line.split() for line in fp)
+                       if len(fields) > 1 and fields[0] == "nameserver"]
+    except IOError as err:
+        return Result("fail", "%s: %s" % (real, err.strerror))
+    if not servers:
+        return Result("fail", "%s: no name servers" % real)
+    return Result("ok", "%s: %s" % (real, " ".join(servers)))
+
+
 #
 #	Next hop
 #
@@ -1064,8 +1083,10 @@ def diagnose(results):  # pylint: disable=too-many-return-statements
 class Monitor(object):  # pylint: disable=too-many-instance-attributes
     """ Run rounds of checks and record the results """
 
-    # Results whose state changes are logged
-    LOGGED = ("diagnosis", "nexthop", "ping4", "ping6", "tunnel", "ttn")
+    # Results whose state changes are logged, along with each dns- result
+    LOGGED = ("diagnosis", "nexthop", "ping4", "ping6", "resolver", "tunnel", "ttn")
+    # Results whose detail changes are logged too
+    LOGGED_DETAIL = ("resolver",)
 
     def __init__(self, options, state_log, leds=None, device_path=None):
         self._options = options
@@ -1156,6 +1177,8 @@ class Monitor(object):  # pylint: disable=too-many-instance-attributes
         if options.ttn_host and time.time() >= self._next_probe:
             self.start_probe()
 
+        results["resolver"] = check_resolver()
+
         # The tunnel check needs the jump host's address
         for key, name in names.items():
             result = runner.wait("dns-" + key, deadline)
@@ -1217,10 +1240,15 @@ class Monitor(object):  # pylint: disable=too-many-instance-attributes
         diagnosis = Result(diagnose(results))
         results["diagnosis"] = diagnosis
 
-        for key in self.LOGGED:
-            if key not in results:
+        logged = list(self.LOGGED)
+        logged += sorted(key for key in results if key.startswith("dns-"))
+        for key in logged:
+            if results.get(key) is None:
                 continue
-            state = results[key].state
+            if key in self.LOGGED_DETAIL:
+                state = str(results[key])
+            else:
+                state = results[key].state
             if self._last_states.get(key) != state:
                 self._log.write("%s: %s", key, results[key])
                 self._last_states[key] = state
@@ -1238,6 +1266,7 @@ class Monitor(object):  # pylint: disable=too-many-instance-attributes
         ]
         order = ["diagnosis", "internet", "nexthop", "ping4", "ping6"]
         order += sorted(key for key in results if key.startswith("ping "))
+        order += ["resolver"]
         order += sorted(key for key in results if key.startswith("dns-"))
         order += ["tunnel", "ttn", "ttn-probe"]
         for key in order:

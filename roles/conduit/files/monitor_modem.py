@@ -199,6 +199,12 @@ def parse_args():
     group.add_argument("--want-ppp-file",
                        default="/var/run/using_ppp",
                        help="File to exist if we want to be using PPP")
+    group.add_argument("--resolv-conf",
+                       default="/var/run/resolv.conf",
+                       help="The resolv.conf that ppp replaces with a link to its own")
+    group.add_argument("--ppp-resolv-conf",
+                       default="/var/run/ppp/resolv.conf",
+                       help="ppp's resolv.conf")
     group.add_argument("--fail-cycles",
                        default=3,
                        type=int,
@@ -285,7 +291,7 @@ def resolve_with_timeout(hostname, timeout=5):
 
     ip_addr = None
     try:
-        ip_addr = socket.getaddrinfo(hostname, None)[0][4][0]
+        ip_addr = socket.getaddrinfo(hostname, None, socket.AF_INET)[0][4][0]
     except DNSTimeout as error:
         logging.error("resolve_with_timeout: Timeout resolving: %s: %s", hostname, error)
     except socket.gaierror as error:
@@ -298,9 +304,28 @@ def resolve_with_timeout(hostname, timeout=5):
 
     return ip_addr
 
-def icmp_echo(dst_name, interface=None, payload=b'hello', id_=None, seq=1):
+class Resolver(object):  # pylint: disable=too-few-public-methods,useless-object-inheritance
+    """ Resolve a hostname, falling back to the last address found
 
-    logging.debug("icmp_echo(%s, interface=%s, id=%s, seq=%d)", dst_name, interface, id_, seq)
+    A DNS failure is not a link failure, so the pings and the tunnel
+    check use the last good address when the name can't be resolved.
+    """
+    def __init__(self, hostname):
+        self.hostname = hostname
+        self.address = None
+
+    def resolve(self):
+        """ Returns the address of hostname, or None if it was never found """
+        address = resolve_with_timeout(self.hostname, timeout=5)
+        if address is not None:
+            self.address = address
+        elif self.address is not None:
+            logging.warning("Using last known address %s for %s", self.address, self.hostname)
+        return self.address
+
+def icmp_echo(dst_ip, interface=None, payload=b'hello', id_=None, seq=1):
+
+    logging.debug("icmp_echo(%s, interface=%s, id=%s, seq=%d)", dst_ip, interface, id_, seq)
 
     if id_ is None:
         id_ = os.getpid() & 0xFFFF
@@ -322,20 +347,12 @@ def icmp_echo(dst_name, interface=None, payload=b'hello', id_=None, seq=1):
     packet = header + payload
 
     try:
-        return _icmp_echo(sock, dst_name, packet, id_, seq)
+        return _icmp_echo(sock, dst_ip, packet, id_, seq)
     finally:
         sock.close()
 
-def _icmp_echo(sock, dst_name, packet, id_, seq):
+def _icmp_echo(sock, dst_ip, packet, id_, seq):
     """ Send an echo request on sock and wait for its reply """
-
-    try:
-        dst_ip = resolve_with_timeout(dst_name, timeout=1)
-    except DNSTimeout:
-        return False
-    else:
-        if dst_ip is None:
-            return False
 
     t0 = time.time()
     try:
@@ -498,18 +515,10 @@ def ppp_on_boot(options, enable):
                               options.ppp_on_boot,
                               error)
 
-def tunnel_addresses(options):
-    """ Return local addresses of all established tunnel connections """
+def tunnel_addresses(dst_ip):
+    """ Return local addresses of all established tunnel connections to dst_ip """
 
     addresses = set()
-
-    try:
-        dst_ip = resolve_with_timeout(options.hostname, timeout=5)
-    except DNSTimeout:
-        return addresses
-    else:
-        if dst_ip is None:
-            return addresses
 
     for conn in psutil.net_connections('inet4'):
         if conn.type != socket.SOCK_STREAM:
@@ -587,15 +596,16 @@ def pppd(options, enable):
             else:
                 logging.debug("%s: %s", " ".join(cmd), result.strip())
 
-            for service in [ 'ppp0', 'pppd']:
-                cmd = ["/usr/bin/monit", "monitor", service]
-                try:
-                    logging.info("Running: %s", " ".join(cmd))
-                    result = subprocess.check_output(["monit", "monitor", service], stderr=subprocess.STDOUT)
-                except subprocess.CalledProcessError as error:
-                    logging.error("%s: %s", " ".join(cmd), error)
-                else:
-                    logging.debug("%s: %s", " ".join(cmd), result.strip())
+            # monit only watches ppp0; starting and stopping pppd is
+            # up to us
+            cmd = ["monit", "monitor", "ppp0"]
+            try:
+                logging.info("Running: %s", " ".join(cmd))
+                result = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+            except subprocess.CalledProcessError as error:
+                logging.error("%s: %s", " ".join(cmd), error)
+            else:
+                logging.debug("%s: %s", " ".join(cmd), result.strip())
 
             return True
 
@@ -620,19 +630,45 @@ def pppd(options, enable):
         else:
             logging.debug("%s: %s", " ".join(cmd), result.strip())
 
-        for service in [ 'ppp0', 'pppd']:
-            cmd = ["monit", "unmonitor", service]
-            try:
-                logging.info("Running: %s", " ".join(cmd))
-                result = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
-            except subprocess.CalledProcessError as error:
-                logging.error("%s: %s", " ".join(cmd), error)
-            else:
-                logging.debug("%s: %s", " ".join(cmd), result.strip())
+        cmd = ["monit", "unmonitor", "ppp0"]
+        try:
+            logging.info("Running: %s", " ".join(cmd))
+            result = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError as error:
+            logging.error("%s: %s", " ".join(cmd), error)
+        else:
+            logging.debug("%s: %s", " ".join(cmd), result.strip())
 
         return True
 
+    restore_resolv_conf(options)
+
     return False
+
+def restore_resolv_conf(options):
+    """ Put back the resolv.conf that ppp's ip-up script saved
+
+    ppp's ip-up.d/08setupdns moves resolv.conf aside and links it to
+    ppp's copy, and ip-down.d/92removedns moves it back, but it doesn't
+    always.  Then DNS keeps using ppp's name servers after ppp is
+    stopped.  Called when pppd is not running.
+    """
+
+    saved = options.resolv_conf + ".ppporig"
+    try:
+        if os.readlink(options.resolv_conf) != options.ppp_resolv_conf:
+            return
+    except OSError:
+        # Not a link
+        return
+    if not os.path.isfile(saved):
+        return
+
+    logging.warning("pppd is not running, restoring %s from %s", options.resolv_conf, saved)
+    try:
+        os.rename(saved, options.resolv_conf)
+    except OSError as error:
+        logging.error("Renaming %s to %s: %s", saved, options.resolv_conf, error)
 
 class IfState(object):
     """ Store IF State """
@@ -691,7 +727,7 @@ def get_interface_for_dest(dest_ip):
 
     return None
 
-def process_interface(options, if_state):
+def process_interface(options, if_state, dst_ip):
 
     logging.debug("process_interface(%s)", if_state)
 
@@ -700,10 +736,14 @@ def process_interface(options, if_state):
     # Test ping response of default_interface
     # Seq is a unsigned 16 bit integer
     responses = 0
+    if dst_ip is None:
+        logging.warning("No address for %s, can not test %s", options.hostname, if_state.name)
+        return
+
     for ping in range(options.pings):
         if_state.seq = if_state.seq + 1 if if_state.seq < 65535 else 0
         logging.debug("send_icmp (seq %d) via %s", if_state.seq, if_state.name)
-        if icmp_echo(options.hostname, interface=if_state.name, seq=if_state.seq):
+        if icmp_echo(dst_ip, interface=if_state.name, seq=if_state.seq):
             responses += 1
             time.sleep(.1)
         if shutdown_requested:
@@ -728,6 +768,7 @@ def process(options, progname):
     """ runs tests in a loop """
 
     if_states = {}
+    resolver = Resolver(options.hostname)
     while time.sleep(options.interval) is None:
         global shutdown_requested
         if shutdown_requested:
@@ -744,6 +785,11 @@ def process(options, progname):
 
         # If we have a modem and sim, ensure ppp_on_boot is enabled
         ppp_on_boot(options, True)
+
+        # Look up the target once per cycle.  If it has never been
+        # found the pings fail, which switches to ppp, where DNS may
+        # work.
+        dst_ip = resolver.resolve()
 
         # Mark interfaces as not seen
         for if_name, if_state in if_states.items():
@@ -783,7 +829,7 @@ def process(options, progname):
 
             # It's us, try pinging
             was_responding = if_state.responding
-            process_interface(options, if_state)
+            process_interface(options, if_state, dst_ip)
             if shutdown_requested:
                 return
 
@@ -852,8 +898,8 @@ def process(options, progname):
             if ppp_new_state and not ppp_state_changed:
                 active_addresses.update(get_ppp_addresses())
 
-            if active_addresses:
-                tunnel_addrs = tunnel_addresses(options)
+            if active_addresses and dst_ip is not None:
+                tunnel_addrs = tunnel_addresses(dst_ip)
                 logging.debug("Checking that tunnel sources (%s) is in (%s)",
                               " ".join(list(tunnel_addrs)),
                               " ".join(list(active_addresses)))
