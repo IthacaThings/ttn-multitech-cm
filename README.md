@@ -453,6 +453,28 @@ and run
 make apply
 ```
 
+### Test builds of mLinux
+
+meta-ttni's `scripts/populate` publishes test builds of mLinux to
+ttni.tech as *VERSION*-devel, both the images and the opkg feeds
+(for example *images/mtcdt/5.3.31-devel/* and
+*feeds/5.3.31-devel/*).  To have test gateways use them, set
+`mlinux_feed_suffix` in their group or host variables:
+
+```yaml
+mlinux_feed_suffix: "-devel"
+```
+
+and run
+
+```bash
+make TAGS=mlinux apply
+```
+
+Leave `mlinux_version` alone: the test images report the plain
+version, and the upgrade tasks compare `mlinux_version` with the
+installed version.
+
 ## Syncing with Upstream
 
 This is necessary when the global configurations change, or if there

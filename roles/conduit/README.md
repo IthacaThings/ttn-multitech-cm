@@ -58,6 +58,9 @@ The following setup must be set up performed on the Contduit:
   cellular
 - **cellular_keepalive_interval**: The LoRA keepalive interval when
   using cellular
+- **mlinux_feed_suffix**: Appended to the mLinux version in the image
+  and opkg feed URLs.  Defaults to **""**; **"-devel"** selects the
+  test builds published by meta-ttni
 - **conduit_monitor_network_ping_hosts**: IPv4 or IPv6 addresses that
   *monitor_network* pings.  Defaults to **[monit_ping_host]** if that
   is set, otherwise 8.8.8.8, 1.1.1.1 and 9.9.9.9
@@ -117,6 +120,8 @@ The following tags can be used to run a subset of the playbook.
   **monit** and **conduit_leds** tags)
 - **monitor_modem**: Installs *monitor_modem* on gateways with a
   cellular modem
+- **mlinux**: Configures the opkg feeds and upgrades mLinux to
+  **mlinux_version**
 
 ## Network monitoring
 
