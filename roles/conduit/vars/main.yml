@@ -13,6 +13,10 @@ forwarder_installed_version: "{{ ansible_local.opkg.poly_packet_forwarder if ans
 
 forwarder_installed: "{{ forwarder_installed_package }}_{{ forwarder_installed_version }}"
 
+# Local and on-gateway name of the mLinux image; the suffix keeps the
+# -devel and release images of a version apart
+mlinux_upgrade_file: "{{ mlinux_upgrade_bin }}_{{ mlinux_version }}{{ mlinux_feed_suffix }}"
+
 # EUI for use with non-TTN forwarders
 lora_eui: "eui-{{ ansible_local.lora.eui|lower }}"
 lora_hostname: "{{ hostname if forwarder_variant != 'poly' else lora_eui }}"

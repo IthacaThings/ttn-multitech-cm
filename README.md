@@ -491,7 +491,17 @@ make TAGS=mlinux,packages,ttn apply
 
 Leave `mlinux_version` alone: the test images report the plain
 version, and the upgrade tasks compare `mlinux_version` with the
-installed version.
+installed version. So switching to the test feeds doesn't reflash a
+gateway. To install a test image (or a new build of the same version),
+force the upgrade for one run:
+
+```bash
+make TARGET=HOST TAGS=mlinux "OPTIONS=-e mlinux_force_upgrade=true" apply
+```
+
+The downloaded images are kept in *roles/conduit/files* with the
+suffix in their name, so test and release images of the same version
+don't overwrite each other.
 
 ## Syncing with Upstream
 

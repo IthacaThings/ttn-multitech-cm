@@ -61,6 +61,9 @@ The following setup must be set up performed on the Contduit:
 - **mlinux_feed_suffix**: Appended to the mLinux version in the image
   and opkg feed URLs.  Defaults to **""**; **"-devel"** selects the
   test builds published by meta-ttni
+- **mlinux_force_upgrade**: Reflash mLinux even when **mlinux_version**
+  is already installed, e.g. to install a new *-devel* build of the
+  same version.  Defaults to **false**; set it for a single run
 - **conduit_package_upgrade**: Upgrade installed packages from the
   opkg feeds on every run, defaults to **true**.  Only the packages
   `opkg list-upgradable` reports are upgraded
