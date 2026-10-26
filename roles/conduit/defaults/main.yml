@@ -98,6 +98,12 @@ conduit_package_conffiles:
     command: update-ca-certificates --fresh
   /var/config/lora/local_conf.json:
     keep: local
+  # Both written by the monit tasks, which also put back the
+  # /etc/monitrc symlink that the package replaces with a file
+  /etc/monitrc:
+    keep: local
+  /etc/default/monit:
+    keep: local
 
 # Tag used by our support repos for this version of mlinux
 mlinux_ttni_preserve_root:

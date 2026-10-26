@@ -78,8 +78,8 @@ The following setup must be set up performed on the Contduit:
   and runs **command** if given, or **keep: local**, which removes
   *FILE-opkg*.  The play fails on any *FILE-opkg* not listed.  By
   default */etc/ca-certificates.conf* takes the package's version and
-  rebuilds the CA bundle, and */var/config/lora/local_conf.json* keeps
-  ours
+  rebuilds the CA bundle; */var/config/lora/local_conf.json*,
+  */etc/monitrc* and */etc/default/monit* keep ours
 - **forwarder_version**: For **basic**, the full opkg version of
   *lora-basic-station* to install, e.g. **2.0.5-8-r3.1**.  If it is
   not set, the newest version in the feeds is installed and kept up to
