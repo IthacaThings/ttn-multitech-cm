@@ -78,6 +78,27 @@ mlinux_url: "{{ mlinux_base_url }}/images/{{ conduit_type }}/{{ mlinux_version }
 mlinux_ttni_base_url: https://ttni.tech/mlinux
 mlinux_restore_init_crumb: /var/lib/restore.init.done
 
+# Upgrade installed packages from the feeds on every run
+conduit_package_upgrade: true
+# How many seconds a package upgrade may take
+conduit_package_upgrade_timeout: 14400
+# Packages the role installs at a specific version, which a package
+# upgrade must leave alone.  lora-basic-station is added when
+# forwarder_variant is basic and forwarder_version is set.
+conduit_package_hold:
+  - mp-packet-forwarder
+  - poly-packet-forwarder
+  - ttn-packet-forwarder
+# Which version of a conffile to keep when opkg leaves the package's
+# version as FILE-opkg: "package" (and run command, if given) or
+# "local".  The play fails on any FILE-opkg not listed here.
+conduit_package_conffiles:
+  /etc/ca-certificates.conf:
+    keep: package
+    command: update-ca-certificates --fresh
+  /var/config/lora/local_conf.json:
+    keep: local
+
 # Tag used by our support repos for this version of mlinux
 mlinux_ttni_preserve_root:
   "3": https://raw.githubusercontent.com/IthacaThings/meta-ttni/mlinux-3/recipes-core/preserve/preserve-1.0

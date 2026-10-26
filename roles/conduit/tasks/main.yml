@@ -82,6 +82,19 @@
     - mlinux
 
 #
+#	Upgrade packages from the feeds, before the tasks that configure
+#	and clean up after them
+#
+- name: main Upgrade packages
+  import_tasks: packages.yml
+  when:
+    - conduit_package_upgrade
+    - mlinux_version is defined
+  tags:
+    - setup
+    - packages
+
+#
 #	Set up logrotate
 #
 - name: main Set up logrotate

@@ -1,0 +1,107 @@
+---
+
+#
+#	Upgrade installed packages from the feeds
+#
+#	Only the packages "opkg list-upgradable" reports, less the ones
+#	the role installs at a specific version.  The tasks that follow
+#	re-apply our configuration on top of whatever the packages
+#	installed.
+#
+
+- name: packages Packages to leave alone
+  ansible.builtin.set_fact:
+    conduit_packages_hold: "{{ conduit_package_hold +
+      (['lora-basic-station'] if forwarder_variant == 'basic' and forwarder_version is defined else []) }}"
+
+- name: packages Update the package lists
+  ansible.builtin.command: opkg update
+  register: conduit_packages_update
+  until: conduit_packages_update is succeeded
+  retries: 10
+  delay: 10
+  changed_when: false
+
+- name: packages List upgradable packages
+  ansible.builtin.command: opkg list-upgradable
+  register: conduit_packages_upgradable
+  changed_when: false
+
+- name: packages Packages to upgrade
+  ansible.builtin.set_fact:
+    conduit_packages_upgrade: "{{ conduit_packages_upgradable.stdout_lines | map('split', ' - ') | map('first') |
+      reject('in', conduit_packages_hold) | list }}"
+
+#	Writes to the JFFS2 root are slow, so an upgrade can take hours.
+#	Run it in the background and poll; a dropped ssh connection then
+#	doesn't fail the task.
+- name: packages Upgrade packages
+  ansible.builtin.command: "opkg upgrade {{ conduit_packages_upgrade | join(' ') }}"
+  changed_when: true
+  async: "{{ conduit_package_upgrade_timeout }}"
+  poll: 60
+  when: conduit_packages_upgrade | length > 0
+  notify:
+    - opkg clean
+    - Update system checksum file
+
+# Not reload_facts.yml: its meta clear_facts ignores "when", so it would
+# clear the facts even when nothing was upgraded
+- name: packages Reload facts after upgrading
+  ansible.builtin.setup:
+  when: conduit_packages_upgrade | length > 0
+
+#
+#	opkg leaves the package's version of a changed conffile next to
+#	ours as FILE-opkg.  conduit_package_conffiles says which one to
+#	keep; any other one stops the play so a person decides.
+#
+
+- name: packages Find conffiles left by opkg
+  ansible.builtin.find:
+    paths:
+      - /etc
+      - /var/config
+    patterns: "*-opkg"
+    recurse: true
+  register: conduit_packages_conffiles_found
+
+- name: packages Conffiles left by opkg
+  ansible.builtin.set_fact:
+    conduit_packages_conffiles: "{{ conduit_packages_conffiles_found.files | map(attribute='path') |
+      map('regex_replace', '-opkg$', '') | list }}"
+
+- name: packages Fail on conffiles we do not know how to handle
+  ansible.builtin.fail:
+    msg: "Unknown conffiles from opkg, add them to conduit_package_conffiles:
+      {{ conduit_packages_conffiles | difference(conduit_package_conffiles | list) | map('regex_replace', '$', '-opkg') | join(', ') }}"
+  when: conduit_packages_conffiles | difference(conduit_package_conffiles | list) | length > 0
+
+- name: packages Use the package's version of conffiles
+  ansible.builtin.command: "mv -f {{ item }}-opkg {{ item }}"
+  changed_when: true
+  loop: "{{ conduit_packages_conffiles }}"
+  when: conduit_package_conffiles[item].keep == 'package'
+  notify:
+    - Update system checksum file
+
+- name: packages Keep our version of conffiles
+  ansible.builtin.file:
+    path: "{{ item }}-opkg"
+    state: absent
+  loop: "{{ conduit_packages_conffiles }}"
+  when: conduit_package_conffiles[item].keep == 'local'
+  notify:
+    - Update system checksum file
+
+- name: packages Run the commands for replaced conffiles
+  ansible.builtin.command: "{{ conduit_package_conffiles[item].command }}"
+  changed_when: true
+  loop: "{{ conduit_packages_conffiles }}"
+  when:
+    - conduit_package_conffiles[item].keep == 'package'
+    - conduit_package_conffiles[item].command is defined
+  notify:
+    - Update system checksum file
+
+...

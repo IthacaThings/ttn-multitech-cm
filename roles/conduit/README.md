@@ -61,6 +61,25 @@ The following setup must be set up performed on the Contduit:
 - **mlinux_feed_suffix**: Appended to the mLinux version in the image
   and opkg feed URLs.  Defaults to **""**; **"-devel"** selects the
   test builds published by meta-ttni
+- **conduit_package_upgrade**: Upgrade installed packages from the
+  opkg feeds on every run, defaults to **true**.  Only the packages
+  `opkg list-upgradable` reports are upgraded
+- **conduit_package_upgrade_timeout**: Seconds the upgrade may run,
+  defaults to **14400**.  It runs in the background and Ansible polls
+  it every minute, so a dropped ssh connection doesn't fail it
+- **conduit_package_hold**: Packages a package upgrade leaves alone,
+  because the role installs them at a specific version.  Defaults to
+  the mp, poly and ttn packet forwarders; *lora-basic-station* is
+  added when **forwarder_variant** is **basic** and
+  **forwarder_version** is set
+- **conduit_package_conffiles**: What to do when an upgrade leaves the
+  package's version of a changed conffile as *FILE-opkg*.  Maps
+  *FILE* to **keep: package**, which installs the package's version
+  and runs **command** if given, or **keep: local**, which removes
+  *FILE-opkg*.  The play fails on any *FILE-opkg* not listed.  By
+  default */etc/ca-certificates.conf* takes the package's version and
+  rebuilds the CA bundle, and */var/config/lora/local_conf.json* keeps
+  ours
 - **conduit_monitor_network_ping_hosts**: IPv4 or IPv6 addresses that
   *monitor_network* pings.  Defaults to **[monit_ping_host]** if that
   is set, otherwise 8.8.8.8, 1.1.1.1 and 9.9.9.9
@@ -122,6 +141,8 @@ The following tags can be used to run a subset of the playbook.
   cellular modem
 - **mlinux**: Configures the opkg feeds and upgrades mLinux to
   **mlinux_version**
+- **packages**: Upgrades installed packages from the opkg feeds (see
+  **conduit_package_upgrade**)
 
 ## Network monitoring
 

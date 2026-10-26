@@ -453,6 +453,24 @@ and run
 make apply
 ```
 
+### Package upgrades
+
+Fixes such as a new CA certificate bundle don't need a new image.
+Every run upgrades the packages that `opkg list-upgradable` reports
+from the gateway's feeds, except the packet forwarders the role
+installs at a specific version (`conduit_package_hold`).  The tasks
+that follow re-apply the configuration and clean up after the
+packages.  To only upgrade packages:
+
+```bash
+make TAGS=packages,ttn apply
+```
+
+If an upgrade leaves a changed conffile as *FILE-opkg*,
+`conduit_package_conffiles` says which version to keep; the play
+fails on any other one.  Set `conduit_package_upgrade: false` to turn
+upgrades off.
+
 ### Test builds of mLinux
 
 meta-ttni's `scripts/populate` publishes test builds of mLinux to
@@ -468,7 +486,7 @@ mlinux_feed_suffix: "-devel"
 and run
 
 ```bash
-make TAGS=mlinux apply
+make TAGS=mlinux,packages,ttn apply
 ```
 
 Leave `mlinux_version` alone: the test images report the plain

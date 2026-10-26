@@ -34,6 +34,13 @@
     - forwader_version is defined
     - ansible_local.opkg.lora_basic_station is not defined or ansible_local.opkg.lora_basic_station != forwarder_version
 
+- name: ttn_basic_station Restart lora-basic-station if packages.yml upgraded it
+  ansible.builtin.command: "true"
+  changed_when: true
+  notify:
+    - Restart lora-basic-station
+  when: "'lora-basic-station' in conduit_packages_upgrade | default([])"
+
 # We have a program below because MT posted the data in an invalid format
 - name: ttn_basic_station Fetch and update station.conf
   block:
