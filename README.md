@@ -61,6 +61,18 @@ The tag of the container will be the latest available version of
 [Github](https://github.com/TheThingsNetwork/lorawan-stack/releases)
 to ensure we are running the latest version of the stack.
 
+The container includes [Mitogen for
+Ansible](https://mitogen.networkgenomics.com/ansible_detailed.html),
+and `ansible.cfg` selects its `mitogen_linear` strategy. Without it,
+each task starts Python on the Conduit and compiles the module from
+source, which takes 6 to 10 seconds on an MTCAP (ARM926); Mitogen
+keeps one Python process on each Conduit for the whole run. To run
+without Mitogen, set `ANSIBLE_STRATEGY=linear`:
+
+```bash
+ANSIBLE_STRATEGY=linear bin/run make TARGET=HOSTNAME apply
+```
+
 ## mLinux version
 
 This repo has been extensively tested on later versions of mLinux 3.3
