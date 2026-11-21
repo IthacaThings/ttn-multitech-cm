@@ -1,0 +1,20 @@
+{#
+	Gateway identity and transport, for maintenance scripts on the
+	jump host. Rendered through to_nice_json so that values are
+	escaped and each key is on its own line.
+#}
+{{ {
+    "_comment": "GENERATED VIA ANSIBLE, DO NOT EDIT!",
+    "gateway_conf": {
+        "hostname": hostname,
+        "eui": ansible_local.lora.eui,
+        "description": description,
+        "contact_email": contact_email,
+        "region": region,
+        "router": router_v3,
+        "transport": forwarder_variant,
+        "initscript": "/etc/init.d/" + monit_pktfwd_initscript,
+        "pidfile": monit_pktfwd_pidfile,
+        "logfile": monit_pktfwd_logfile
+    }
+} | to_nice_json(indent=4) }}

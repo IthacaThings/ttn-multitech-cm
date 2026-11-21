@@ -44,6 +44,14 @@
     owner: root
     group: root
 
+- name: ttn Install /var/config/lora/gateway_info.json
+  template:
+    src: gateway_info.json.j2
+    dest: /var/config/lora/gateway_info.json
+    mode: "0644"
+    owner: root
+    group: root
+
 #
 #	Remove Multi-Tech stuff that we don't want and install the TTN packet-forwarder
 #
