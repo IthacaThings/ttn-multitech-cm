@@ -2,6 +2,7 @@ FROM debian:stable
 
 ARG ansible_version=9.6.1
 ARG ansible_lint_version=24.6.1
+ARG mitogen_version=0.3.54
 # The lorawan-stack release tag (e.g. v3.37.0); bin/run passes the latest
 ARG lorawan_stack_version
 ARG DEBIAN_FRONTEND=noninteractive
@@ -22,6 +23,11 @@ RUN echo "**** install packages ****" && \
     for pkg in ansible==${ansible_version} ansible-lint==${ansible_lint_version}; do \
         PIPX_HOME=/opt/pipx PIPX_BIN_DIR=/usr/local/bin pipx install --include-deps ${pkg}; \
     done && \
+    echo "**** install mitogen ****" && \
+    PIPX_HOME=/opt/pipx PIPX_BIN_DIR=/usr/local/bin pipx inject ansible mitogen==${mitogen_version} && \
+    mkdir -p /opt/mitogen && \
+    ln -s $(/opt/pipx/venvs/ansible/bin/python -c 'import ansible_mitogen, os; print(os.path.dirname(ansible_mitogen.__file__))')/plugins/strategy /opt/mitogen/strategy && \
+    test -f /opt/mitogen/strategy/mitogen_linear.py && \
     echo "**** install ttn-lw-cli ****" && \
     test -n "${lorawan_stack_version}" && \
     version=${lorawan_stack_version#v} && \
