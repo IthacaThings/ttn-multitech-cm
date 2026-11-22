@@ -2,8 +2,49 @@
 
 trap "rm -f .docker_env" 0 1 2 3 13 15
 
+LORAWAN_STACK_REPO=TheThingsNetwork/lorawan-stack
+
+# Print the tag of the latest lorawan-stack release, e.g. v3.37.0.
+# Read it from the releases/latest redirect on github.com, which the
+# API rate limit (60 requests an hour per IP without a token) does not
+# apply to. If that fails, fall back to the API and, if that fails
+# too, show its reply.
+latest_lorawan_stack_version() {
+    local location version reply status
+
+    location=$(curl -fsS --retry 3 -o /dev/null -w '%{redirect_url}' \
+	https://github.com/${LORAWAN_STACK_REPO}/releases/latest)
+    version=${location##*/tag/}
+    if [[ ${location} == */tag/* && -n ${version} ]]; then
+	echo "${version}"
+	return 0
+    fi
+    echo "No release tag in the releases/latest redirect (${location:-none}); trying the API" >&2
+
+    reply=$(mktemp)
+    status=$(curl -sS --retry 3 -D "${reply}.headers" -o "${reply}" -w '%{http_code}' \
+	https://api.github.com/repos/${LORAWAN_STACK_REPO}/releases/latest)
+    version=$(jq -r '.tag_name // empty' "${reply}" 2>/dev/null)
+    if [[ ${status} == 200 && -n ${version} ]]; then
+	rm -f "${reply}" "${reply}.headers"
+	echo "${version}"
+	return 0
+    fi
+    {
+	echo "GitHub API reply: HTTP ${status}"
+	grep -i -E '^x-ratelimit-(limit|remaining|reset|resource|used):' "${reply}.headers"
+	jq -r '.message // empty' "${reply}" 2>/dev/null || head -c 500 "${reply}"
+    } >&2
+    rm -f "${reply}" "${reply}.headers"
+    return 1
+}
+
 # The image tag is the lorawan stack version
-LORAWAN_STACK_VERSION=$(curl -qs https://api.github.com/repos/TheThingsNetwork/lorawan-stack/releases | jq -r '.[0].name')
+LORAWAN_STACK_VERSION=$(latest_lorawan_stack_version)
+if [[ -z ${LORAWAN_STACK_VERSION} ]]; then
+    echo "Unable to find the latest ${LORAWAN_STACK_REPO} release" >&2
+    exit 1
+fi
 IMAGE_TAG=ansible-env:${LORAWAN_STACK_VERSION}
 
 prog=$(basename ${0} | tr '[:upper:]' '[:lower:]')
@@ -45,7 +86,9 @@ fi
 build_image() {
     # We use --no-cache to do a full build so .Created is correct
     echo "Building ${IMAGE_TAG} ${*}" >&2
-    docker build -q ${*} -t ${IMAGE_TAG} docker || exit $?
+    docker build -q ${*} \
+	--build-arg lorawan_stack_version=${LORAWAN_STACK_VERSION} \
+	-t ${IMAGE_TAG} docker || exit $?
 }
 
 check_image() {

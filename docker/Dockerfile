@@ -2,6 +2,8 @@ FROM debian:stable
 
 ARG ansible_version=9.6.1
 ARG ansible_lint_version=24.6.1
+# The lorawan-stack release tag (e.g. v3.37.0); bin/run passes the latest
+ARG lorawan_stack_version
 ARG DEBIAN_FRONTEND=noninteractive
 
 # Disable output buffering
@@ -21,9 +23,13 @@ RUN echo "**** install packages ****" && \
         PIPX_HOME=/opt/pipx PIPX_BIN_DIR=/usr/local/bin pipx install --include-deps ${pkg}; \
     done && \
     echo "**** install ttn-lw-cli ****" && \
-    uname -m; uname -s && \
+    test -n "${lorawan_stack_version}" && \
+    version=${lorawan_stack_version#v} && \
+    arch=$(uname -m | sed -e 's/aarch64/arm64/' -e 's/x86_64/amd64/') && \
+    echo "ttn-lw-cli ${version} for linux_${arch}" && \
     ( mkdir /tmp/lorawan-stack; cd /tmp/lorawan-stack && \
-        wget -q -O - $(curl -qs https://api.github.com/repos/TheThingsNetwork/lorawan-stack/releases | jq -r '.[0].assets[].browser_download_url' | grep -iE "lorawan-stack-cli_.*_$(uname -s)_$(uname -m | sed -e 's/aarch64/arm64/' -e 's/x86_64/amd64/').tar.gz") | tar xzf - --strip-components 1 && \
+        wget -q -O cli.tar.gz https://github.com/TheThingsNetwork/lorawan-stack/releases/download/v${version}/lorawan-stack-cli_${version}_linux_${arch}.tar.gz && \
+        tar xzf cli.tar.gz --strip-components 1 && \
         install -m 755 ttn-lw-cli /usr/local/bin && \
         install -m 644 config/completion/bash/ttn-lw-cli /etc/bash_completion.d ) && \
     echo "**** clean up ****" && \
