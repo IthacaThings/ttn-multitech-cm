@@ -18,6 +18,12 @@ jobs:
           # Prevent ${HOME}/.cache from being owned by root
           mkdir -p ${HOME}/snap/ttn-lw-stack/common/ttn-lw-cli
           mkdir -p ${HOME}/.cache
+      # Show how much of the unauthenticated GitHub API quota (60 an
+      # hour per IP) this runner has left. This endpoint does not count
+      # against it.
+      - name: Show GitHub API rate limit
+        run: |
+          curl -sS https://api.github.com/rate_limit | jq -c .rate || true
       - name: Run syntax-check
         run: |
           bin/run make syntax-check
