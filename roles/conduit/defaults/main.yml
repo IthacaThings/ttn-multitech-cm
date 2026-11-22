@@ -110,7 +110,7 @@ ppp0_mtu: 1100
 # and then gives up.  Change this so it will keep going forever (90
 # days).
 eth0_udhcpc_opts: -b -t 2592000
-wlan0_udhcp_opts: -b -t 2592000
+wlan0_udhcpc_opts: -b -t 2592000
 
 # WPA stuff
 wpa_conf: /var/config/wpa_supplicant.conf
