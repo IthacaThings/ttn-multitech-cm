@@ -34,6 +34,13 @@
     - forwarder_variant == "basic"
     - ansible_local.lora.product_id is match("MTAC-LORA-(915|868)")
 
+- name: ttn Check that we have a station.conf template if using Basic Station
+  fail:
+    msg: "No Basic Station station.conf template for {{ conduit_type }}, use mp packet forwarder"
+  when:
+    - forwarder_variant == "basic"
+    - conduit_type not in basic_station_conf_url
+
 - include_tasks: ttnv3.yml
 
 - name: ttn Lora dir
