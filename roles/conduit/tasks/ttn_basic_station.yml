@@ -131,6 +131,17 @@
     - update rc
     - Restart lora-basic-station
 
+# The link task above notifies "update rc" only when it creates the
+# link, so rc links left by an earlier forwarder can outlive it.
+- name: ttn_basic_station Check rc links for lora-basic-station
+  ansible.builtin.shell: "test -e /etc/rc5.d/S95lora-basic-station && ! ls /etc/rc?.d/*ttn-pkt-forwarder >/dev/null 2>&1"
+  register: rc_links
+  check_mode: false
+  failed_when: false
+  changed_when: rc_links.rc != 0
+  notify:
+    - update rc
+
 - name: ttn_basic_station Enable basic station
   lineinfile: dest=/etc/default/lora-basic-station
     regexp="^ENABLED="

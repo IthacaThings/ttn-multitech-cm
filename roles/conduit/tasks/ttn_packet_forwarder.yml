@@ -105,6 +105,17 @@
     - update rc
     - restart ttn-pkt-forwarder
 
+# The link task above notifies "update rc" only when it creates the
+# link, so rc links left by an earlier forwarder can outlive it.
+- name: ttn_packet_forwarder Check rc links for ttn-pkt-forwarder
+  ansible.builtin.shell: "test -e /etc/rc5.d/S95ttn-pkt-forwarder && ! ls /etc/rc?.d/*lora-basic-station >/dev/null 2>&1"
+  register: rc_links
+  check_mode: false
+  failed_when: false
+  changed_when: rc_links.rc != 0
+  notify:
+    - update rc
+
 - name: ttn_packet_forwarder Install /etc/default/ttn-pkt-forwarder
   copy:
     src: "{{ role_path }}/files/default.enabled"
