@@ -1,0 +1,99 @@
+---
+
+#
+# monitor_network replaces conduit_leds and runs on all gateways
+#
+
+- name: monitor_network | Remove the old conduit_leds service
+  ansible.builtin.shell: |
+    monit unmonitor conduit_leds || true
+    update-rc.d -f conduit_leds remove
+  args:
+    removes: /var/config/init.d/conduit_leds
+  notify:
+    - Update system checksum file
+
+# Not via its init script, so this works even if an earlier run has
+# already removed it.  The [/] keeps pkill from matching this shell.
+- name: monitor_network | Stop the old conduit_leds daemon
+  ansible.builtin.command: pkill -f "[/]usr/local/sbin/conduit_leds"
+  register: conduit_leds_pkill
+  changed_when: conduit_leds_pkill.rc == 0
+  failed_when: conduit_leds_pkill.rc > 1
+
+- name: monitor_network | Remove the old conduit_leds files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/init.d/conduit_leds
+    - /var/config/init.d/conduit_leds
+    - /var/config/local/sbin/conduit_leds
+    - /var/run/conduit_leds.pid
+  notify:
+    - Update system checksum file
+
+- name: monitor_network | /var/config/local/sbin/monitor_network
+  ansible.builtin.copy:
+    dest: /var/config/local/sbin/monitor_network
+    src: monitor_network.py
+    mode: "0755"
+    owner: root
+    group: root
+  notify:
+    - Restart monitor_network
+    - Update system checksum file
+
+- name: monitor_network | /var/config/local/lib/reboot_with_reason
+  ansible.builtin.copy:
+    dest: /var/config/local/lib/reboot_with_reason
+    src: reboot_with_reason
+    mode: "0755"
+    owner: root
+    group: root
+  notify:
+    - Update system checksum file
+
+- name: monitor_network | /var/config/monitor_network.default
+  ansible.builtin.template:
+    src: monitor_network.default.j2
+    dest: /var/config/monitor_network.default
+    mode: "0644"
+    owner: root
+    group: root
+  notify:
+    - Restart monitor_network
+    - Update system checksum file
+
+- name: monitor_network | Link /etc/default/monitor_network to /var/config/monitor_network.default
+  ansible.builtin.file:
+    path: /etc/default/monitor_network
+    state: link
+    src: /var/config/monitor_network.default
+    force: true
+  notify:
+    - Restart monitor_network
+    - Update system checksum file
+
+- name: monitor_network | /var/config/init.d/monitor_network
+  ansible.builtin.copy:
+    dest: /var/config/init.d/monitor_network
+    src: monitor_network.initd
+    mode: "0755"
+    owner: root
+    group: root
+  notify:
+    - Restart monitor_network
+    - Update system checksum file
+
+- name: monitor_network | Link /etc/init.d/monitor_network to /var/config/init.d/monitor_network
+  ansible.builtin.file:
+    path: /etc/init.d/monitor_network
+    state: link
+    src: /var/config/init.d/monitor_network
+    force: true
+  notify:
+    - Restart monitor_network
+    - Update system checksum file
+
+...
