@@ -106,11 +106,15 @@ eth0_mtu: 1100
 wlan0_mtu: 1100
 ppp0_mtu: 1100
 
-# By default the DHCP client sends three packets over three seconds
-# and then gives up.  Change this so it will keep going forever (90
-# days).
-eth0_udhcpc_opts: -b -t 2592000
-wlan0_udhcpc_opts: -b -t 2592000
+# Extra udhcpc options for DHCP interfaces. ifup already runs udhcpc
+# with -b, so if there is no lease after -t discovers (-T seconds
+# apart) it continues in the background, retrying every -A seconds
+# forever. Keep -t small: ifup waits in the foreground until then, and
+# boot does not continue past networking (to sshd, monit and PPP) until
+# it returns. A large -t hangs the boot of a gateway without an
+# Ethernet lease, so a cellular gateway never brings up PPP.
+eth0_udhcpc_opts: -t 3 -T 3 -A 20
+wlan0_udhcpc_opts: -t 3 -T 3 -A 20
 
 # WPA stuff
 wpa_conf: /var/config/wpa_supplicant.conf
