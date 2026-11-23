@@ -40,7 +40,9 @@ authorized_keys: []
 forwarder_baseurl_kersing: https://github.com/kersing/multitech-installer/raw/master
 # TTNI cache of packages
 forwarder_baseurl_ttni: "{{ mlinux_ttni_base_url }}/feeds/ttni-arm926ejste"
-# Command to run when rotating logs
+# Rotation of the packet forwarder log (ttn-pkt-forwarder only; see
+# basic_log_rotate_count for Basic Station). Rotated files are
+# compressed, then the command runs.
 forwarder_logrotate_command: "{{ '/etc/init.d/ttn-pkt-forwarder restart' if forwarder_variant != 'basic' else '' }}"
 forwarder_logrotate_count: 14
 forwarder_logrotate_size: 10M
@@ -59,6 +61,15 @@ basic_station_conf_url:
 basic_cert_url: https://letsencrypt.org/certs/isrgrootx1.pem
 basic_log_level: INFO,S2E:VERBOSE
 basic_log_file: /var/log/basic-station.log
+# logrotate rotates the Basic Station log when it reaches basic_log_size
+# and keeps basic_log_rotate_count compressed copies. Station's own
+# rotation is only a backstop, at twice basic_log_size with one file,
+# in case logrotate stops running. All of it is on the /var/volatile
+# tmpfs (about 123 MB), where monit reboots at 75% usage. With 4M and 20:
+# the log, up to 4 MB, 20 .gz files of about 0.8 MB, and up to 4 MB more
+# in the file station had open at startup: about 24 MB.
+basic_log_rotate_count: 20
+basic_log_size: 4M
 
 status_public: true
 location_public: true
