@@ -50,8 +50,8 @@
           --routerid {{ ansible_local.lora.eui }}
           --log-file {{ basic_log_file }}
           --log-level {{ basic_log_level }}
-          --log-size {{ forwarder_logrotate_size }}
-          --log-rotate {{ forwarder_logrotate_count }}
+          --log-size {{ (basic_log_size | human_to_bytes) * 2 }}
+          --log-rotate 1
           {{ '--tc-timeout 5' if use_cellular else '' }}
           {{ gps_arg }}"
       register: station_conf_raw
@@ -67,6 +67,24 @@
     group: root
   notify:
     - Restart lora-basic-station
+
+# Before logrotate took over the log, station rotated it into
+# basic-station.log.N and logrotate compressed those to .N-YYYYMMDD.gz.
+# Nothing rotates those any more.
+- name: ttn_basic_station Find logs from station's own rotation
+  find:
+    paths: "{{ basic_log_file | dirname }}"
+    patterns: "{{ basic_log_file | basename | regex_escape }}\\.[0-9]+(-[0-9]{8}\\.gz)?$"
+    use_regex: true
+  register: basic_old_logs
+
+- name: ttn_basic_station Remove logs from station's own rotation
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ basic_old_logs.files }}"
+  loop_control:
+    label: "{{ item.path }}"
 
 - name: ttn_basic_station Download certificate
   local_action: get_url

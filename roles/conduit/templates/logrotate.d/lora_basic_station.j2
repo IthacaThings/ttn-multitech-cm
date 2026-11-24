@@ -1,8 +1,12 @@
-{{ basic_log_file }}.*[0-9] {
+# Station opens, appends to and closes its log for every line, so
+# renaming it is enough: the next line starts a new file. cron runs
+# logrotate every 5 minutes, so maxsize applies within 5 minutes.
+{{ basic_log_file }} {
 	daily
-	nocreate
-	missingok
+	maxsize {{ basic_log_size }}
+	rotate {{ basic_log_rotate_count }}
 	compress
-	rotate {{ forwarder_logrotate_count }}
-	dateext
+	missingok
+	nocreate
+	notifempty
 }
